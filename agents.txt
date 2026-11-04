@@ -1,0 +1,8 @@
+# Agents policy for InMed Educación Médica
+
+User-agent: *
+Allow: /
+
+Preferred-language: es-PY
+Primary-topic: Kit de sutura educativo, práctica de sutura, instrumental médico para estudiantes en Paraguay.
+Commercial-contact: https://wa.me/595991950031
