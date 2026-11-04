@@ -1443,6 +1443,7 @@ function panelBanners(){
     <div class="field full"><label>Título del hero (usá &lt;em&gt; para el texto en rojo)</label><input name="heroTitle" value="${esc(B.heroTitle)}"></div>
     <div class="field"><label>Subtítulo del hero</label><input name="heroSub" value="${esc(B.heroSub)}"></div>
     <div class="field"><label>Sello circular del hero</label><input name="heroBadge" value="${esc(B.heroBadge)}"></div>
+    <div class="field full"><label>Imagen principal del hero / banner</label><input type="file" name="heroUpload" accept="image/jpeg,image/png,image/webp"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. El panel convierte automáticamente a <b>WebP</b> y reduce imágenes excesivamente grandes sin deformarlas.</small><div data-media-result="hero"></div></div>
     <div class="field"><label class="checkbox-row"><input type="checkbox" name="showHeroBadge" ${B.showHeroBadge?'checked':''}> Mostrar sello del hero</label></div>
     <div class="field"><label class="checkbox-row"><input type="checkbox" name="showOffer" ${B.showOffer?'checked':''}> Mostrar banner de oferta</label></div>
     <div class="field full"><label>Título del banner de oferta</label><input name="offerTitle" value="${esc(B.offerTitle)}"></div>
@@ -1502,7 +1503,7 @@ function productForm(p){
     <div class="field"><label>Estado</label><select name="active"><option value="1" ${p.active!==false?'selected':''}>● Activo</option><option value="0" ${p.active===false?'selected':''}>○ Inactivo</option></select></div>
     <div class="field"><label>Foto principal</label><select name="img">${imageOptions(p.img||'sutura')}</select></div>
     <div class="field"><label>Envío gratis</label><label class="checkbox-row" style="height:40px"><input type="checkbox" name="freeShip" ${p.freeShip?'checked':''}> Sí, este producto tiene envío gratis</label></div>
-    <div class="field full"><label>Subir foto propia (opcional)</label><input type="file" name="upload" accept="image/*"><small>Si elegís un archivo, reemplaza la foto principal. Se guarda dentro del navegador.</small></div>
+    <div class="field full"><label>Subir foto propia (opcional)</label><input type="file" name="upload" accept="image/jpeg,image/png,image/webp"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. JPG/PNG se convierte automáticamente a <b>WebP</b> antes de guardar. No se agranda una imagen pequeña.</small><div data-media-result="product"></div></div>
     <div class="field full"><label>Variaciones <button type="button" class="mini-btn" data-act="variant-add" style="margin-left:8px">+ AGREGAR VARIACIÓN</button></label>
       <div id="variantRows" style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg-soft)">
         ${vs.length?vs.map(variantRowHTML).join(''):'<small style="color:var(--gray)">Sin variaciones. Podés agregar color, precio, stock y SKU por variante.</small>'}
@@ -1601,8 +1602,46 @@ document.addEventListener('click',e=>{
   }
 });
 
+
+/* --- optimizador de imágenes: JPG/PNG/WebP -> WebP --- */
+async function optimizeImageToWebP(file, opts={}){
+  if(!file || !/^image\//i.test(file.type||'')) throw new Error('Archivo de imagen inválido');
+  const maxW=Number(opts.maxW)||1600, maxH=Number(opts.maxH)||1600, quality=Number(opts.quality)||0.88;
+  const url=URL.createObjectURL(file);
+  try{
+    const source=await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(new Error('No se pudo leer la imagen'));
+      im.src=url;
+    });
+    const ow=source.naturalWidth||source.width, oh=source.naturalHeight||source.height;
+    const scale=Math.min(1,maxW/ow,maxH/oh);
+    const w=Math.max(1,Math.round(ow*scale)), h=Math.max(1,Math.round(oh*scale));
+    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d',{alpha:true});
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+    ctx.drawImage(source,0,0,w,h);
+    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('El navegador no pudo generar WebP')),'image/webp',quality));
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const rd=new FileReader(); rd.onload=()=>resolve(rd.result); rd.onerror=reject; rd.readAsDataURL(blob);
+    });
+    const saved=Math.max(0,Math.round((1-blob.size/Math.max(1,file.size))*100));
+    return {dataUrl,blob,width:w,height:h,originalWidth:ow,originalHeight:oh,originalBytes:file.size,webpBytes:blob.size,saved};
+  } finally { URL.revokeObjectURL(url); }
+}
+const fmtBytes=n=>{n=Number(n)||0;if(n<1024)return n+' B';if(n<1048576)return (n/1024).toFixed(0)+' KB';return (n/1048576).toFixed(2)+' MB';};
+function mediaResultHTML(r,label){
+  return '<div style="margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-soft);font-size:12px;line-height:1.5">'+
+    '<b>'+esc(label||'Imagen optimizada')+'</b><br>'+
+    r.originalWidth+'×'+r.originalHeight+' px · '+fmtBytes(r.originalBytes)+' → <b>WebP '+r.width+'×'+r.height+' px · '+fmtBytes(r.webpBytes)+'</b>'+
+    (r.saved>0?' · <span style="color:#2A9D8F;font-weight:700">'+r.saved+'% menos</span>':'')+
+    '</div>';
+}
+let pendingProductWebP=null, pendingHeroWebP=null;
+
 /* --- formularios --- */
-document.addEventListener('submit',e=>{
+document.addEventListener('submit',async e=>{
   const f=e.target;
   if(f.id==='loginForm'){
     e.preventDefault();
@@ -1626,8 +1665,14 @@ document.addEventListener('submit',e=>{
       if(rows.length&&ex){ex.stock=rows.reduce((a,v)=>a+v.stock,0);}
       saveDB();closeAll();renderAdminContent();renderStore();toast(ex?'Producto actualizado':'Producto creado');
     };
-    if(upload){ const rd=new FileReader(); rd.onload=()=>{ const key='custom_'+Date.now(); IMG[key]=rd.result; DB.customImages=DB.customImages||{}; DB.customImages[key]=rd.result; base.img=key; apply(); }; rd.readAsDataURL(upload); }
-    else apply();
+    if(upload){
+      try{
+        const r=pendingProductWebP&&pendingProductWebP.file===upload?pendingProductWebP.result:await optimizeImageToWebP(upload,{maxW:1600,maxH:1600,quality:.88});
+        const key='custom_'+Date.now(); IMG[key]=r.dataUrl; DB.customImages=DB.customImages||{}; DB.customImages[key]=r.dataUrl; base.img=key;
+        toast('Imagen WebP optimizada: '+fmtBytes(r.originalBytes)+' → '+fmtBytes(r.webpBytes));
+        pendingProductWebP=null; apply();
+      }catch(err){ toast('No se pudo optimizar la imagen: '+err.message); }
+    } else apply();
   }
   if(kind==='category'){
     const old=g('id'), ex=DB.categories.find(c=>c.id===old);
@@ -1650,6 +1695,14 @@ document.addEventListener('submit',e=>{
   }
   if(kind==='banners'){
     Object.assign(DB.banners,{announcement:g('announcement'),showAnnouncement:!!d.get('showAnnouncement'),heroTitle:g('heroTitle'),heroSub:g('heroSub'),heroBadge:g('heroBadge'),showHeroBadge:!!d.get('showHeroBadge'),showOffer:!!d.get('showOffer'),offerTitle:g('offerTitle'),offerText:g('offerText'),offerEnd:g('offerEnd'),newsText:g('newsText')});
+    const heroUpload=f.querySelector('[name=heroUpload]')&&f.querySelector('[name=heroUpload]').files[0];
+    if(heroUpload){
+      try{
+        const r=pendingHeroWebP&&pendingHeroWebP.file===heroUpload?pendingHeroWebP.result:await optimizeImageToWebP(heroUpload,{maxW:1920,maxH:720,quality:.88});
+        DB.customImages=DB.customImages||{}; DB.customImages.hero=r.dataUrl; IMG.hero=r.dataUrl; pendingHeroWebP=null;
+        toast('Banner WebP optimizado: '+fmtBytes(r.originalBytes)+' → '+fmtBytes(r.webpBytes));
+      }catch(err){ toast('No se pudo optimizar el banner: '+err.message); }
+    }
     saveDB();renderAdminContent();renderStore();toast('Banners actualizados');
   }
   if(kind==='settings'){
@@ -1657,8 +1710,28 @@ document.addEventListener('submit',e=>{
     saveDB();renderAdminContent();renderStore();toast('Configuración guardada');
   }
 });
-document.addEventListener('change',e=>{
+document.addEventListener('change',async e=>{
   const t=e.target;
+  if(t.matches('[name="upload"]') && t.files && t.files[0]){
+    const box=t.parentElement.querySelector('[data-media-result="product"]');
+    if(box) box.innerHTML='<small>Optimizando a WebP…</small>';
+    try{
+      const r=await optimizeImageToWebP(t.files[0],{maxW:1600,maxH:1600,quality:.88});
+      pendingProductWebP={file:t.files[0],result:r};
+      if(box) box.innerHTML=mediaResultHTML(r,'Foto de producto');
+      if(Math.abs((r.originalWidth/r.originalHeight)-1)>.08) toast('La foto no es 1:1; se conservará sin deformar.');
+    }catch(err){ if(box) box.innerHTML='<small style="color:#D90429">'+esc(err.message)+'</small>'; }
+  }
+  if(t.matches('[name="heroUpload"]') && t.files && t.files[0]){
+    const box=t.parentElement.querySelector('[data-media-result="hero"]');
+    if(box) box.innerHTML='<small>Optimizando a WebP…</small>';
+    try{
+      const r=await optimizeImageToWebP(t.files[0],{maxW:1920,maxH:720,quality:.88});
+      pendingHeroWebP={file:t.files[0],result:r};
+      if(box) box.innerHTML=mediaResultHTML(r,'Hero / banner');
+      if(Math.abs((r.originalWidth/r.originalHeight)-(8/3))>.15) toast('La proporción no es 8:3; el panel no deformará la imagen.');
+    }catch(err){ if(box) box.innerHTML='<small style="color:#D90429">'+esc(err.message)+'</small>'; }
+  }
   if(t.dataset.leadStatus){ const l=(DB.leads||[]).find(x=>x.id===t.dataset.leadStatus); if(l){l.status=t.value;saveDB();toast('Estado actualizado');} }
 });
 document.addEventListener('input',e=>{
