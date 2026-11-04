@@ -1246,7 +1246,7 @@ function renderPosts(){
   $('#postGrid').innerHTML=shown.map(p=>`
     <article class="post" data-act="post" data-id="${p.id}">
       <div class="post-img"><img src="${img(p.img)}" alt="${esc(p.title)}"><span class="badge badge-red post-tag">${esc(p.cat)}</span></div>
-      <div class="post-body"><small>${new Date(p.date).toLocaleDateString('es-PY')} · Blog InMed</small><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
+      <div class="post-body"><small>${p.date?new Date(p.date).toLocaleDateString('es-PY')+' · ':''}Blog InMed</small><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
     </article>`).join('');
   $('#blogAll').innerHTML=(S.allPosts?'Ver menos':'Ver todos los artículos')+' '+ic('arrow','width:16px;height:16px');
 }
@@ -1600,7 +1600,7 @@ document.addEventListener('click',e=>{
     case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); renderProducts(); break; }
     case 'bic': S.bic=Number(val); renderBIC(); break;
     case 'combo-add': addToCart(id,'',1,'combo'); break;
-    case 'post': { const p=(DB.posts||[]).find(x=>x.id===id); if(p) openInfo(p.title,`<p><b>${esc(p.cat)} · ${new Date(p.date).toLocaleDateString('es-PY')}</b></p><p>${esc(p.summary)}</p><p>Este artículo forma parte del Blog Utilidades Clínicas de InMed. En la V1 en producción, el contenido completo se carga desde Supabase manteniendo la URL <span class="mono">/blog/${esc(p.slug)}</span>.</p>`); break; }
+    case 'post': { const p=(DB.posts||[]).find(x=>x.id===id); if(p&&p.slug) window.location.href='/blog/'+p.slug; break; }
     case 'faq': el.parentElement.classList.toggle('open'); break;
     case 'close-info': closeAll(); break;
     case 'qty': { const it=cart[i]; if(!it)break; it.qty+=Number(val); if(it.qty<=0)cart.splice(i,1); saveCart(); renderCart(); break; }
