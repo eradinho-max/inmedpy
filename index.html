@@ -945,7 +945,11 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.prototype.slice.call(r.querySelectorAll(s));
 const IMG = window.IMAGES || {};
-const img = k => IMG[k] || IMG['bic-rosa'] || '';
+const img = k => {
+  const v=String(k||'');
+  if(/^https?:\/\//i.test(v)||/^data:image\//i.test(v)) return v;
+  return IMG[v] || IMG['bic-rosa'] || '';
+};
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gs  = n => 'Gs. '+Math.round(Number(n)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 const norm= s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
