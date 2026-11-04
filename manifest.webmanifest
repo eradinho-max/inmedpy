@@ -1,0 +1,14 @@
+{
+  "name": "InMed Kit de Sutura Paraguay",
+  "short_name": "InMed Sutura",
+  "description": "Kit de Sutura InMed de 25 piezas con piel simuladora de 3 capas en Paraguay.",
+  "start_url": "https://inmed-py.github.io/kit-de-sutura-paraguay/",
+  "scope": "https://inmed-py.github.io/kit-de-sutura-paraguay/",
+  "display": "standalone",
+  "background_color": "#F6F1E8",
+  "theme_color": "#F6F1E8",
+  "icons": [
+    { "src": "https://inmed-py.github.io/kit-de-sutura-paraguay/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://inmed-py.github.io/kit-de-sutura-paraguay/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
