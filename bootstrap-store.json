@@ -1,0 +1,683 @@
+{
+  "settings": {
+    "storeName": "InMed",
+    "whatsapp": "595981000000",
+    "email": "hola@inmed.com.py",
+    "phone": "+595 981 000-000",
+    "freeShipMin": 300000,
+    "footer": "Equipamiento médico para estudiantes, profesionales y cuidado en casa. Productos originales, asesoría real y envíos a todo Paraguay.",
+    "copy": "© 2026 InMed Soluciones Médicas · Asunción, Paraguay"
+  },
+  "banners": {
+    "showAnnouncement": true,
+    "announcement": "<b>5% OFF</b> en tu primera compra con el cupón <b>INMED5</b>",
+    "heroTitle": "EQUIPÁ TU PRÁCTICA CON PRODUCTOS QUE <em>HACEN LA DIFERENCIA.</em>",
+    "heroSub": "Equipamiento médico para estudiantes, profesionales y cuidado en casa.",
+    "showHeroBadge": true,
+    "heroBadge": "<span>15%</span>OFF",
+    "showOffer": true,
+    "offerTitle": "SEMANA INMED · 15% OFF",
+    "offerText": "En estetoscopios, kits de sutura y diagnóstico. Precios especiales por tiempo limitado, sin editar una sola línea de código.",
+    "offerEnd": "2026-11-10T23:59:59",
+    "newsText": "Guías prácticas, novedades del catálogo y una selección de ofertas. Un correo por semana, sin ruido."
+  },
+  "categories": [
+    {
+      "id": "Sutura",
+      "name": "Kits de Sutura",
+      "img": "sutura",
+      "desc": "Práctica y entrenamiento"
+    },
+    {
+      "id": "Estetoscopios",
+      "name": "Estetoscopios",
+      "img": "bic-rosa",
+      "desc": "BIC, cardiology y más"
+    },
+    {
+      "id": "Presión arterial",
+      "name": "Presión Arterial",
+      "img": "esfigmo",
+      "desc": "Aneroides y digitales"
+    },
+    {
+      "id": "Oxímetros",
+      "name": "Oxímetros",
+      "img": "oximetro",
+      "desc": "SpO2 y pulso"
+    },
+    {
+      "id": "Termómetros",
+      "name": "Termómetros",
+      "img": "termometro",
+      "desc": "Digitales e infrarrojos"
+    },
+    {
+      "id": "Glucómetros",
+      "name": "Glucómetros",
+      "img": "glucometro",
+      "desc": "Control de glucosa"
+    }
+  ],
+  "products": [
+    {
+      "id": "p1",
+      "name": "Kit de Sutura InMed — 25 piezas",
+      "cat": "Sutura",
+      "short": "Pad de silicona, instrumental y 12 hilos.",
+      "desc": "Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.",
+      "price": 279000,
+      "promo": 249000,
+      "stock": 24,
+      "sku": "KIT-SUT-25",
+      "img": "sutura",
+      "rating": 4.9,
+      "reviews": 38,
+      "active": true,
+      "freeShip": true,
+      "featured": true,
+      "tags": [
+        "MÁS VENDIDO"
+      ],
+      "features": [
+        "25 piezas organizadas en estuche",
+        "Pad de silicona reutilizable de 3 capas",
+        "Instrumental de acero inoxidable",
+        "Hilos de nylon, seda y poliéster",
+        "Ideal para estudiantes y residentes"
+      ],
+      "includes": [
+        "1 almohadilla de sutura",
+        "1 portaagujas + 1 pinza",
+        "1 tijera quirúrgica + 1 bisturí",
+        "12 hilos con aguja",
+        "Estuche con cierre y manual"
+      ],
+      "specs": {
+        "Piezas": "25",
+        "Material": "Acero inoxidable / silicona",
+        "Nivel": "Estudiante y residente",
+        "SKU": "KIT-SUT-25"
+      }
+    },
+    {
+      "id": "p2",
+      "name": "Estetoscopio BIC Eternity III",
+      "cat": "Estetoscopios",
+      "short": "Doble campana, acero inoxidable. 5 colores.",
+      "desc": "El clásico BIC Eternity III con doble campana de acero inoxidable, tubo de PVC flexible y olivas suaves. Disponible en cinco combinaciones de color con terminación Rainbow.",
+      "price": 329000,
+      "promo": 289000,
+      "stock": 18,
+      "sku": "BIC-ET3",
+      "img": "bic-rosa",
+      "rating": 4.9,
+      "reviews": 52,
+      "active": true,
+      "freeShip": true,
+      "featured": true,
+      "tags": [
+        "MÁS VENDIDO"
+      ],
+      "features": [
+        "Doble campana adulto / pediátrico",
+        "Acero inoxidable pulido",
+        "Tubo flexible de doble lumen",
+        "Olivas suaves intercambiables",
+        "Incluye estuche y accesorios"
+      ],
+      "includes": [
+        "Estetoscopio BIC Eternity III",
+        "Par de olivas de repuesto",
+        "Diafragmas de repuesto",
+        "Estuche protector"
+      ],
+      "specs": {
+        "Modelo": "Eternity III",
+        "Campana": "Doble, acero inoxidable",
+        "Tubo": "PVC doble lumen",
+        "Garantía": "12 meses",
+        "SKU": "BIC-ET3"
+      },
+      "variants": [
+        {
+          "name": "Rosa / Rainbow",
+          "color": "#E8A0B8",
+          "img": "bic-rosa",
+          "price": 289000,
+          "stock": 4,
+          "sku": "BIC-ET3-RO"
+        },
+        {
+          "name": "Total Black",
+          "color": "#20242B",
+          "img": "bic-black",
+          "price": 279000,
+          "stock": 7,
+          "sku": "BIC-ET3-BK"
+        },
+        {
+          "name": "Vino / Rainbow",
+          "color": "#7A1F33",
+          "img": "bic-vino",
+          "price": 299000,
+          "stock": 2,
+          "sku": "BIC-ET3-VI"
+        },
+        {
+          "name": "Azul / Black",
+          "color": "#1E4FA1",
+          "img": "bic-azul",
+          "price": 289000,
+          "stock": 5,
+          "sku": "BIC-ET3-AZ"
+        },
+        {
+          "name": "Gold / Rainbow",
+          "color": "linear-gradient(135deg,#D9B25C,#7A4BD0)",
+          "img": "bic-gold",
+          "price": 319000,
+          "stock": 3,
+          "sku": "BIC-ET3-GD"
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "Oxímetro Fingertip Digital",
+      "cat": "Oxímetros",
+      "short": "SpO2 y pulso con display OLED.",
+      "desc": "Oxímetro de dedo compacto con pantalla OLED, lectura de saturación de oxígeno y frecuencia de pulso en segundos. Apagado automático y correa incluida.",
+      "price": 129000,
+      "promo": 99000,
+      "stock": 2,
+      "sku": "OXI-FT01",
+      "img": "oximetro",
+      "rating": 4.8,
+      "reviews": 27,
+      "active": true,
+      "freeShip": false,
+      "featured": true,
+      "tags": [
+        "OFERTA"
+      ],
+      "features": [
+        "Lectura de SpO2 y pulso en 5 segundos",
+        "Display OLED de alto contraste",
+        "Apagado automático",
+        "Correa y pilas incluidas"
+      ],
+      "includes": [
+        "Oxímetro",
+        "Correa",
+        "2 pilas AAA",
+        "Manual"
+      ],
+      "specs": {
+        "Rango SpO2": "70–99%",
+        "Pulso": "30–250 bpm",
+        "Pantalla": "OLED",
+        "SKU": "OXI-FT01"
+      }
+    },
+    {
+      "id": "p4",
+      "name": "Esfigmomanómetro Aneroide Pro",
+      "cat": "Presión arterial",
+      "short": "Brazalete adulto + estuche.",
+      "desc": "Esfigmomanómetro aneroide de precisión con manómetro de aguja, brazalete de nailon ajustable, pera de goma y válvula de liberación. Ideal para consultorio.",
+      "price": 245000,
+      "promo": null,
+      "stock": 12,
+      "sku": "ESF-AN01",
+      "img": "esfigmo",
+      "rating": 4.7,
+      "reviews": 19,
+      "active": true,
+      "freeShip": true,
+      "featured": true,
+      "tags": [],
+      "features": [
+        "Manómetro aneroide de alta precisión",
+        "Brazalete adulto ajustable",
+        "Pera y válvula de metal",
+        "Estuche de transporte"
+      ],
+      "includes": [
+        "Manómetro + brazalete",
+        "Pera de insuflado",
+        "Estuche"
+      ],
+      "specs": {
+        "Rango": "0–300 mmHg",
+        "Precisión": "±3 mmHg",
+        "Brazalete": "Adulto 22–32 cm",
+        "SKU": "ESF-AN01"
+      }
+    },
+    {
+      "id": "p5",
+      "name": "Termómetro Digital Clínico",
+      "cat": "Termómetros",
+      "short": "Lectura rápida, punta flexible.",
+      "desc": "Termómetro digital de uso clínico y domiciliario, con punta flexible, lectura en 30 segundos, memoria de la última medición y alerta de fiebre.",
+      "price": 39000,
+      "promo": null,
+      "stock": 46,
+      "sku": "TER-DG01",
+      "img": "termometro",
+      "rating": 4.8,
+      "reviews": 41,
+      "active": true,
+      "freeShip": false,
+      "featured": true,
+      "tags": [],
+      "features": [
+        "Lectura en 30 segundos",
+        "Punta flexible",
+        "Memoria de última medición",
+        "Apagado automático"
+      ],
+      "includes": [
+        "Termómetro",
+        "Estuche protector",
+        "Manual"
+      ],
+      "specs": {
+        "Rango": "32–42,9 °C",
+        "Precisión": "±0,1 °C",
+        "Batería": "LR41",
+        "SKU": "TER-DG01"
+      }
+    },
+    {
+      "id": "p6",
+      "name": "Glucómetro + 50 Tiras",
+      "cat": "Glucómetros",
+      "short": "Kit completo para control de glucosa.",
+      "desc": "Kit de glucometría con medidor digital, 50 tiras reactivas, lancetas y dispositivo de punción. Resultados en 5 segundos con memoria de 500 registros.",
+      "price": 219000,
+      "promo": 189000,
+      "stock": 9,
+      "sku": "GLU-KT50",
+      "img": "glucometro",
+      "rating": 4.7,
+      "reviews": 16,
+      "active": true,
+      "freeShip": true,
+      "featured": true,
+      "tags": [
+        "OFERTA"
+      ],
+      "features": [
+        "Resultado en 5 segundos",
+        "Memoria de 500 mediciones",
+        "50 tiras y lancetas incluidas",
+        "Pantalla amplia retroiluminada"
+      ],
+      "includes": [
+        "Glucómetro",
+        "50 tiras reactivas",
+        "Lancetero + lancetas",
+        "Estuche"
+      ],
+      "specs": {
+        "Muestra": "0,5 µL",
+        "Memoria": "500 registros",
+        "Tiras": "50 unidades",
+        "SKU": "GLU-KT50"
+      }
+    },
+    {
+      "id": "p7",
+      "name": "Estetoscopio Cardiology InMed Pro",
+      "cat": "Estetoscopios",
+      "short": "Acabado gold / rainbow, alta sensibilidad.",
+      "desc": "Estetoscopio de línea premium con campana de acero inoxidable con terminación Rainbow, tubo negro de doble lumen y olivas de silicona. Para auscultación exigente.",
+      "price": 359000,
+      "promo": null,
+      "stock": 7,
+      "sku": "EST-PRO-GD",
+      "img": "bic-gold",
+      "rating": 5,
+      "reviews": 11,
+      "active": true,
+      "freeShip": true,
+      "featured": true,
+      "tags": [
+        "NUEVO"
+      ],
+      "features": [
+        "Campana Rainbow de alta sensibilidad",
+        "Tubo doble lumen",
+        "Olivas de silicona hipoalergénicas",
+        "Incluye estuche rígido"
+      ],
+      "includes": [
+        "Estetoscopio",
+        "Olivas de repuesto",
+        "Estuche rígido"
+      ],
+      "specs": {
+        "Campana": "Acero inoxidable Rainbow",
+        "Tubo": "Doble lumen",
+        "Garantía": "24 meses",
+        "SKU": "EST-PRO-GD"
+      }
+    },
+    {
+      "id": "p8",
+      "name": "Kit de Sutura Avanzado — 32 piezas",
+      "cat": "Sutura",
+      "short": "Más hilos, más instrumentos, más práctica.",
+      "desc": "Versión ampliada del kit de sutura con 32 piezas, pad de tres capas, instrumental adicional y mayor variedad de hilos para entrenamiento avanzado de nudos y técnicas.",
+      "price": 349000,
+      "promo": null,
+      "stock": 14,
+      "sku": "KIT-SUT-32",
+      "img": "sutura",
+      "rating": 4.8,
+      "reviews": 23,
+      "active": true,
+      "freeShip": true,
+      "featured": false,
+      "tags": [],
+      "features": [
+        "32 piezas",
+        "Pad de silicona de 3 capas",
+        "Mayor variedad de hilos",
+        "Instrumental adicional"
+      ],
+      "includes": [
+        "Estuche completo",
+        "Pad de sutura",
+        "Instrumental",
+        "Hilos y agujas"
+      ],
+      "specs": {
+        "Piezas": "32",
+        "Nivel": "Avanzado",
+        "SKU": "KIT-SUT-32"
+      }
+    },
+    {
+      "id": "p9",
+      "name": "Monitor de Presión Digital",
+      "cat": "Presión arterial",
+      "short": "Pantalla amplia, detección de arritmia.",
+      "desc": "Monitor digital de presión arterial de brazo con pantalla amplia, detección de latido irregular, memoria para 2 usuarios y brazalete universal.",
+      "price": 289000,
+      "promo": 259000,
+      "stock": 6,
+      "sku": "ESF-DG02",
+      "img": "esfigmo",
+      "rating": 4.6,
+      "reviews": 14,
+      "active": true,
+      "freeShip": true,
+      "featured": false,
+      "tags": [
+        "OFERTA"
+      ],
+      "features": [
+        "Pantalla LCD amplia",
+        "Memoria 2 × 120 lecturas",
+        "Detección de arritmia",
+        "Brazalete universal"
+      ],
+      "includes": [
+        "Monitor",
+        "Brazalete",
+        "4 pilas AA",
+        "Manual"
+      ],
+      "specs": {
+        "Método": "Oscilométrico",
+        "Memoria": "240 lecturas",
+        "Brazalete": "22–42 cm",
+        "SKU": "ESF-DG02"
+      }
+    },
+    {
+      "id": "p10",
+      "name": "Oxímetro Profesional OLED",
+      "cat": "Oxímetros",
+      "short": "Pletismografía y alarmas configurables.",
+      "desc": "Oxímetro profesional con display OLED giratorio, pletismograma, alarmas de SpO2 y pulso configurables, y batería recargable.",
+      "price": 159000,
+      "promo": null,
+      "stock": 11,
+      "sku": "OXI-PR02",
+      "img": "oximetro",
+      "rating": 4.9,
+      "reviews": 9,
+      "active": true,
+      "freeShip": false,
+      "featured": false,
+      "tags": [],
+      "features": [
+        "Pletismograma en pantalla",
+        "Alarmas configurables",
+        "Batería recargable USB-C",
+        "4 direcciones de lectura"
+      ],
+      "includes": [
+        "Oxímetro",
+        "Cable USB-C",
+        "Correa",
+        "Manual"
+      ],
+      "specs": {
+        "Rango SpO2": "70–100%",
+        "Batería": "Recargable",
+        "Pantalla": "OLED giratoria",
+        "SKU": "OXI-PR02"
+      }
+    },
+    {
+      "id": "p11",
+      "name": "Termómetro Infrarrojo Sin Contacto",
+      "cat": "Termómetros",
+      "short": "Medición higiénica a distancia.",
+      "desc": "Termómetro infrarrojo sin contacto con lectura en 1 segundo, modo objeto y corporal, pantalla retroiluminada y memoria de 32 registros.",
+      "price": 149000,
+      "promo": null,
+      "stock": 0,
+      "sku": "TER-IR03",
+      "img": "termometro",
+      "rating": 4.7,
+      "reviews": 12,
+      "active": true,
+      "freeShip": false,
+      "featured": false,
+      "tags": [],
+      "features": [
+        "Lectura en 1 segundo",
+        "Sin contacto",
+        "Memoria de 32 registros",
+        "Alarma de fiebre"
+      ],
+      "includes": [
+        "Termómetro",
+        "Manual",
+        "2 pilas AAA"
+      ],
+      "specs": {
+        "Distancia": "1–5 cm",
+        "Precisión": "±0,2 °C",
+        "Memoria": "32",
+        "SKU": "TER-IR03"
+      }
+    },
+    {
+      "id": "p12",
+      "name": "Kit Glucometría Completo",
+      "cat": "Glucómetros",
+      "short": "Medidor + 100 tiras + estuche.",
+      "desc": "Set completo de control glucémico con medidor, 100 tiras, 100 lancetas, lancetero, soluciones de control y estuche organizador.",
+      "price": 269000,
+      "promo": null,
+      "stock": 8,
+      "sku": "GLU-KT100",
+      "img": "glucometro",
+      "rating": 4.8,
+      "reviews": 8,
+      "active": true,
+      "freeShip": true,
+      "featured": false,
+      "tags": [],
+      "features": [
+        "100 tiras y 100 lancetas",
+        "Solución de control",
+        "Estuche organizador",
+        "Conexión a app"
+      ],
+      "includes": [
+        "Glucómetro",
+        "100 tiras",
+        "100 lancetas",
+        "Estuche"
+      ],
+      "specs": {
+        "Tiras": "100 unidades",
+        "Memoria": "800 registros",
+        "SKU": "GLU-KT100"
+      }
+    }
+  ],
+  "combos": [
+    {
+      "id": "c1",
+      "name": "Kit Semiología",
+      "desc": "Estetoscopio + esfigmomanómetro + oxímetro. Lo esencial para la evaluación clínica.",
+      "imgs": [
+        "bic-black",
+        "esfigmo",
+        "oximetro"
+      ],
+      "price": 629000,
+      "old": 727000,
+      "sku": "COM-SEM",
+      "items": [
+        "Estetoscopio BIC Eternity III · Total Black",
+        "Esfigmomanómetro Aneroide Pro",
+        "Oxímetro Fingertip Digital"
+      ],
+      "stock": 6
+    },
+    {
+      "id": "c2",
+      "name": "Kit Prácticas Clínicas",
+      "desc": "Pensado para estudiantes: auscultación, temperatura y saturación en un solo pedido.",
+      "imgs": [
+        "bic-rosa",
+        "termometro",
+        "oximetro"
+      ],
+      "price": 469000,
+      "old": 537000,
+      "sku": "COM-PRA",
+      "items": [
+        "Estetoscopio BIC Eternity III · Rosa / Rainbow",
+        "Termómetro Digital Clínico",
+        "Oxímetro Fingertip Digital"
+      ],
+      "stock": 9
+    },
+    {
+      "id": "c3",
+      "name": "Kit Sutura Completo",
+      "desc": "Kit avanzado de 32 piezas con hilos adicionales para práctica intensiva.",
+      "imgs": [
+        "sutura",
+        "sutura",
+        "sutura"
+      ],
+      "price": 389000,
+      "old": 449000,
+      "sku": "COM-SUT",
+      "items": [
+        "Kit de Sutura Avanzado — 32 piezas",
+        "Set adicional de hilos de entrenamiento"
+      ],
+      "stock": 5
+    }
+  ],
+  "promotions": [
+    {
+      "id": "pr1",
+      "name": "Semana InMed",
+      "percent": 15,
+      "start": "2026-11-01",
+      "end": "2026-11-10",
+      "productIds": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "active": true
+    }
+  ],
+  "posts": [
+    {
+      "id": "b1",
+      "title": "Cómo elegir tu primer estetoscopio",
+      "cat": "Estetoscopios",
+      "img": "bic-rosa",
+      "summary": "Doble o simple campana, largo del tubo, olivas y sensibilidad: qué mirar antes de comprar.",
+      "date": "2026-10-28",
+      "active": true,
+      "slug": "como-elegir-estetoscopio"
+    },
+    {
+      "id": "b2",
+      "title": "Cómo medir correctamente la presión arterial",
+      "cat": "Presión arterial",
+      "img": "esfigmo",
+      "summary": "Posición, brazalete, reposo y errores frecuentes que alteran la lectura.",
+      "date": "2026-10-21",
+      "active": true,
+      "slug": "medir-presion-arterial"
+    },
+    {
+      "id": "b3",
+      "title": "Valores normales de SpO2 y cuándo consultar",
+      "cat": "Oxímetros",
+      "img": "oximetro",
+      "summary": "Guía práctica de interpretación y limitaciones del oxímetro de dedo.",
+      "date": "2026-10-14",
+      "active": true,
+      "slug": "valores-normales-spo2"
+    },
+    {
+      "id": "b4",
+      "title": "Tipos de hilos de sutura y sus usos",
+      "cat": "Sutura",
+      "img": "sutura",
+      "summary": "Absorbibles, no absorbibles, calibres y agujas: la guía para tus prácticas.",
+      "date": "2026-10-07",
+      "active": true,
+      "slug": "tipos-de-hilos-de-sutura"
+    },
+    {
+      "id": "b5",
+      "title": "Cómo utilizar un glucómetro en casa",
+      "cat": "Glucómetros",
+      "img": "glucometro",
+      "summary": "Paso a paso para una medición confiable y cuidado de las tiras.",
+      "date": "2026-09-30",
+      "active": true,
+      "slug": "como-usar-un-glucometro"
+    },
+    {
+      "id": "b6",
+      "title": "Tipos de termómetros clínicos",
+      "cat": "Termómetros",
+      "img": "termometro",
+      "summary": "Digital, infrarrojo y de contacto: ventajas y cuándo conviene cada uno.",
+      "date": "2026-09-23",
+      "active": true,
+      "slug": "tipos-de-termometros"
+    }
+  ]
+}
