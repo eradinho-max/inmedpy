@@ -580,6 +580,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .section-head{align-items:flex-start}
 }
 </style>
+<script src="/supabase-config.js"></script>
 </head>
 <body>
 
@@ -1052,7 +1053,27 @@ function loadCart(){ try{const c=JSON.parse(ST.get('inmed_cart_v1')||'[]'); retu
 let cart=loadCart();
 const saveCart=()=>ST.set('inmed_cart_v1',JSON.stringify(cart));
 
+
 const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[]};
+
+/* ---------- catálogo remoto Supabase ---------- */
+async function syncRemoteStore(){
+  const cfg=window.INMED_SUPABASE||{};
+  if(!cfg.url||!cfg.key) return false;
+  try{
+    const r=await fetch(cfg.url+'/rest/v1/store_state?id=eq.main&select=data',{
+      headers:{apikey:cfg.key,Authorization:'Bearer '+cfg.key,Accept:'application/json'}
+    });
+    if(!r.ok) return false;
+    const rows=await r.json();
+    const remote=rows&&rows[0]&&rows[0].data;
+    if(!remote||!Array.isArray(remote.products)||!remote.settings) return false;
+    const localLeads=Array.isArray(DB.leads)?DB.leads:[];
+    DB=Object.assign({},remote,{leads:localLeads});
+    Object.assign(IMG,DB.customImages||{});
+    return true;
+  }catch(e){ return false; }
+}
 
 /* ---------- utilidades de negocio ---------- */
 function activePromoFor(p){
@@ -1792,8 +1813,8 @@ function route(){
   renderStore();window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
-route();
-setInterval(renderCountdown,1000);
+async function boot(){ await syncRemoteStore(); route(); setInterval(renderCountdown,1000); }
+boot();
 })();
 </script>
 </body>
