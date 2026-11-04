@@ -620,64 +620,154 @@
   ],
   "posts": [
     {
-      "id": "b1",
-      "title": "Cómo elegir tu primer estetoscopio",
-      "cat": "Estetoscopios",
-      "img": "bic-rosa",
-      "summary": "Doble o simple campana, largo del tubo, olivas y sensibilidad: qué mirar antes de comprar.",
-      "date": "2026-10-28",
-      "active": true,
-      "slug": "como-elegir-estetoscopio"
-    },
-    {
-      "id": "b2",
-      "title": "Cómo medir correctamente la presión arterial",
-      "cat": "Presión arterial",
-      "img": "esfigmo",
-      "summary": "Posición, brazalete, reposo y errores frecuentes que alteran la lectura.",
-      "date": "2026-10-21",
-      "active": true,
-      "slug": "medir-presion-arterial"
-    },
-    {
-      "id": "b3",
-      "title": "Valores normales de SpO2 y cuándo consultar",
-      "cat": "Oxímetros",
-      "img": "oximetro",
-      "summary": "Guía práctica de interpretación y limitaciones del oxímetro de dedo.",
-      "date": "2026-10-14",
-      "active": true,
-      "slug": "valores-normales-spo2"
-    },
-    {
-      "id": "b4",
-      "title": "Tipos de hilos de sutura y sus usos",
+      "id": "old01",
+      "title": "Tipos de sutura: guía para estudiantes de Medicina",
       "cat": "Sutura",
-      "img": "sutura",
-      "summary": "Absorbibles, no absorbibles, calibres y agujas: la guía para tus prácticas.",
-      "date": "2026-10-07",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/tipos-de-sutura.webp",
+      "summary": "Guía práctica sobre técnicas de sutura y sus principales aplicaciones.",
+      "date": null,
       "active": true,
-      "slug": "tipos-de-hilos-de-sutura"
+      "slug": "tipos-de-sutura.html"
     },
     {
-      "id": "b5",
-      "title": "Cómo utilizar un glucómetro en casa",
-      "cat": "Glucómetros",
-      "img": "glucometro",
-      "summary": "Paso a paso para una medición confiable y cuidado de las tiras.",
-      "date": "2026-09-30",
+      "id": "old02",
+      "title": "Instrumental quirúrgico básico: guía completa",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/instrumental-quirurgico-basico.webp",
+      "summary": "Instrumental esencial para prácticas quirúrgicas y de sutura.",
+      "date": null,
       "active": true,
-      "slug": "como-usar-un-glucometro"
+      "slug": "instrumental-quirurgico-basico.html"
     },
     {
-      "id": "b6",
-      "title": "Tipos de termómetros clínicos",
-      "cat": "Termómetros",
-      "img": "termometro",
-      "summary": "Digital, infrarrojo y de contacto: ventajas y cuándo conviene cada uno.",
-      "date": "2026-09-23",
+      "id": "old03",
+      "title": "Práctica de sutura para estudiantes: guía completa",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/practica-de-sutura.webp",
+      "summary": "Orientaciones para entrenar suturas de forma progresiva y organizada.",
+      "date": null,
       "active": true,
-      "slug": "tipos-de-termometros"
+      "slug": "practica-de-sutura-para-estudiantes.html"
+    },
+    {
+      "id": "old04",
+      "title": "Errores frecuentes al suturar: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/errores-frecuentes.webp",
+      "summary": "Errores comunes durante la práctica de sutura y cómo evitarlos.",
+      "date": null,
+      "active": true,
+      "slug": "errores-frecuentes-al-suturar.html"
+    },
+    {
+      "id": "old05",
+      "title": "Piel simuladora para sutura: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/piel-simuladora.webp",
+      "summary": "Cómo utilizar piel simuladora para desarrollar técnica y precisión.",
+      "date": null,
+      "active": true,
+      "slug": "piel-simuladora.html"
+    },
+    {
+      "id": "old06",
+      "title": "Porta agujas: guía para estudiantes",
+      "cat": "Instrumental",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/porta-agujas.webp",
+      "summary": "Uso correcto del porta agujas durante la técnica de sutura.",
+      "date": null,
+      "active": true,
+      "slug": "porta-agujas.html"
+    },
+    {
+      "id": "old07",
+      "title": "Nudos quirúrgicos: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/nudos-quirurgicos.webp",
+      "summary": "Principios y técnicas para practicar nudos quirúrgicos.",
+      "date": null,
+      "active": true,
+      "slug": "nudos-quirurgicos.html"
+    },
+    {
+      "id": "old08",
+      "title": "Punto colchonero: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/punto-colchonero.webp",
+      "summary": "Guía práctica de la técnica de punto colchonero.",
+      "date": null,
+      "active": true,
+      "slug": "punto-colchonero.html"
+    },
+    {
+      "id": "old09",
+      "title": "Sutura intradérmica: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/sutura-intradermica.webp",
+      "summary": "Fundamentos y ejecución de la sutura intradérmica.",
+      "date": null,
+      "active": true,
+      "slug": "sutura-intradermica.html"
+    },
+    {
+      "id": "old10",
+      "title": "Sutura continua: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/sutura-continua.webp",
+      "summary": "Conceptos esenciales para aprender y practicar sutura continua.",
+      "date": null,
+      "active": true,
+      "slug": "sutura-continua.html"
+    },
+    {
+      "id": "old11",
+      "title": "Punto simple de sutura: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/punto-simple.webp",
+      "summary": "Paso a paso del punto simple, base del entrenamiento en sutura.",
+      "date": null,
+      "active": true,
+      "slug": "punto-simple.html"
+    },
+    {
+      "id": "old12",
+      "title": "Kit de sutura para medicina: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/kit-sutura-medicina.webp",
+      "summary": "Qué debe incluir un kit de sutura orientado a estudiantes de Medicina.",
+      "date": null,
+      "active": true,
+      "slug": "kit-de-sutura-para-medicina.html"
+    },
+    {
+      "id": "old13",
+      "title": "Materiales de sutura: guía completa para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/materiales-sutura.webp",
+      "summary": "Principales materiales utilizados en sutura y sus características.",
+      "date": null,
+      "active": true,
+      "slug": "materiales-de-sutura.html"
+    },
+    {
+      "id": "old14",
+      "title": "Cómo aprender sutura desde cero: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/como-aprender-sutura.webp",
+      "summary": "Ruta práctica para comenzar el entrenamiento de sutura desde cero.",
+      "date": null,
+      "active": true,
+      "slug": "como-aprender-sutura.html"
+    },
+    {
+      "id": "old15",
+      "title": "Hilo de sutura: guía para estudiantes",
+      "cat": "Sutura",
+      "img": "https://inmed-py.github.io/kit-de-sutura-paraguay/img/blog/hilo-de-sutura.webp",
+      "summary": "Conceptos básicos sobre hilos de sutura, calibres y materiales.",
+      "date": null,
+      "active": true,
+      "slug": "hilo-de-sutura.html"
     }
   ]
 }
