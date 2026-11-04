@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>InMed | Equipamiento médico en Paraguay</title>
+<meta name="inmed-build" content="public-storefront-no-admin">
 <meta name="description" content="Equipamiento médico para estudiantes, profesionales y cuidado en casa. Estetoscopios, kits de sutura, oxímetros y más. Envíos a todo Paraguay.">
 <meta name="theme-color" content="#D90429">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23D90429'/%3E%3Cpath d='M27 12h10v15h15v10H37v15H27V37H12V27h15z' fill='white'/%3E%3C/svg%3E">
@@ -639,7 +640,6 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
         <div class="search-drop" id="searchDrop" hidden></div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="btnAdmin" title="Panel administrativo" aria-label="Panel administrativo"><svg class="ic"><use href="#i-user"/></svg></button>
         <button class="icon-btn" id="btnCart" title="Carrito" aria-label="Abrir carrito">
           <svg class="ic"><use href="#i-cart"/></svg><span class="cart-count" id="cartCount">0</span>
         </button>
@@ -850,7 +850,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
           </div>
         </div>
         <div><h4>Productos</h4><ul id="footerCats"></ul></div>
-        <div><h4>InMed</h4><ul><li><a href="#inicio">Inicio</a></li><li><a href="#combos">Combos</a></li><li><a href="#ofertas">Ofertas</a></li><li><a href="#blog">Blog</a></li><li><a href="#/" id="footerNosotros">Nosotros</a></li><li><a href="#/" id="footerContacto">Contacto</a></li><li><a href="#/admin">Panel administrativo</a></li></ul></div>
+        <div><h4>InMed</h4><ul><li><a href="#inicio">Inicio</a></li><li><a href="#combos">Combos</a></li><li><a href="#ofertas">Ofertas</a></li><li><a href="#blog">Blog</a></li><li><a href="#/" id="footerNosotros">Nosotros</a></li><li><a href="#/" id="footerContacto">Contacto</a></li></ul></div>
         <div><h4>Contacto</h4><ul class="footer-contact">
           <li><svg class="ic" style="width:15px;height:15px"><use href="#i-wa"/></svg><span id="footerPhone"></span></li>
           <li><svg class="ic" style="width:15px;height:15px"><use href="#i-mail"/></svg><span id="footerMail"></span></li>
@@ -877,11 +877,11 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
       </div>
       <h2>Acceso al panel</h2><p>Gestioná productos, stock, promociones y pedidos.</p>
       <form id="loginForm">
-        <div class="field" style="margin-bottom:14px"><label>Correo electrónico</label><input type="email" id="loginEmail" required placeholder="admin@inmed.com"></div>
+        <div class="field" style="margin-bottom:14px"><label>Correo electrónico</label><input type="email" id="loginEmail" required placeholder="correo administrativo"></div>
         <div class="field" style="margin-bottom:20px"><label>Contraseña</label><input type="password" id="loginPass" required placeholder="••••••••"></div>
         <button class="btn btn-primary btn-block" type="submit">INGRESAR</button>
       </form>
-      <div class="demo-hint"><b>Demo:</b> <code>admin@inmed.com</code> / <code>inmed2026</code><br>Este panel funciona con datos locales del navegador (sin backend). Es la maqueta funcional de la V1.</div>
+      <div class="demo-hint"><b>Panel administrativo deshabilitado en el build público.</b><br>La administración será publicada en una ruta separada con autenticación real.</div>
       <div style="margin-top:18px"><a href="#/" class="link-arrow">← Volver a la tienda</a></div>
     </div>
   </div>
@@ -1606,8 +1606,7 @@ document.addEventListener('submit',e=>{
   const f=e.target;
   if(f.id==='loginForm'){
     e.preventDefault();
-    if($('#loginEmail').value.trim().toLowerCase()==='admin@inmed.com'&&$('#loginPass').value==='inmed2026'){ S.adminAuth=true;renderAdmin();toast('Bienvenido al panel InMed'); }
-    else toast('Credenciales incorrectas. Usá la cuenta demo.');
+    toast('Panel administrativo deshabilitado en el build público.');
     return;
   }
   if(f.id==='newsForm'){
@@ -1687,7 +1686,6 @@ document.addEventListener('click',e=>{
 
 /* --- enlaces y navegación --- */
 $('#btnCart').addEventListener('click',openCart);
-$('#btnAdmin').addEventListener('click',()=>{location.hash='#/admin';});
 $('#heroWhats').addEventListener('click',()=>openWA('Hola InMed 👋, quiero ver el catálogo y recibir asesoría para elegir mi equipamiento médico.'));
 $('#faqWhats').addEventListener('click',()=>openWA('Hola InMed 👋, tengo una consulta sobre los productos y los envíos. ¿Podés ayudarme?'));
 $('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed 👋, quiero hacer una consulta sobre el catálogo.');});
@@ -1711,14 +1709,14 @@ $('#adminExit').addEventListener('click',()=>{location.hash='#/';});
 
 /* --- router --- */
 function route(){
-  const mode=location.hash.indexOf('#/admin')===0?'admin':'store';
+  const mode='store';
+  if(location.hash.indexOf('#/admin')===0){ history.replaceState(null,'',location.pathname+location.search+'#/'); }
   if(mode===S.mode) return;
   S.mode=mode;
-  $('#store').hidden=mode==='admin'; $('#admin').hidden=mode!=='admin';
-  $('#waFloat').style.display=mode==='admin'?'none':'';
+  $('#store').hidden=false; $('#admin').hidden=true;
+  $('#waFloat').style.display='';
   closeAll();
-  if(mode==='admin'){renderAdmin();window.scrollTo(0,0);}
-  else{renderStore();window.scrollTo(0,0);}
+  renderStore();window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
 route();
