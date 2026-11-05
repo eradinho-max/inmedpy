@@ -51,35 +51,72 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 <script>
 (()=>{'use strict';
 const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
-let token=null,user=null,DB=null,tab='products',dirty=false;
-const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['json','Respaldo JSON']];
+let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null;
+const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Gs. '+Math.round(Number(n)||0).toLocaleString('es-PY');
 function msg(el,text,kind='notice'){el.innerHTML='<div class="'+kind+'">'+esc(text)+'</div>'}
 function apiHeaders(auth=true){const h={apikey:CFG.key,'Content-Type':'application/json'};if(auth&&token)h.Authorization='Bearer '+token;return h}
-async function req(path,opt={}){const r=await fetch(CFG.url+path,{...opt,headers:{...apiHeaders(opt.auth!==false),...(opt.headers||{})}});if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));return r.status===204?null:r.json()}
+function setSession(j){
+ token=j.access_token;refreshToken=j.refresh_token||refreshToken;
+ expiry=Date.now()+Math.max(60,Number(j.expires_in||3600)-90)*1000;
+ sessionStorage.setItem('inmed_admin_session',JSON.stringify({access_token:token,refresh_token:refreshToken,expires_at:expiry}));
+ sessionStorage.removeItem('inmed_admin_token');
+}
+function clearSession(){token=null;refreshToken=null;expiry=0;user=null;sessionStorage.removeItem('inmed_admin_session');sessionStorage.removeItem('inmed_admin_token')}
+async function ensureToken(force=false){
+ if(!force&&token&&Date.now()<expiry)return;
+ if(!refreshToken)throw new Error('Sesión vencida. Inicia sesión nuevamente.');
+ if(!refreshing)refreshing=(async()=>{
+  const r=await fetch(CFG.url+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refreshToken})});
+  if(!r.ok){clearSession();throw new Error('Sesión vencida. Inicia sesión nuevamente.')}
+  setSession(await r.json());
+ })().finally(()=>{refreshing=null});
+ await refreshing;
+}
+async function req(path,opt={}){
+ const auth=opt.auth!==false;
+ if(auth)await ensureToken();
+ const send=()=>fetch(CFG.url+path,{...opt,headers:{...apiHeaders(auth),...(opt.headers||{})}});
+ let r=await send();
+ if(auth&&r.status===401){await ensureToken(true);r=await send();}
+ if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
+ return r.status===204?null:r.json();
+}
 async function login(email,password){
  const r=await fetch(CFG.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
  if(!r.ok) throw new Error('Correo o contraseña inválidos.');
- const j=await r.json();token=j.access_token;user=j.user;
+ const j=await r.json();setSession(j);user=j.user;
  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
- if(!rows.length){token=null;user=null;throw new Error('La cuenta existe, pero no está autorizada como administradora de InMed.');}
- sessionStorage.setItem('inmed_admin_token',j.access_token);
+ if(!rows.length){clearSession();throw new Error('La cuenta existe, pero no está autorizada como administradora de InMed.');}
 }
 async function loadStore(){
  const rows=await req('/rest/v1/store_state?id=eq.main&select=data,updated_at');
  if(!rows.length)throw new Error('No existe store_state/main');
- DB=rows[0].data; $('#syncStatus').textContent='Sincronizado · '+new Date(rows[0].updated_at).toLocaleString('es-PY');
+ DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+}
+function validateStore(){
+ if(!DB||!Array.isArray(DB.products)||!Array.isArray(DB.categories))throw new Error('El catálogo no tiene una estructura válida.');
+ const ids=new Set();
+ for(const p of DB.products){
+  if(!p.id||ids.has(p.id))throw new Error('Hay productos sin ID o con ID repetido.');
+  ids.add(p.id);
+  if(!Number.isFinite(Number(p.price))||Number(p.price)<0||!Number.isFinite(Number(p.stock))||Number(p.stock)<0)throw new Error('Precio o stock inválido en '+(p.name||p.id));
+ }
 }
 async function saveStore(){
- if(!DB)return;
+ if(!DB||!dirty)return;
+ validateStore();
  $('#syncStatus').textContent='Guardando…';
- await req('/rest/v1/store_state?id=eq.main',{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
- dirty=false;$('#syncStatus').textContent='Guardado en Supabase · '+new Date().toLocaleString('es-PY');
+ const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
+ const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
+ if(!Array.isArray(rows)||rows.length!==1)throw new Error('El catálogo fue modificado desde otra sesión. No se sobrescribió. Copia tu respaldo JSON y recarga.');
+ lastSyncedAt=rows[0].updated_at;dirty=false;
+ $('#syncStatus').textContent='Guardado en Supabase · '+new Date(lastSyncedAt).toLocaleString('es-PY');
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
-function render(){renderTabs(); if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else renderJSON();}
+function render(){renderTabs(); if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
 function pImage(p){return /^https?:/i.test(p.img||'')?p.img:''}
 function renderProducts(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Productos</h2><p class="muted">Precio, stock, promoción, foto y estado.</p></div><button class="btn primary" id="addProduct">+ NUEVO</button></div><div class="list">'+
@@ -94,18 +131,18 @@ function renderProducts(){
  '<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
  '<div class="row between" style="margin-top:12px"><span class="badge '+((p.stock||0)<=0?'off':'')+'">'+((p.stock||0)<=0?'Sin stock':money(p.promo||p.price))+'</span><button class="btn danger" data-delete-product="'+i+'">Eliminar</button></div>'+
  '</div></div></div>').join('')+'</div>';
- $('#addProduct').onclick=()=>{DB.products.push({id:'p'+Date.now(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
+ $('#addProduct').onclick=()=>{collect();DB.products.push({id:'p'+Date.now(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
 }
 function field(label,id,val,type='text'){return '<div class="field"><label>'+label+'</label><input id="'+id+'" type="'+type+'" value="'+esc(val??'')+'"></div>'}
 function renderCategories(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
  (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+field('ID','c_id_'+i,c.id)+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
- $('#addCat').onclick=()=>{DB.categories.push({id:'Nueva categoría',name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
+ $('#addCat').onclick=()=>{collect();DB.categories.push({id:'Nueva categoría',name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
  (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+'</div><div class="field" style="margin-top:12px"><label>IDs de productos separados por coma</label><input id="pr_products_'+i+'" value="'+esc((p.productIds||[]).join(','))+'"></div><div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div></div>').join('')+'</div>';
- $('#addPromo').onclick=()=>{DB.promotions.push({id:'pr'+Date.now(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
+ $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr'+Date.now(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
 function renderBanners(){
  const b=DB.banners||{};
@@ -116,6 +153,23 @@ function renderBanners(){
 function renderSettings(){
  const s=DB.settings||{};
  $('#content').innerHTML='<div class="card"><h2>Configuración</h2><div class="grid">'+field('Nombre','s_name',s.storeName)+field('WhatsApp','s_whatsapp',s.whatsapp)+field('Teléfono visible','s_phone',s.phone)+field('Correo','s_email',s.email)+field('Envío gratis desde','s_ship',s.freeShipMin,'number')+'</div></div>';
+}
+function renderAccount(){
+ $('#content').innerHTML='<div class="card" style="max-width:680px"><h2>Mi cuenta</h2><p class="muted">Cuenta autorizada: '+esc(user?.email||'')+'. Puedes cambiar tu contraseña sin modificar la tienda.</p>'+
+ '<form id="changePasswordForm"><div class="field"><label for="oldPass">Contraseña actual</label><input id="oldPass" type="password" autocomplete="current-password" required></div>'+
+ '<div class="grid" style="margin-top:14px"><div class="field"><label for="newPass">Nueva contraseña (mínimo 12 caracteres)</label><input id="newPass" type="password" autocomplete="new-password" minlength="12" required></div>'+
+ '<div class="field"><label for="repeatPass">Repetir nueva contraseña</label><input id="repeatPass" type="password" autocomplete="new-password" minlength="12" required></div></div>'+
+ '<button class="btn primary" style="margin-top:16px">CAMBIAR CONTRASEÑA</button><div id="accountMsg" role="status" aria-live="polite"></div></form></div>';
+ $('#changePasswordForm').onsubmit=async e=>{
+  e.preventDefault();const box=$('#accountMsg'),old=$('#oldPass').value,next=$('#newPass').value,repeat=$('#repeatPass').value;
+  if(next.length<12||next!==repeat){msg(box,'La nueva contraseña debe tener al menos 12 caracteres y coincidir.','notice err');return;}
+  try{
+   await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:next,current_password:old})});
+   msg(box,'Contraseña actualizada. Vuelve a iniciar sesión.','notice ok');
+   $('#changePasswordForm').reset();
+   await signOut(true);
+  }catch(err){msg(box,'No se pudo cambiar la contraseña: '+err.message,'notice err')}
+ };
 }
 function renderJSON(){
  $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Vista técnica. Útil para copiar un respaldo manual antes de cambios grandes.</p><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn primary" style="margin-top:12px">APLICAR JSON</button></div>';
@@ -136,9 +190,9 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
- const d=e.target.closest('[data-delete-product]');if(d){if(confirm('¿Eliminar este producto?')){DB.products.splice(Number(d.dataset.deleteProduct),1);mark();renderProducts()}return}
+ const d=e.target.closest('[data-delete-product]');if(d){if(confirm('¿Eliminar este producto?')){collect();DB.products.splice(Number(d.dataset.deleteProduct),1);mark();renderProducts()}return}
 });
-document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))mark()});
+document.addEventListener('input',e=>{if($('#adminView').contains(e.target)&&!e.target.closest('#changePasswordForm')&&e.target.matches('input,textarea,select'))mark()});
 document.addEventListener('change',async e=>{
  const inp=e.target.closest('[data-upload]');if(!inp||!inp.files?.[0])return;
  const f=inp.files[0],kind=inp.dataset.upload;
@@ -149,8 +203,27 @@ document.addEventListener('change',async e=>{
 });
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const box=$('#loginMsg');try{await login($('#email').value,$('#password').value);await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(err){msg(box,err.message,'notice err')}});
 $('#saveAll').onclick=async()=>{try{collect();await saveStore();render()}catch(err){alert('No se pudo guardar: '+err.message)}};
-$('#logout').onclick=()=>{sessionStorage.removeItem('inmed_admin_token');location.reload()};
-(async()=>{const stored=sessionStorage.getItem('inmed_admin_token');if(!stored)return;token=stored;try{const u=await req('/auth/v1/user');user=u;const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');if(!rows.length)throw 0;await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(e){sessionStorage.removeItem('inmed_admin_token')}})();
+async function signOut(skipConfirm=false){
+ if(!skipConfirm&&dirty&&!confirm('Hay cambios sin guardar. ¿Salir de todas formas?'))return;
+ try{if(token)await req('/auth/v1/logout',{method:'POST'})}catch(e){}
+ clearSession();dirty=false;location.reload();
+}
+$('#logout').onclick=()=>signOut();
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+(async()=>{
+ sessionStorage.removeItem('inmed_admin_token');
+ let saved;try{saved=JSON.parse(sessionStorage.getItem('inmed_admin_session')||'null')}catch(e){}
+ if(!saved?.refresh_token)return;
+ token=saved.access_token;refreshToken=saved.refresh_token;expiry=Number(saved.expires_at)||0;
+ try{
+  await ensureToken();
+  user=await req('/auth/v1/user');
+  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
+  if(!rows.length)throw new Error('Sin permiso administrativo');
+  await loadStore();
+  $('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render();
+ }catch(e){clearSession()}
+})();
 })();
 </script>
 </body>
