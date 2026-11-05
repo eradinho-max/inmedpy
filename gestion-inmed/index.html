@@ -164,7 +164,9 @@ function renderAccount(){
   e.preventDefault();const box=$('#accountMsg'),old=$('#oldPass').value,next=$('#newPass').value,repeat=$('#repeatPass').value;
   if(next.length<12||next!==repeat){msg(box,'La nueva contraseña debe tener al menos 12 caracteres y coincidir.','notice err');return;}
   try{
-   await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:next,current_password:old})});
+   const check=await fetch(CFG.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email:user.email,password:old})});
+   if(!check.ok)throw new Error('La contraseña actual es incorrecta.');
+   await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:next})});
    msg(box,'Contraseña actualizada. Vuelve a iniciar sesión.','notice ok');
    $('#changePasswordForm').reset();
    await signOut(true);
