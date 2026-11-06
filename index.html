@@ -1,20 +1,27 @@
 <!doctype html>
 <html lang="es-PY">
 <head>
-<!-- SEO/Analytics preservados do site original -->
+<!-- InMed: metadatos de la tienda nueva; el sitio de GitHub Pages sigue independiente. -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3YWWXYW6LT"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=window.gtag||gtag;gtag('js',new Date());gtag('config','G-3YWWXYW6LT');</script>
-<link rel="canonical" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<link rel="alternate" hreflang="es-PY" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<link rel="alternate" hreflang="x-default" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<meta property="og:locale" content="es_PY"><meta property="og:type" content="website"><meta property="og:site_name" content="InMed Soluciones Médicas"><meta property="og:url" content="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://inmedpy.vercel.app/">
+<link rel="alternate" hreflang="es-PY" href="https://inmedpy.vercel.app/">
+<link rel="alternate" hreflang="x-default" href="https://inmedpy.vercel.app/">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta property="og:locale" content="es_PY">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="InMed Soluciones Médicas">
+<meta property="og:url" content="https://inmedpy.vercel.app/">
+<meta property="og:title" content="InMed Paraguay | Kits de Sutura y Equipamiento Médico">
+<meta property="og:description" content="Kits de sutura, estetoscopios, oxímetros, tensiómetros y equipos médicos para estudiantes y profesionales en Paraguay. Catálogo y consultas por WhatsApp.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://inmedpy.vercel.app/#organizacion","name":"InMed Soluciones Médicas","url":"https://inmedpy.vercel.app/","description":"Equipamiento médico para estudiantes y profesionales de la salud en Paraguay."},{"@type":"WebSite","@id":"https://inmedpy.vercel.app/#sitio","url":"https://inmedpy.vercel.app/","name":"InMed Soluciones Médicas","inLanguage":"es-PY","publisher":{"@id":"https://inmedpy.vercel.app/#organizacion"}},{"@type":"WebPage","@id":"https://inmedpy.vercel.app/#inicio","url":"https://inmedpy.vercel.app/","name":"InMed Paraguay | Kits de Sutura y Equipamiento Médico","description":"Catálogo de equipamiento médico y kits de sutura en Paraguay.","isPartOf":{"@id":"https://inmedpy.vercel.app/#sitio"},"about":{"@id":"https://inmedpy.vercel.app/#organizacion"},"inLanguage":"es-PY"}]}</script>
 <script defer src="/site-analytics.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>InMed | Equipamiento médico en Paraguay</title>
+<title>InMed Paraguay | Kits de Sutura y Equipamiento Médico</title>
 <meta name="inmed-build" content="public-storefront-no-admin">
-<meta name="description" content="Equipamiento médico para estudiantes, profesionales y cuidado en casa. Estetoscopios, kits de sutura, oxímetros y más. Envíos a todo Paraguay.">
+<meta name="description" content="Kits de sutura, estetoscopios, oxímetros y equipos médicos para estudiantes y profesionales en Paraguay. Consultá el catálogo y comprá por WhatsApp.">
 <meta name="theme-color" content="#D90429">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23D90429'/%3E%3Cpath d='M27 12h10v15h15v10H37v15H27V37H12V27h15z' fill='white'/%3E%3C/svg%3E">
 <style>/* ============================================================
@@ -679,7 +686,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
       <div class="container hero-grid">
         <div class="hero-copy">
           <div class="eyebrow">Equipamiento médico InMed</div>
-          <h1 id="heroTitle"></h1>
+          <h1 id="heroTitle">Equipamiento médico para estudiantes y profesionales en Paraguay</h1>
           <p class="lead" id="heroSub"></p>
           <div class="hero-ctas">
             <a href="#productos" class="btn btn-primary" data-scroll="productos">VER PRODUCTOS <svg class="ic" style="width:16px;height:16px"><use href="#i-arrow"/></svg></a>
@@ -692,7 +699,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
           </div>
         </div>
         <div class="hero-visual">
-          <img id="heroImg" alt="Set de equipamiento médico InMed: estetoscopio, oxímetro, esfigmomanómetro, termómetro y kit de sutura">
+          <img id="heroImg" fetchpriority="high" loading="eager" decoding="async" alt="Equipamiento médico de InMed: estetoscopio, oxímetro, tensiómetro, termómetro y kit de sutura">
           <div class="float-card float-a"><span class="dot"></span><span>En stock<small>Entrega inmediata</small></span></div>
           <div class="float-card float-b"><span class="dot"></span><span id="floatBText">Envío gratis*<small>En compras seleccionadas</small></span></div>
           <div class="hero-badge" id="heroBadge"></div>
@@ -1200,7 +1207,7 @@ function renderStore(){
   $('#footerMail').closest('li').hidden=!String(C.email||'').trim();
   $('#footerCopy').textContent=C.copy;
   $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
-  document.title=C.storeName+' | Equipamiento médico en Paraguay';
+  document.title=(C.storeName||'InMed')+' Paraguay | Kits de Sutura y Equipamiento Médico';
   renderCategories(); renderFilters(); renderProducts(); renderBIC(); renderCombos(); renderPosts(); renderFAQ(); renderCountdown(); renderCart();
 }
 function renderCategories(){
@@ -1232,7 +1239,7 @@ function productCard(p){
     <div class="prod-media" data-act="open-pdp" data-id="${p.id}">
       <div class="prod-badges">${badges}</div>
       <button class="prod-fav ${fav?'on':''}" data-act="fav" data-id="${p.id}" aria-label="Favorito">${ic('heart','width:16px;height:16px')}</button>
-      <img src="${img(p.img)}" alt="${esc(p.name)}" loading="lazy">
+      <img src="${img(p.img)}" alt="${esc(p.name)}" loading="lazy" decoding="async">
     </div>
     <div class="prod-body">
       <div class="prod-cat">${esc(publicCategoryName(p.cat))}</div>
