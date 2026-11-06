@@ -1067,7 +1067,7 @@ let cart=loadCart();
 const saveCart=()=>ST.set('inmed_cart_v1',JSON.stringify(cart));
 
 
-const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[]};
+const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[],catalogReady:false,checkoutBusy:false};
 
 /* ---------- catálogo remoto Supabase ---------- */
 async function syncRemoteStore(){
@@ -1102,12 +1102,53 @@ function priceOf(p,v){
   return {cur:base,old:null,off:null};
 }
 const stockOf=(p,v)=> v? Number(v.stock) : Number(p.stock);
+function cartAvailability(it){
+  if(!S.catalogReady||!it||typeof it.id!=='string')return {ok:false,reason:'Catálogo no disponible'};
+  if(it.kind==='combo'){
+    const combo=(DB.combos||[]).find(x=>x.id===it.id&&x.active!==false);
+    const max=Math.floor(Number(combo?.stock));
+    return combo&&Number.isFinite(max)&&max>0?{ok:true,max}:{ok:false,reason:'Combo agotado o no disponible'};
+  }
+  const p=DB.products.find(x=>x.id===it.id&&x.active!==false);
+  if(!p)return {ok:false,reason:'Producto no disponible'};
+  const variants=p.variants||[];
+  const v=variants.length?variants.find(x=>x.name===it.variant):null;
+  if(variants.length&&!v)return {ok:false,reason:'Seleccioná una variante válida'};
+  const max=Math.floor(stockOf(p,v));
+  if(!Number.isFinite(max)||max<=0)return {ok:false,reason:'Sin stock'};
+  return {ok:true,max};
+}
+function reconcileCart(){
+ const original=JSON.stringify(cart),normalized=[];
+ for(const it of cart){
+  const available=cartAvailability(it);
+  if(!available.ok)continue;
+  const qty=Math.min(available.max,Math.max(1,Math.floor(Number(it.qty)||1)));
+  const kind=it.kind==='combo'?'combo':'product';
+  const key=it.id+'::'+(it.variant||'')+'::'+kind;
+  const existing=normalized.find(x=>x.id+'::'+(x.variant||'')+'::'+x.kind===key);
+  if(existing)existing.qty=Math.min(available.max,existing.qty+qty);
+  else normalized.push({id:it.id,variant:it.variant||'',qty,kind});
+ }
+ cart=normalized;
+ if(JSON.stringify(cart)!==original)saveCart();
+ return JSON.stringify(cart)!==original;
+}
 const activeProducts=()=>DB.products.filter(p=>p.active!==false);
-function waUrl(text){ return 'https://wa.me/'+(DB.settings.whatsapp||'').replace(/\D/g,'')+'?text='+encodeURIComponent(text); }
+function waUrl(text){
+ const digits=String(DB.settings?.whatsapp||'').replace(/\D/g,'');
+ if(!/^\d{8,15}$/.test(digits))return null;
+ return 'https://wa.me/'+digits+'?text='+encodeURIComponent(text);
+}
 function openWA(text,log){
-  if(log) addLead('Pedido WhatsApp','Cliente web',log.text,log.total);
-  try{ const w=window.open(waUrl(text),'_blank','noopener,noreferrer'); if(!w) toast('Si no se abrió WhatsApp, revisá los permisos de ventanas emergentes.'); }
-  catch(e){ toast('WhatsApp: '+waUrl(text).slice(0,60)+'…'); }
+ const url=waUrl(text);
+ if(!url){toast('El WhatsApp de la tienda no está configurado.');return false;}
+ // This only opens WhatsApp. The buyer must press Send; opening is not a completed order.
+ if(log)addLead('Apertura WhatsApp','Cliente web',log.text,log.total);
+ const a=document.createElement('a');
+ a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+ document.body.appendChild(a);a.click();a.remove();
+ return true;
 }
 function addLead(type,contact,items,total){
   DB.leads.unshift({id:uid(),type,contact,items,total:Number(total)||0,date:nowStr(),status:'Nuevo'});
@@ -1138,7 +1179,8 @@ function renderStore(){
   $('#newsText').textContent=B.newsText;
   $('#footerAbout').textContent=C.footer;
   $('#footerPhone').textContent=C.phone;
-  $('#footerMail').textContent=C.email;
+  $('#footerMail').textContent=C.email||'';
+  $('#footerMail').closest('li').hidden=!String(C.email||'').trim();
   $('#footerCopy').textContent=C.copy;
   $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
   document.title=C.storeName+' | Equipamiento médico en Paraguay';
@@ -1209,9 +1251,9 @@ function setFilter(f,scroll){
 function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 
 /* ---------- BIC Eternity ---------- */
-function bicProduct(){ return DB.products.find(p=>p.id==='p2')||DB.products[0]; }
+function bicProduct(){ return DB.products.find(p=>p.id==='p2'&&p.active!==false&&(p.variants||[]).length)||DB.products.find(p=>p.active!==false&&(p.variants||[]).length)||null; }
 function renderBIC(){
-  const p=bicProduct(), vs=p.variants||[];
+  const p=bicProduct(), vs=p?.variants||[];
   if(!vs.length){ $('#bic').hidden=true; return; }
   $('#bic').hidden=false;
   S.bic=Math.min(S.bic,vs.length-1);
@@ -1272,6 +1314,12 @@ function lineInfo(it){
   return {name:p.name+(v?' · '+v.name:''),img:v?v.img:p.img,price:pr.cur,sku:v?v.sku:p.sku,stock:stockOf(p,v)};
 }
 function renderCart(){
+  if(!S.catalogReady){
+    $('#cartCount').textContent=0;$('#drawerCount').textContent='(sin confirmar)';
+    $('#cartBody').innerHTML='<div class="cart-empty"><h3>Estamos verificando el catálogo</h3><p>Los precios y las existencias no están disponibles por el momento. Conservamos tu selección para volver a comprobarla cuando el catálogo esté disponible.</p></div>';
+    $('#cartFoot').innerHTML='<button class="btn btn-outline btn-block" data-close>VOLVER A LA TIENDA</button>';
+    return;
+  }
   const n=cart.reduce((a,b)=>a+b.qty,0);
   $('#cartCount').textContent=n; $('#drawerCount').textContent='('+n+')';
   if(!cart.length){
@@ -1290,24 +1338,34 @@ function renderCart(){
   const free=sub>=Number(DB.settings.freeShipMin);
   const ship=free?0:25000, total=sub+ship;
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
-    <div class="cart-total-row"><span>Envío</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
+    <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
     ${!free?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(DB.settings.freeShipMin-sub)} para envío gratis</div>`:''}
-    <div class="cart-total-row grand"><span>Total</span><span>${gs(total)}</span></div>
+    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"sin cargo según el mínimo de compra":gs(ship)}. InMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
 }
 function addToCart(id,variant,qty,kind){
-  qty=Math.max(1,Number(qty)||1);
-  const key=id+'::'+(variant||'')+'::'+(kind||'product');
-  const found=cart.find(c=>(c.id+'::'+(c.variant||'')+'::'+(c.kind||'product'))===key);
-  if(found) found.qty+=qty; else cart.push({id,variant:variant||'',qty,kind:kind||'product'});
-  saveCart(); renderCart(); toast('Producto agregado al pedido');
+ if(!S.catalogReady){toast('No podemos confirmar el catálogo ahora. Reintentá en unos instantes.');return false;}
+ const requested=Math.max(1,Math.floor(Number(qty)||1));
+ const type=kind==='combo'?'combo':'product';
+ const item={id,variant:variant||'',qty:requested,kind:type};
+ const available=cartAvailability(item);
+ if(!available.ok){toast(available.reason+'. Consultá por WhatsApp.');return false;}
+ const key=id+'::'+item.variant+'::'+type;
+ const found=cart.find(c=>(c.id+'::'+(c.variant||'')+'::'+(c.kind||'product'))===key);
+ const previous=found?found.qty:0;
+ const next=Math.min(available.max,previous+requested);
+ if(next<=previous){toast('Ya agregaste el máximo disponible de este producto.');return false;}
+ if(found)found.qty=next;else cart.push({id,variant:item.variant,qty:next,kind:type});
+ saveCart();renderCart();
+ toast(next<previous+requested?'Cantidad ajustada al stock disponible.':'Producto agregado al pedido');
+ return true;
 }
 function cartMessage(){
   const lines=cart.map(it=>{const x=lineInfo(it);return '• '+it.qty+'x '+(x?x.name:'Producto')+' — '+gs(x?x.price*it.qty:0)});
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
   const free=sub>=Number(DB.settings.freeShipMin), ship=free?0:25000;
-  return 'Hola InMed 👋, quiero realizar este pedido:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío: '+(free?'Gratis':gs(ship))+'\nTotal: '+gs(sub+ship)+'\n\n¿Podés confirmarme disponibilidad y entrega? ¡Gracias!';
+  return 'Hola InMed 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis según el mínimo de compra':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
 }
 function openCart(){ closeInfo(); $('#overlay').classList.add('show'); $('#cartDrawer').classList.add('show'); $('#productModal').classList.remove('show'); }
 function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').classList.remove('show'); $('#productModal').classList.remove('show'); $('#searchDrop').hidden=true; closeInfo(); }
@@ -1363,9 +1421,8 @@ function renderPDP(){
     <div class="related"><h3 style="font-size:15px">Productos relacionados</h3><div class="related-grid">${related.map(r=>`<div class="related-item" data-act="open-pdp" data-id="${r.id}"><img src="${img(r.img)}" alt=""><div><strong>${esc(r.name)}</strong><small>${gs(priceOf(r).cur)}</small></div></div>`).join('')}</div></div>`;
 }
 function pdpAdd(){
-  if(!S.pdp) return;
-  addToCart(S.pdp.id,S.pdp.variant,S.pdp.qty,'product');
-  closeAll(); openCart();
+  if(!S.pdp)return;
+  if(addToCart(S.pdp.id,S.pdp.variant,S.pdp.qty,'product')){closeAll();openCart();}
 }
 
 /* ---------- modal informativo (blog / nosotros) ---------- */
@@ -1584,7 +1641,7 @@ function postForm(p){
 /* ==========================================================================
    EVENTOS
    ========================================================================== */
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');
   const closeEl=e.target.closest('[data-close]');
   if(closeEl && !el){ closeAll(); return; }
@@ -1603,13 +1660,72 @@ document.addEventListener('click',e=>{
     case 'post': { const p=(DB.posts||[]).find(x=>x.id===id); if(p&&p.slug) window.location.href='/blog/'+p.slug; break; }
     case 'faq': el.parentElement.classList.toggle('open'); break;
     case 'close-info': closeAll(); break;
-    case 'qty': { const it=cart[i]; if(!it)break; it.qty+=Number(val); if(it.qty<=0)cart.splice(i,1); saveCart(); renderCart(); break; }
+    case 'qty': { const it=cart[i];if(!it)break;const available=cartAvailability(it);
+      if(!available.ok){cart.splice(i,1);toast('El artículo ya no está disponible.');}
+      else {const next=it.qty+Number(val);if(next<=0)cart.splice(i,1);
+      else if(next>available.max)toast('Cantidad máxima disponible: '+available.max);
+      else it.qty=next;}
+      saveCart();renderCart();break;}
     case 'remove': cart.splice(i,1); saveCart(); renderCart(); toast('Producto quitado'); break;
-    case 'checkout': { const msg=cartMessage(), sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0); openWA(msg,{text:msg,total:sub}); toast('Pedido enviado a WhatsApp'); break; }
+    case 'checkout': {
+      if(S.checkoutBusy)break;
+      if(!S.catalogReady||!cart.length){toast('El catálogo no está disponible para realizar pedidos.');break;}
+      S.checkoutBusy=true;el.disabled=true;
+      // Open a tab inside the click, before awaiting the stock check, to avoid popup blockers.
+      const pending=window.open('about:blank','_blank');
+      if(pending){pending.opener=null;try{pending.document.body.textContent='InMed: verificando disponibilidad y precios…';}catch(e){}}
+      const summary=()=>JSON.stringify(cart.map(it=>{
+        const x=lineInfo(it);
+        return {id:it.id,variant:it.variant,qty:it.qty,name:x?.name,price:x?.price,stock:cartAvailability(it).max};
+      }));
+      const before=summary();
+      try{
+        const updated=await syncRemoteStore();
+        if(!updated){
+          S.catalogReady=false;
+          if(pending)pending.close();
+          renderCart();toast('No se pudo verificar el catálogo. No se abrió ningún pedido.');break;
+        }
+        S.catalogReady=true;
+        const adjusted=reconcileCart();
+        const after=summary();
+        if(adjusted||after!==before||!cart.length){
+          if(pending)pending.close();
+          renderStore();
+          toast('Actualizamos precios o existencias. Revisá el pedido y pulsá finalizar nuevamente.');
+          break;
+        }
+        if(cart.some(it=>!cartAvailability(it).ok||it.qty>cartAvailability(it).max)){
+          if(pending)pending.close();
+          reconcileCart();renderStore();
+          toast('El stock cambió. Revisá el pedido nuevamente.');break;
+        }
+        const msg=cartMessage(),url=waUrl(msg);
+        if(!url){if(pending)pending.close();toast('WhatsApp no configurado.');break;}
+        const sub=cart.reduce((sum,it)=>{const x=lineInfo(it);return sum+(x?x.price*it.qty:0);},0);
+        addLead('Apertura WhatsApp','Cliente web',msg,sub);
+        if(pending){pending.location.replace(url);}
+        else {
+          const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+          document.body.appendChild(link);link.click();link.remove();
+        }
+        toast('WhatsApp abierto. Revisá y enviá el mensaje para solicitar tu pedido.');
+      }catch(err){
+        if(pending)pending.close();
+        toast('No pudimos verificar el pedido. Reintentá cuando el catálogo esté disponible.');
+      }finally{
+        S.checkoutBusy=false;el.disabled=false;
+      }
+      break;
+    }
     case 'pdp-img': { if(S.pdp){S.pdp.variant='';} const modal=$('#productModal'); const main=$('.pdp-main-img img'); if(main)main.src=img(val); $$('.pdp-thumbs button').forEach(b=>b.classList.toggle('active',b.dataset.val===val)); break; }
     case 'pdp-variant': if(S.pdp){S.pdp.variant=val;renderPDP();} break;
     case 'pdp-tab': if(S.pdp){S.pdp.tab=val;renderPDP();} break;
-    case 'pdp-qty': if(S.pdp){S.pdp.qty=Math.max(1,S.pdp.qty+Number(val));renderPDP();} break;
+    case 'pdp-qty': if(S.pdp){
+      const available=cartAvailability({id:S.pdp.id,variant:S.pdp.variant,kind:'product'});
+      S.pdp.qty=Math.max(1,Math.min(available.ok?available.max:1,S.pdp.qty+Number(val)));
+      renderPDP();
+    }break;
     case 'pdp-add': pdpAdd(); break;
     case 'pdp-wa': { if(!S.pdp)break; const p=DB.products.find(x=>x.id===S.pdp.id); const v=(p.variants||[]).find(x=>x.name===S.pdp.variant); const pr=priceOf(p,v); const msg='Hola InMed 👋, quiero comprar:\n\n• '+S.pdp.qty+'x '+p.name+(v?' · '+v.name:'')+' — '+gs(pr.cur*S.pdp.qty)+'\n\n¿Podés confirmarme disponibilidad y entrega?'; openWA(msg,{text:msg,total:pr.cur*S.pdp.qty}); break; }
     /* admin */
@@ -1826,7 +1942,29 @@ function route(){
   renderStore();window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
-async function boot(){ await syncRemoteStore(); route(); setInterval(renderCountdown,1000); }
+async function boot(){
+ const ok=await syncRemoteStore();
+ S.catalogReady=ok;
+ let cartAdjusted=false;
+ if(ok){cartAdjusted=reconcileCart();}
+ else {
+  // Never sell from hardcoded or locally cached demonstration prices when the source of truth is offline.
+  DB.products=[];DB.categories=[];DB.combos=[];DB.promotions=[];DB.posts=[];
+  if(DB.banners){DB.banners.showOffer=false;DB.banners.showHeroBadge=false;}
+ }
+ route();
+ if(!ok){
+  const notice=document.createElement('div');
+  notice.setAttribute('role','alert');
+  notice.style.cssText='padding:14px 18px;background:#fff7ed;color:#7c2d12;text-align:center;font-weight:700;border-bottom:1px solid #fed7aa;';
+  notice.textContent='Catálogo temporalmente indisponible. No mostramos precios ni existencias sin confirmación. ';
+  const button=document.createElement('button');
+  button.type='button';button.textContent='REINTENTAR';button.style.cssText='margin-left:10px;padding:7px 12px;border:1px solid #7c2d12;border-radius:8px;background:white;cursor:pointer';
+  button.addEventListener('click',()=>location.reload());
+  notice.appendChild(button);$('#store').prepend(notice);
+ }else if(cartAdjusted){toast('Actualizamos el pedido según el stock disponible.');}
+ setInterval(renderCountdown,1000);
+}
 boot();
 })();
 </script>
