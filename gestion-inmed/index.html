@@ -193,7 +193,7 @@ function renderBanners(){
  const b=DB.banners||{};
  $('#content').innerHTML='<div class="card"><h2>Banners</h2><div class="grid">'+
  field('Aviso superior','b_announcement',b.announcement)+field('Título hero','b_title',b.heroTitle)+field('Subtítulo hero','b_sub',b.heroSub)+field('Título oferta','b_offerTitle',b.offerTitle)+
- '</div><div class="field" style="margin-top:14px"><label>Banner principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. Conversión automática a WebP.</small><div id="hero_status"></div></div></div>';
+ '</div><div class="field" style="margin-top:14px"><label>Banner principal</label><div><img id="heroPreview" class="heroPreview" alt="Vista previa del banner" src="'+esc(DB.customImages?.hero||'')+'" '+(!DB.customImages?.hero?'style="display:none"':'')+'></div><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. Conversión automática a WebP. Después de enviar, pulsa GUARDAR CAMBIOS para publicar.</small><div id="hero_status"></div></div></div>';
 }
 function renderSettings(){
  const s=DB.settings||{};
@@ -320,8 +320,8 @@ document.addEventListener('change',async e=>{
  const inp=e.target.closest('[data-upload]');if(!inp||!inp.files?.[0])return;
  const f=inp.files[0],kind=inp.dataset.upload;
  try{
-   if(kind==='product'){const i=Number(inp.dataset.index),box=$('#upload_status_'+i);box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'products',1600,1600);DB.products[i].img=r.url;box.innerHTML='<div class="notice ok">WebP '+r.w+'×'+r.h+' · '+Math.round(r.old/1024)+' KB → '+Math.round(r.bytes/1024)+' KB</div>';mark();}
-   else {const box=$('#hero_status');box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'banners',1920,720);DB.customImages=DB.customImages||{};DB.customImages.hero=r.url;box.innerHTML='<div class="notice ok">WebP '+r.w+'×'+r.h+' · '+Math.round(r.bytes/1024)+' KB</div>';mark();}
+   if(kind==='product'){const i=Number(inp.dataset.index),box=$('#upload_status_'+i);box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'products',1600,1600);DB.products[i].img=r.url;const thumb=inp.closest('.item')?.querySelector('img.preview');if(thumb){thumb.src=r.url;thumb.style.visibility='visible'}box.innerHTML='<div class="notice ok">Imagen subida: WebP '+r.w+'×'+r.h+' · '+Math.round(r.old/1024)+' KB → '+Math.round(r.bytes/1024)+' KB. Pulsa GUARDAR CAMBIOS para publicar.</div>';mark();}
+   else {const box=$('#hero_status');box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'banners',1920,720);DB.customImages=DB.customImages||{};DB.customImages.hero=r.url;const preview=$('#heroPreview');if(preview){preview.src=r.url;preview.style.display='block'}box.innerHTML='<div class="notice ok">Banner subido: WebP '+r.w+'×'+r.h+' · '+Math.round(r.bytes/1024)+' KB. Pulsa GUARDAR CAMBIOS para publicar.</div>';mark();}
  }catch(err){alert('Error de imagen: '+err.message)}
 });
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const box=$('#loginMsg');try{await login($('#email').value,$('#password').value);await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(err){msg(box,err.message,'notice err')}});
