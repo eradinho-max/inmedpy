@@ -26,10 +26,33 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://vercel.live https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qozaarjaqonggtktqtxh.supabase.co https://*.google-analytics.com https://www.google-analytics.com https:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/gestion-inmed/(.*)",
+      "headers": [
         {
           "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/blog/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/blog",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
         }
       ]
     }
