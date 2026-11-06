@@ -134,6 +134,7 @@ function validateStore(data=DB){
  }
  for(const promo of data.promotions){
   if(!Number.isFinite(Number(promo.percent))||Number(promo.percent)<0||Number(promo.percent)>100)throw new Error('Descuento fuera de 0–100% en '+(promo.name||promo.id));
+  if(promo.start&&promo.end&&promo.end<promo.start)throw new Error('La fecha final es anterior al inicio en '+(promo.name||promo.id));
   if(promo.active&&!(promo.productIds||[]).every(id=>ids.has(id)))throw new Error('Promoción activa con productos inexistentes: '+(promo.name||promo.id));
  }
  return true;
@@ -165,7 +166,7 @@ function renderProducts(){
  '</div><div class="grid" style="margin-top:12px">'+
  field('Descripción corta','p_short_'+i,p.short)+
  '<div class="field"><label>Estado</label><select id="p_active_'+i+'"><option value="1" '+(p.active!==false?'selected':'')+'>Activo</option><option value="0" '+(p.active===false?'selected':'')+'>Oculto</option></select></div></div>'+
- textAreaField('Descripción completa','p_desc_'+i,p.desc)+'<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
+ textAreaField('Descripción completa','p_desc_'+i,p.desc)+textAreaField('Características (una por línea)','p_features_'+i,(p.features||[]).join('\n'))+textAreaField('Contenido del paquete (uno por línea)','p_includes_'+i,(p.includes||[]).join('\n'))+'<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
  '<div class="row between" style="margin-top:12px"><span class="badge '+((p.stock||0)<=0?'off':'')+'">'+((p.stock||0)<=0?'Sin stock':money(p.promo||p.price))+'</span><button class="btn danger" data-delete-product="'+i+'">Eliminar</button></div>'+
  '</div></div></div>').join('')+'</div>';
  $('#addProduct').onclick=()=>{collect();DB.products.push({id:'p-'+crypto.randomUUID(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
@@ -183,7 +184,7 @@ function renderCategories(){
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
- (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+
+ (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Inicio','pr_start_'+i,p.start,'date')+field('Fin','pr_end_'+i,p.end,'date')+
  '</div><div class="field" style="margin-top:12px"><label>Productos incluidos</label><div class="grid">'+(DB.products||[]).map(x=>'<label class="row"><input type="checkbox" style="width:auto" data-promo-product="'+i+'" value="'+esc(x.id)+'" '+((p.productIds||[]).includes(x.id)?'checked':'')+'><span>'+esc(x.name)+'</span></label>').join('')+'</div></div>'+
  '<div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div>'+
  '<button class="btn danger" style="margin-top:12px" data-delete-promo="'+i+'">Eliminar promoción</button></div>').join('')+'</div>';
@@ -192,7 +193,7 @@ function renderPromotions(){
 function renderBanners(){
  const b=DB.banners||{};
  $('#content').innerHTML='<div class="card"><h2>Banners</h2><div class="grid">'+
- field('Aviso superior','b_announcement',b.announcement)+field('Título hero','b_title',b.heroTitle)+field('Subtítulo hero','b_sub',b.heroSub)+field('Título oferta','b_offerTitle',b.offerTitle)+
+ field('Aviso superior','b_announcement',b.announcement)+field('Título hero','b_title',b.heroTitle)+field('Subtítulo hero','b_sub',b.heroSub)+'<div class="field"><label>Promoción visible</label><p class="muted">El título, porcentaje y fecha final de la oferta se actualizan desde Promociones para evitar anuncios incorrectos.</p></div>'+
  '</div><div class="field" style="margin-top:14px"><label>Banner principal</label><div><img id="heroPreview" class="heroPreview" alt="Vista previa del banner" src="'+esc(DB.customImages?.hero||'')+'" '+(!DB.customImages?.hero?'style="display:none"':'')+'></div><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. Conversión automática a WebP. Después de enviar, pulsa GUARDAR CAMBIOS para publicar.</small><div id="hero_status"></div></div></div>';
 }
 function renderSettings(){
@@ -294,10 +295,10 @@ function renderJSON(){
  $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
- (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.active=g('p_active_'+i).value==='1'});
+ (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=g('p_features_'+i).value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);p.includes=g('p_includes_'+i).value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);p.active=g('p_active_'+i).value==='1'});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
- (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
- if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value;b.offerTitle=$('#b_offerTitle').value}
+ (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.start=$('#pr_start_'+i).value;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
+ if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value}
  if(tab==='settings'){const s=DB.settings;s.storeName=$('#s_name').value;s.whatsapp=$('#s_whatsapp').value;s.phone=$('#s_phone').value;s.email=$('#s_email').value;s.freeShipMin=Number($('#s_ship').value)||0}
 }
 async function optimize(file,maxW,maxH,q=.88){const url=URL.createObjectURL(file);try{const im=await new Promise((res,rej)=>{const x=new Image;x.onload=()=>res(x);x.onerror=rej;x.src=url});const sc=Math.min(1,maxW/im.naturalWidth,maxH/im.naturalHeight);const w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('WebP no disponible')),'image/webp',q));return{blob,w,h,old:file.size}}finally{URL.revokeObjectURL(url)}}
