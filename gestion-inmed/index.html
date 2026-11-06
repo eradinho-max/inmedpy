@@ -186,7 +186,10 @@ function collect(){
 }
 async function optimize(file,maxW,maxH,q=.88){const url=URL.createObjectURL(file);try{const im=await new Promise((res,rej)=>{const x=new Image;x.onload=()=>res(x);x.onerror=rej;x.src=url});const sc=Math.min(1,maxW/im.naturalWidth,maxH/im.naturalHeight);const w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('WebP no disponible')),'image/webp',q));return{blob,w,h,old:file.size}}finally{URL.revokeObjectURL(url)}}
 async function uploadMedia(file,folder,maxW,maxH){
- const r=await optimize(file,maxW,maxH);const path=folder+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.webp';
+ await ensureToken();
+ if(file.size>20*1024*1024)throw new Error('La imagen original supera 20 MB.');
+ const r=await optimize(file,maxW,maxH);
+ if(r.blob.size>5*1024*1024)throw new Error('La imagen optimizada supera el límite de 5 MB.');const path=folder+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.webp';
  const up=await fetch(CFG.url+'/storage/v1/object/inmed-media/'+path,{method:'POST',headers:{apikey:CFG.key,Authorization:'Bearer '+token,'Content-Type':'image/webp','x-upsert':'false'},body:r.blob});
  if(!up.ok)throw new Error(await up.text());return{url:CFG.url+'/storage/v1/object/public/inmed-media/'+path,bytes:r.blob.size,w:r.w,h:r.h,old:r.old}
 }
