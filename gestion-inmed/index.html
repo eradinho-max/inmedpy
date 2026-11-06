@@ -160,26 +160,31 @@ function renderProducts(){
  (DB.products||[]).map((p,i)=>'<div class="item"><div class="row mobilecol" style="align-items:flex-start">'+
  '<img class="preview" src="'+esc(pImage(p))+'" onerror="this.style.visibility=\'hidden\'">'+
  '<div style="flex:1"><div class="grid3">'+
- field('Nombre','p_name_'+i,p.name)+field('SKU','p_sku_'+i,p.sku)+field('Categoría','p_cat_'+i,p.cat)+
+ field('Nombre','p_name_'+i,p.name)+field('SKU','p_sku_'+i,p.sku)+categorySelect('p_cat_'+i,p.cat)+
  field('Precio normal','p_price_'+i,p.price,'number')+field('Precio promo','p_promo_'+i,p.promo??'','number')+field('Stock','p_stock_'+i,p.stock,'number')+
  '</div><div class="grid" style="margin-top:12px">'+
  field('Descripción corta','p_short_'+i,p.short)+
  '<div class="field"><label>Estado</label><select id="p_active_'+i+'"><option value="1" '+(p.active!==false?'selected':'')+'>Activo</option><option value="0" '+(p.active===false?'selected':'')+'>Oculto</option></select></div></div>'+
- '<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
+ textAreaField('Descripción completa','p_desc_'+i,p.desc)+'<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
  '<div class="row between" style="margin-top:12px"><span class="badge '+((p.stock||0)<=0?'off':'')+'">'+((p.stock||0)<=0?'Sin stock':money(p.promo||p.price))+'</span><button class="btn danger" data-delete-product="'+i+'">Eliminar</button></div>'+
  '</div></div></div>').join('')+'</div>';
- $('#addProduct').onclick=()=>{collect();DB.products.push({id:'p'+Date.now(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
+ $('#addProduct').onclick=()=>{collect();DB.products.push({id:'p-'+crypto.randomUUID(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
 }
 function field(label,id,val,type='text'){return '<div class="field"><label>'+label+'</label><input id="'+id+'" type="'+type+'" value="'+esc(val??'')+'"></div>'}
+function textAreaField(label,id,val){return '<div class="field" style="margin-top:12px"><label for="'+id+'">'+esc(label)+'</label><textarea id="'+id+'" rows="4">'+esc(val??'')+'</textarea></div>'}
+function categorySelect(id,val){
+ const options=(DB.categories||[]).map(c=>'<option value="'+esc(c.id)+'" '+(val===c.id?'selected':'')+'>'+esc(c.name||c.id)+'</option>').join('');
+ return '<div class="field"><label for="'+id+'">Categoría</label><select id="'+id+'" required>'+options+'</select></div>';
+}
 function renderCategories(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
- (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+field('ID','c_id_'+i,c.id)+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
- $('#addCat').onclick=()=>{collect();DB.categories.push({id:'Nueva categoría',name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
+ (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
+ $('#addCat').onclick=()=>{collect();DB.categories.push({id:'cat-'+crypto.randomUUID(),name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
  (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+'</div><div class="field" style="margin-top:12px"><label>IDs de productos separados por coma</label><input id="pr_products_'+i+'" value="'+esc((p.productIds||[]).join(','))+'"></div><div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div></div>').join('')+'</div>';
- $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr'+Date.now(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
+ $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr-'+crypto.randomUUID(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
 function renderBanners(){
  const b=DB.banners||{};
@@ -285,8 +290,8 @@ function renderJSON(){
  $('#applyJson').onclick=()=>{try{DB=JSON.parse($('#jsonBox').value);mark();render()}catch(e){alert('JSON inválido')}}
 }
 function collect(){
- (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.active=g('p_active_'+i).value==='1'});
- (DB.categories||[]).forEach((c,i)=>{const a=$('#c_id_'+i);if(a){c.id=a.value;c.name=$('#c_name_'+i).value;c.desc=$('#c_desc_'+i).value}});
+ (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.active=g('p_active_'+i).value==='1'});
+ (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
  (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=$('#pr_products_'+i).value.split(',').map(x=>x.trim()).filter(Boolean);p.active=$('#pr_active_'+i).value==='1'}});
  if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value;b.offerTitle=$('#b_offerTitle').value}
  if(tab==='settings'){const s=DB.settings;s.storeName=$('#s_name').value;s.whatsapp=$('#s_whatsapp').value;s.phone=$('#s_phone').value;s.email=$('#s_email').value;s.freeShipMin=Number($('#s_ship').value)||0}
@@ -302,7 +307,7 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
- const d=e.target.closest('[data-delete-product]');if(d){if(confirm('¿Eliminar este producto?')){collect();DB.products.splice(Number(d.dataset.deleteProduct),1);mark();renderProducts()}return}
+ const d=e.target.closest('[data-delete-product]');if(d){const i=Number(d.dataset.deleteProduct);collect();const product=DB.products[i];if((DB.promotions||[]).some(p=>p.active&&(p.productIds||[]).includes(product.id))){alert('Primero retira este producto de las promociones activas.');return}if(confirm('¿Eliminar '+product.name+'?')){DB.products.splice(i,1);mark();renderProducts()}return}
 });
 document.addEventListener('input',e=>{if($('#adminView').contains(e.target)&&!e.target.closest('#changePasswordForm')&&e.target.matches('input,textarea,select'))mark()});
 document.addEventListener('change',async e=>{
