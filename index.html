@@ -1067,7 +1067,7 @@ let cart=loadCart();
 const saveCart=()=>ST.set('inmed_cart_v1',JSON.stringify(cart));
 
 
-const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[],catalogReady:false};
+const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[],catalogReady:false,checkoutBusy:false};
 
 /* ---------- catálogo remoto Supabase ---------- */
 async function syncRemoteStore(){
@@ -1106,7 +1106,7 @@ function cartAvailability(it){
   if(!S.catalogReady||!it||typeof it.id!=='string')return {ok:false,reason:'Catálogo no disponible'};
   if(it.kind==='combo'){
     const combo=(DB.combos||[]).find(x=>x.id===it.id&&x.active!==false);
-    return combo?{ok:true,max:20}:{ok:false,reason:'Combo no disponible'};
+    return combo?{ok:true,max:1}:{ok:false,reason:'Combo no disponible'};
   }
   const p=DB.products.find(x=>x.id===it.id&&x.active!==false);
   if(!p)return {ok:false,reason:'Producto no disponible'};
@@ -1313,6 +1313,12 @@ function lineInfo(it){
   return {name:p.name+(v?' · '+v.name:''),img:v?v.img:p.img,price:pr.cur,sku:v?v.sku:p.sku,stock:stockOf(p,v)};
 }
 function renderCart(){
+  if(!S.catalogReady){
+    $('#cartCount').textContent=0;$('#drawerCount').textContent='(sin confirmar)';
+    $('#cartBody').innerHTML='<div class="cart-empty"><h3>Estamos verificando el catálogo</h3><p>Los precios y las existencias no están disponibles por el momento. Conservamos tu selección para volver a comprobarla cuando el catálogo esté disponible.</p></div>';
+    $('#cartFoot').innerHTML='<button class="btn btn-outline btn-block" data-close>VOLVER A LA TIENDA</button>';
+    return;
+  }
   const n=cart.reduce((a,b)=>a+b.qty,0);
   $('#cartCount').textContent=n; $('#drawerCount').textContent='('+n+')';
   if(!cart.length){
@@ -1331,9 +1337,9 @@ function renderCart(){
   const free=sub>=Number(DB.settings.freeShipMin);
   const ship=free?0:25000, total=sub+ship;
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
-    <div class="cart-total-row"><span>Envío</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
+    <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
     ${!free?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(DB.settings.freeShipMin-sub)} para envío gratis</div>`:''}
-    <div class="cart-total-row grand"><span>Total</span><span>${gs(total)}</span></div>
+    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"sin cargo según el mínimo de compra":gs(ship)}. InMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
 }
@@ -1358,7 +1364,7 @@ function cartMessage(){
   const lines=cart.map(it=>{const x=lineInfo(it);return '• '+it.qty+'x '+(x?x.name:'Producto')+' — '+gs(x?x.price*it.qty:0)});
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
   const free=sub>=Number(DB.settings.freeShipMin), ship=free?0:25000;
-  return 'Hola InMed 👋, quiero realizar este pedido:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío: '+(free?'Gratis':gs(ship))+'\nTotal: '+gs(sub+ship)+'\n\n¿Podés confirmarme disponibilidad y entrega? ¡Gracias!';
+  return 'Hola InMed 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis según el mínimo de compra':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
 }
 function openCart(){ closeInfo(); $('#overlay').classList.add('show'); $('#cartDrawer').classList.add('show'); $('#productModal').classList.remove('show'); }
 function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').classList.remove('show'); $('#productModal').classList.remove('show'); $('#searchDrop').hidden=true; closeInfo(); }
@@ -1634,7 +1640,7 @@ function postForm(p){
 /* ==========================================================================
    EVENTOS
    ========================================================================== */
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');
   const closeEl=e.target.closest('[data-close]');
   if(closeEl && !el){ closeAll(); return; }
@@ -1661,12 +1667,54 @@ document.addEventListener('click',e=>{
       saveCart();renderCart();break;}
     case 'remove': cart.splice(i,1); saveCart(); renderCart(); toast('Producto quitado'); break;
     case 'checkout': {
+      if(S.checkoutBusy)break;
       if(!S.catalogReady||!cart.length){toast('El catálogo no está disponible para realizar pedidos.');break;}
-      if(cart.some(it=>!cartAvailability(it).ok||it.qty>cartAvailability(it).max)){
-        reconcileCart();renderCart();toast('El stock cambió. Revisá tu pedido antes de continuar.');break;
+      S.checkoutBusy=true;el.disabled=true;
+      // Open a tab inside the click, before awaiting the stock check, to avoid popup blockers.
+      const pending=window.open('about:blank','_blank');
+      if(pending){pending.opener=null;try{pending.document.body.textContent='InMed: verificando disponibilidad y precios…';}catch(e){}}
+      const summary=()=>JSON.stringify(cart.map(it=>{
+        const x=lineInfo(it);
+        return {id:it.id,variant:it.variant,qty:it.qty,name:x?.name,price:x?.price,stock:cartAvailability(it).max};
+      }));
+      const before=summary();
+      try{
+        const updated=await syncRemoteStore();
+        if(!updated){
+          S.catalogReady=false;
+          if(pending)pending.close();
+          renderCart();toast('No se pudo verificar el catálogo. No se abrió ningún pedido.');break;
+        }
+        S.catalogReady=true;
+        const adjusted=reconcileCart();
+        const after=summary();
+        if(adjusted||after!==before||!cart.length){
+          if(pending)pending.close();
+          renderStore();
+          toast('Actualizamos precios o existencias. Revisá el pedido y pulsá finalizar nuevamente.');
+          break;
+        }
+        if(cart.some(it=>!cartAvailability(it).ok||it.qty>cartAvailability(it).max)){
+          if(pending)pending.close();
+          reconcileCart();renderStore();
+          toast('El stock cambió. Revisá el pedido nuevamente.');break;
+        }
+        const msg=cartMessage(),url=waUrl(msg);
+        if(!url){if(pending)pending.close();toast('WhatsApp no configurado.');break;}
+        const sub=cart.reduce((sum,it)=>{const x=lineInfo(it);return sum+(x?x.price*it.qty:0);},0);
+        addLead('Apertura WhatsApp','Cliente web',msg,sub);
+        if(pending){pending.location.replace(url);}
+        else {
+          const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+          document.body.appendChild(link);link.click();link.remove();
+        }
+        toast('WhatsApp abierto. Revisá y enviá el mensaje para solicitar tu pedido.');
+      }catch(err){
+        if(pending)pending.close();
+        toast('No pudimos verificar el pedido. Reintentá cuando el catálogo esté disponible.');
+      }finally{
+        S.checkoutBusy=false;el.disabled=false;
       }
-      const msg=cartMessage(),sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
-      if(openWA(msg,{text:msg,total:sub}))toast('Abrimos WhatsApp. Revisá y enviá el mensaje para solicitar tu pedido.');
       break;
     }
     case 'pdp-img': { if(S.pdp){S.pdp.variant='';} const modal=$('#productModal'); const main=$('.pdp-main-img img'); if(main)main.src=img(val); $$('.pdp-thumbs button').forEach(b=>b.classList.toggle('active',b.dataset.val===val)); break; }
