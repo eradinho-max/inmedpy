@@ -117,7 +117,7 @@ async function loadStore(){
  DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
 }
 function validateStore(data=DB){
- if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions))throw new Error('El catálogo no tiene una estructura válida.');
+ if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions)||!Array.isArray(data.combos)||!Array.isArray(data.posts)||!data.settings||typeof data.settings!=='object'||!data.banners||typeof data.banners!=='object')throw new Error('El respaldo no tiene una estructura completa de InMed.');
  const ids=new Set(), categories=new Set();
  for(const c of data.categories){
   if(typeof c.id!=='string'||!c.id.trim()||categories.has(c.id))throw new Error('Categoría sin ID o ID duplicado.');
