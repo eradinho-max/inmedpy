@@ -35,7 +35,28 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
         <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="password" type="password" autocomplete="current-password" required></div>
         <button class="btn primary" style="width:100%;margin-top:16px">ENTRAR</button>
       </form>
-      <div id="loginMsg"></div>
+      <div id="loginMsg" role="status" aria-live="polite"></div>
+      <button type="button" class="btn ghost" id="forgotPassword" style="width:100%;margin-top:12px">¿Olvidaste tu contraseña?</button>
+      <section id="recoverView" class="hidden" aria-label="Recuperación de contraseña">
+        <h2 style="margin-top:18px">Recuperar acceso</h2>
+        <p class="muted">Te enviaremos un enlace para crear una nueva contraseña.</p>
+        <form id="recoverForm">
+          <div class="field"><label for="recoverEmail">Correo</label><input id="recoverEmail" type="email" autocomplete="email" required></div>
+          <button class="btn primary" style="width:100%;margin-top:14px">ENVIAR ENLACE</button>
+        </form>
+        <button type="button" id="backToLogin" class="btn ghost" style="width:100%;margin-top:10px">VOLVER AL ACCESO</button>
+        <div id="recoverMsg" role="status" aria-live="polite"></div>
+      </section>
+      <section id="inviteView" class="hidden">
+        <h2 id="credentialTitle">Activar cuenta administrativa</h2>
+        <p class="muted" id="inviteEmail"></p>
+        <form id="inviteForm">
+          <div class="field"><label for="invitePassword">Crear contraseña (mínimo 12 caracteres)</label><input id="invitePassword" type="password" autocomplete="new-password" minlength="12" required></div>
+          <div class="field" style="margin-top:12px"><label for="invitePasswordConfirm">Confirmar contraseña</label><input id="invitePasswordConfirm" type="password" autocomplete="new-password" minlength="12" required></div>
+          <button id="setPasswordButton" class="btn primary" style="width:100%;margin-top:16px">GUARDAR CONTRASEÑA</button>
+        </form>
+        <div id="inviteMsg" role="status" aria-live="polite"></div>
+      </section>
     </div>
   </section>
 
@@ -51,106 +72,311 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 <script>
 (()=>{'use strict';
 const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
-let token=null,user=null,DB=null,tab='products',dirty=false;
-const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['json','Respaldo JSON']];
+let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null,saving=false;
+const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Gs. '+Math.round(Number(n)||0).toLocaleString('es-PY');
 function msg(el,text,kind='notice'){el.innerHTML='<div class="'+kind+'">'+esc(text)+'</div>'}
 function apiHeaders(auth=true){const h={apikey:CFG.key,'Content-Type':'application/json'};if(auth&&token)h.Authorization='Bearer '+token;return h}
-async function req(path,opt={}){const r=await fetch(CFG.url+path,{...opt,headers:{...apiHeaders(opt.auth!==false),...(opt.headers||{})}});if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));return r.status===204?null:r.json()}
+function setSession(j){
+ token=j.access_token;refreshToken=j.refresh_token||refreshToken;
+ expiry=Date.now()+Math.max(60,Number(j.expires_in||3600)-90)*1000;
+ sessionStorage.setItem('inmed_admin_session',JSON.stringify({access_token:token,refresh_token:refreshToken,expires_at:expiry}));
+ sessionStorage.removeItem('inmed_admin_token');
+}
+function clearSession(){token=null;refreshToken=null;expiry=0;user=null;sessionStorage.removeItem('inmed_admin_session');sessionStorage.removeItem('inmed_admin_token')}
+async function ensureToken(force=false){
+ if(!force&&token&&Date.now()<expiry)return;
+ if(!refreshToken)throw new Error('Sesión vencida. Inicia sesión nuevamente.');
+ if(!refreshing)refreshing=(async()=>{
+  const r=await fetch(CFG.url+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refreshToken})});
+  if(!r.ok){clearSession();throw new Error('Sesión vencida. Inicia sesión nuevamente.')}
+  setSession(await r.json());
+ })().finally(()=>{refreshing=null});
+ await refreshing;
+}
+async function req(path,opt={}){
+ const auth=opt.auth!==false;
+ if(auth)await ensureToken();
+ const send=()=>fetch(CFG.url+path,{...opt,headers:{...apiHeaders(auth),...(opt.headers||{})}});
+ let r=await send();
+ if(auth&&r.status===401){await ensureToken(true);r=await send();}
+ if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
+ return r.status===204?null:r.json();
+}
 async function login(email,password){
  const r=await fetch(CFG.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
  if(!r.ok) throw new Error('Correo o contraseña inválidos.');
- const j=await r.json();token=j.access_token;user=j.user;
+ const j=await r.json();setSession(j);user=j.user;
  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
- if(!rows.length){token=null;user=null;throw new Error('La cuenta existe, pero no está autorizada como administradora de InMed.');}
- sessionStorage.setItem('inmed_admin_token',j.access_token);
+ if(!rows.length){clearSession();throw new Error('La cuenta existe, pero no está autorizada como administradora de InMed.');}
 }
 async function loadStore(){
  const rows=await req('/rest/v1/store_state?id=eq.main&select=data,updated_at');
  if(!rows.length)throw new Error('No existe store_state/main');
- DB=rows[0].data; $('#syncStatus').textContent='Sincronizado · '+new Date(rows[0].updated_at).toLocaleString('es-PY');
+ DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+}
+function validateStore(data=DB){
+ if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions)||!Array.isArray(data.combos)||!Array.isArray(data.posts)||!data.settings||typeof data.settings!=='object'||!data.banners||typeof data.banners!=='object')throw new Error('El respaldo no tiene una estructura completa de InMed.');
+ const ids=new Set(), categories=new Set();
+ for(const c of data.categories){
+  if(typeof c.id!=='string'||!c.id.trim()||categories.has(c.id))throw new Error('Categoría sin ID o ID duplicado.');
+  if(!String(c.name||'').trim())throw new Error('Todas las categorías deben tener un nombre.');
+  categories.add(c.id);
+ }
+ for(const p of data.products){
+  if(typeof p.id!=='string'||!p.id.trim()||ids.has(p.id))throw new Error('Hay productos sin ID o con ID repetido.');
+  ids.add(p.id);
+  if(!String(p.name||'').trim())throw new Error('Hay productos sin nombre.');
+  if(!categories.has(p.cat))throw new Error('Categoría inválida para '+(p.name||p.id));
+  if(!Number.isFinite(p.price)||p.price<0||!Number.isInteger(p.stock)||p.stock<0)throw new Error('Precio o stock inválido en '+p.name);
+  if(p.promo!=null&&(!Number.isFinite(p.promo)||p.promo<0||p.promo>p.price))throw new Error('Precio promocional inválido en '+p.name);
+ }
+ for(const promo of data.promotions){
+  if(!Number.isFinite(Number(promo.percent))||Number(promo.percent)<0||Number(promo.percent)>100)throw new Error('Descuento fuera de 0–100% en '+(promo.name||promo.id));
+  if(promo.active&&!(promo.productIds||[]).every(id=>ids.has(id)))throw new Error('Promoción activa con productos inexistentes: '+(promo.name||promo.id));
+ }
+ return true;
 }
 async function saveStore(){
- if(!DB)return;
- $('#syncStatus').textContent='Guardando…';
- await req('/rest/v1/store_state?id=eq.main',{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
- dirty=false;$('#syncStatus').textContent='Guardado en Supabase · '+new Date().toLocaleString('es-PY');
+ if(!DB||!dirty||saving)return;
+ validateStore();
+ saving=true;$('#saveAll').disabled=true;$('#syncStatus').textContent='Guardando…';
+ try{
+  const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
+  const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(rows)||rows.length!==1)throw new Error('Otra sesión modificó el catálogo. No se sobrescribieron sus cambios. Exporta el respaldo JSON antes de recargar.');
+  lastSyncedAt=rows[0].updated_at;dirty=false;
+  $('#syncStatus').textContent='Guardado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+ }catch(err){$('#syncStatus').textContent='Error al guardar · cambios pendientes';throw err}
+ finally{saving=false;$('#saveAll').disabled=false}
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
-function render(){renderTabs(); if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else renderJSON();}
+function render(){renderTabs(); if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
 function pImage(p){return /^https?:/i.test(p.img||'')?p.img:''}
 function renderProducts(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Productos</h2><p class="muted">Precio, stock, promoción, foto y estado.</p></div><button class="btn primary" id="addProduct">+ NUEVO</button></div><div class="list">'+
  (DB.products||[]).map((p,i)=>'<div class="item"><div class="row mobilecol" style="align-items:flex-start">'+
  '<img class="preview" src="'+esc(pImage(p))+'" onerror="this.style.visibility=\'hidden\'">'+
  '<div style="flex:1"><div class="grid3">'+
- field('Nombre','p_name_'+i,p.name)+field('SKU','p_sku_'+i,p.sku)+field('Categoría','p_cat_'+i,p.cat)+
+ field('Nombre','p_name_'+i,p.name)+field('SKU','p_sku_'+i,p.sku)+categorySelect('p_cat_'+i,p.cat)+
  field('Precio normal','p_price_'+i,p.price,'number')+field('Precio promo','p_promo_'+i,p.promo??'','number')+field('Stock','p_stock_'+i,p.stock,'number')+
  '</div><div class="grid" style="margin-top:12px">'+
  field('Descripción corta','p_short_'+i,p.short)+
  '<div class="field"><label>Estado</label><select id="p_active_'+i+'"><option value="1" '+(p.active!==false?'selected':'')+'>Activo</option><option value="0" '+(p.active===false?'selected':'')+'>Oculto</option></select></div></div>'+
- '<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
+ textAreaField('Descripción completa','p_desc_'+i,p.desc)+'<div class="field" style="margin-top:12px"><label>Foto principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="product" data-index="'+i+'"><small>Recomendado: <b>1600 × 1600 px · 1:1</b>. Se convierte automáticamente a WebP y se envía al Storage.</small><div id="upload_status_'+i+'"></div></div>'+
  '<div class="row between" style="margin-top:12px"><span class="badge '+((p.stock||0)<=0?'off':'')+'">'+((p.stock||0)<=0?'Sin stock':money(p.promo||p.price))+'</span><button class="btn danger" data-delete-product="'+i+'">Eliminar</button></div>'+
  '</div></div></div>').join('')+'</div>';
- $('#addProduct').onclick=()=>{DB.products.push({id:'p'+Date.now(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
+ $('#addProduct').onclick=()=>{collect();DB.products.push({id:'p-'+crypto.randomUUID(),name:'Nuevo producto',cat:(DB.categories?.[0]?.id||''),short:'',desc:'',price:0,promo:null,stock:0,sku:'',img:'',active:false,freeShip:false,tags:[],variants:[],seo:{}});mark();renderProducts()}
 }
 function field(label,id,val,type='text'){return '<div class="field"><label>'+label+'</label><input id="'+id+'" type="'+type+'" value="'+esc(val??'')+'"></div>'}
+function textAreaField(label,id,val){return '<div class="field" style="margin-top:12px"><label for="'+id+'">'+esc(label)+'</label><textarea id="'+id+'" rows="4">'+esc(val??'')+'</textarea></div>'}
+function categorySelect(id,val){
+ const options=(DB.categories||[]).map(c=>'<option value="'+esc(c.id)+'" '+(val===c.id?'selected':'')+'>'+esc(c.name||c.id)+'</option>').join('');
+ return '<div class="field"><label for="'+id+'">Categoría</label><select id="'+id+'" required>'+options+'</select></div>';
+}
 function renderCategories(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
- (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+field('ID','c_id_'+i,c.id)+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
- $('#addCat').onclick=()=>{DB.categories.push({id:'Nueva categoría',name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
+ (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
+ $('#addCat').onclick=()=>{collect();DB.categories.push({id:'cat-'+crypto.randomUUID(),name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
- (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+'</div><div class="field" style="margin-top:12px"><label>IDs de productos separados por coma</label><input id="pr_products_'+i+'" value="'+esc((p.productIds||[]).join(','))+'"></div><div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div></div>').join('')+'</div>';
- $('#addPromo').onclick=()=>{DB.promotions.push({id:'pr'+Date.now(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
+ (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+
+ '</div><div class="field" style="margin-top:12px"><label>Productos incluidos</label><div class="grid">'+(DB.products||[]).map(x=>'<label class="row"><input type="checkbox" style="width:auto" data-promo-product="'+i+'" value="'+esc(x.id)+'" '+((p.productIds||[]).includes(x.id)?'checked':'')+'><span>'+esc(x.name)+'</span></label>').join('')+'</div></div>'+
+ '<div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div>'+
+ '<button class="btn danger" style="margin-top:12px" data-delete-promo="'+i+'">Eliminar promoción</button></div>').join('')+'</div>';
+ $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr-'+crypto.randomUUID(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
 function renderBanners(){
  const b=DB.banners||{};
  $('#content').innerHTML='<div class="card"><h2>Banners</h2><div class="grid">'+
  field('Aviso superior','b_announcement',b.announcement)+field('Título hero','b_title',b.heroTitle)+field('Subtítulo hero','b_sub',b.heroSub)+field('Título oferta','b_offerTitle',b.offerTitle)+
- '</div><div class="field" style="margin-top:14px"><label>Banner principal</label><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. Conversión automática a WebP.</small><div id="hero_status"></div></div></div>';
+ '</div><div class="field" style="margin-top:14px"><label>Banner principal</label><div><img id="heroPreview" class="heroPreview" alt="Vista previa del banner" src="'+esc(DB.customImages?.hero||'')+'" '+(!DB.customImages?.hero?'style="display:none"':'')+'></div><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado desktop: <b>1920 × 720 px · 8:3</b>. Conversión automática a WebP. Después de enviar, pulsa GUARDAR CAMBIOS para publicar.</small><div id="hero_status"></div></div></div>';
 }
 function renderSettings(){
  const s=DB.settings||{};
  $('#content').innerHTML='<div class="card"><h2>Configuración</h2><div class="grid">'+field('Nombre','s_name',s.storeName)+field('WhatsApp','s_whatsapp',s.whatsapp)+field('Teléfono visible','s_phone',s.phone)+field('Correo','s_email',s.email)+field('Envío gratis desde','s_ship',s.freeShipMin,'number')+'</div></div>';
 }
+function showLogin(message='',kind='notice ok'){
+ $('#loginForm').classList.remove('hidden');
+ $('#forgotPassword').classList.remove('hidden');
+ $('#recoverView').classList.add('hidden');
+ $('#inviteView').classList.add('hidden');
+ if(message)msg($('#loginMsg'),message,kind);else $('#loginMsg').textContent='';
+}
+function showRecoveryRequest(message='',kind='notice'){
+ $('#loginForm').classList.add('hidden');
+ $('#forgotPassword').classList.add('hidden');
+ $('#inviteView').classList.add('hidden');
+ $('#recoverView').classList.remove('hidden');
+ $('#recoverEmail').value=$('#email').value||$('#recoverEmail').value;
+ if(message)msg($('#recoverMsg'),message,kind);
+}
+$('#forgotPassword').addEventListener('click',()=>showRecoveryRequest());
+$('#backToLogin').addEventListener('click',()=>showLogin());
+$('#recoverForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const email=$('#recoverEmail').value.trim();
+ const box=$('#recoverMsg'),btn=$('#recoverForm button');
+ btn.disabled=true;
+ try{
+  // Explicit redirect: avoid a stale Supabase Site URL pointing to localhost or an old preview.
+  const redirectTo=location.origin+location.pathname;
+  const response=await fetch(CFG.url+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{
+   method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email})
+  });
+  if(!response.ok){
+   const body=await response.json().catch(()=>({}));
+   const code=String(body.code||body.error_code||'').toLowerCase();
+   if(response.status===429||code==='over_email_send_rate_limit'||code==='over_request_rate_limit'){
+    throw new Error('Se alcanzó el límite de correos del proyecto Supabase (error 429). No sigas intentando ahora: espera a que se restablezca la cuota de envío o configura SMTP propio en Supabase.');
+   }
+   if(code==='email_address_not_authorized'){
+    throw new Error('El servicio de correo integrado no autoriza este destinatario. Configura SMTP propio o utiliza un miembro autorizado de la organización.');
+   }
+   if(response.status>=500||code.includes('smtp')){
+    throw new Error('El servicio de correo de Supabase no está disponible o tiene un problema de configuración SMTP.');
+   }
+   throw new Error('No se pudo enviar el enlace (HTTP '+response.status+'). Revisa Authentication > Logs en Supabase.');
+  }
+  msg(box,'Si existe una cuenta para este correo, recibirás un nuevo enlace. Usa el mensaje más reciente y abre el enlace en este navegador.','notice ok');
+ }catch(err){msg(box,err.message,'notice err')}finally{btn.disabled=false}
+});
+function showInviteForm(kind='invite'){
+ $('#loginForm').classList.add('hidden');
+ $('#forgotPassword').classList.add('hidden');
+ $('#recoverView').classList.add('hidden');
+ $('#inviteView').classList.remove('hidden');
+ const isRecovery=kind==='recovery';
+ $('#credentialTitle').textContent=isRecovery?'Restablecer contraseña':'Activar cuenta administrativa';
+ $('#inviteEmail').textContent=(isRecovery?'Define una nueva contraseña para: ':'Correo de la invitación: ')+(user?.email||'');
+ $('#setPasswordButton').textContent=isRecovery?'GUARDAR NUEVA CONTRASEÑA':'ACTIVAR MI CUENTA';
+ $('#inviteMsg').textContent='';
+}
+$('#inviteForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const pass=$('#invitePassword').value,confirmPass=$('#invitePasswordConfirm').value,box=$('#inviteMsg');
+ if(pass.length<12||pass!==confirmPass){msg(box,'Las contraseñas no coinciden o tienen menos de 12 caracteres.','notice err');return}
+ const btn=$('#setPasswordButton');btn.disabled=true;
+ try{
+  // A valid recovery/invitation session is required by Supabase for this operation.
+  await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:pass})});
+  $('#inviteForm').reset();
+  try{await req('/auth/v1/logout',{method:'POST'})}catch(e){}
+  clearSession();
+  showLogin('Contraseña definida correctamente. Ya puedes entrar con tu correo y la nueva contraseña.','notice ok');
+ }catch(err){msg(box,'No se pudo guardar la contraseña: '+err.message,'notice err')}finally{btn.disabled=false}
+});
+function renderAccount(){
+ $('#content').innerHTML='<div class="card" style="max-width:680px"><h2>Mi cuenta</h2><p class="muted">Cuenta autorizada: '+esc(user?.email||'')+'. Puedes cambiar tu contraseña sin modificar la tienda.</p>'+
+ '<form id="changePasswordForm"><div class="field"><label for="oldPass">Contraseña actual</label><input id="oldPass" type="password" autocomplete="current-password" required></div>'+
+ '<div class="grid" style="margin-top:14px"><div class="field"><label for="newPass">Nueva contraseña (mínimo 12 caracteres)</label><input id="newPass" type="password" autocomplete="new-password" minlength="12" required></div>'+
+ '<div class="field"><label for="repeatPass">Repetir nueva contraseña</label><input id="repeatPass" type="password" autocomplete="new-password" minlength="12" required></div></div>'+
+ '<button class="btn primary" style="margin-top:16px">CAMBIAR CONTRASEÑA</button><div id="accountMsg" role="status" aria-live="polite"></div></form></div>';
+ $('#changePasswordForm').onsubmit=async e=>{
+  e.preventDefault();const box=$('#accountMsg'),old=$('#oldPass').value,next=$('#newPass').value,repeat=$('#repeatPass').value;
+  if(next.length<12||next!==repeat){msg(box,'La nueva contraseña debe tener al menos 12 caracteres y coincidir.','notice err');return;}
+  try{
+   const check=await fetch(CFG.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email:user.email,password:old})});
+   if(!check.ok)throw new Error('La contraseña actual es incorrecta.');
+   await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:next})});
+   msg(box,'Contraseña actualizada. Vuelve a iniciar sesión.','notice ok');
+   $('#changePasswordForm').reset();
+   await signOut(true);
+  }catch(err){msg(box,'No se pudo cambiar la contraseña: '+err.message,'notice err')}
+ };
+}
 function renderJSON(){
- $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Vista técnica. Útil para copiar un respaldo manual antes de cambios grandes.</p><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn primary" style="margin-top:12px">APLICAR JSON</button></div>';
- $('#applyJson').onclick=()=>{try{DB=JSON.parse($('#jsonBox').value);mark();render()}catch(e){alert('JSON inválido')}}
+ $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Descarga una copia antes de importar o editar muchos productos. No se guarda automáticamente.</p><button class="btn ghost" id="downloadJSON" type="button">DESCARGAR RESPALDO</button><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace;margin-top:12px">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn danger" style="margin-top:12px">REEMPLAZAR DATOS EN MEMORIA</button><p class="muted">Para persistir una importación válida debes pulsar GUARDAR CAMBIOS.</p></div>';
+ $('#downloadJSON').onclick=()=>{const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='inmed-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+ $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
- (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.active=g('p_active_'+i).value==='1'});
- (DB.categories||[]).forEach((c,i)=>{const a=$('#c_id_'+i);if(a){c.id=a.value;c.name=$('#c_name_'+i).value;c.desc=$('#c_desc_'+i).value}});
- (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=$('#pr_products_'+i).value.split(',').map(x=>x.trim()).filter(Boolean);p.active=$('#pr_active_'+i).value==='1'}});
+ (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.active=g('p_active_'+i).value==='1'});
+ (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
+ (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
  if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value;b.offerTitle=$('#b_offerTitle').value}
  if(tab==='settings'){const s=DB.settings;s.storeName=$('#s_name').value;s.whatsapp=$('#s_whatsapp').value;s.phone=$('#s_phone').value;s.email=$('#s_email').value;s.freeShipMin=Number($('#s_ship').value)||0}
 }
 async function optimize(file,maxW,maxH,q=.88){const url=URL.createObjectURL(file);try{const im=await new Promise((res,rej)=>{const x=new Image;x.onload=()=>res(x);x.onerror=rej;x.src=url});const sc=Math.min(1,maxW/im.naturalWidth,maxH/im.naturalHeight);const w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('WebP no disponible')),'image/webp',q));return{blob,w,h,old:file.size}}finally{URL.revokeObjectURL(url)}}
 async function uploadMedia(file,folder,maxW,maxH){
- const r=await optimize(file,maxW,maxH);const path=folder+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.webp';
+ await ensureToken();
+ if(file.size>20*1024*1024)throw new Error('La imagen original supera 20 MB.');
+ const r=await optimize(file,maxW,maxH);
+ if(r.blob.size>5*1024*1024)throw new Error('La imagen optimizada supera el límite de 5 MB.');const path=folder+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.webp';
  const up=await fetch(CFG.url+'/storage/v1/object/inmed-media/'+path,{method:'POST',headers:{apikey:CFG.key,Authorization:'Bearer '+token,'Content-Type':'image/webp','x-upsert':'false'},body:r.blob});
  if(!up.ok)throw new Error(await up.text());return{url:CFG.url+'/storage/v1/object/public/inmed-media/'+path,bytes:r.blob.size,w:r.w,h:r.h,old:r.old}
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
- const d=e.target.closest('[data-delete-product]');if(d){if(confirm('¿Eliminar este producto?')){DB.products.splice(Number(d.dataset.deleteProduct),1);mark();renderProducts()}return}
+ const removePromo=e.target.closest('[data-delete-promo]');
+ if(removePromo){collect();const i=Number(removePromo.dataset.deletePromo);if(confirm('¿Eliminar esta promoción?')){DB.promotions.splice(i,1);mark();renderPromotions()}return}
+ const d=e.target.closest('[data-delete-product]');if(d){const i=Number(d.dataset.deleteProduct);collect();const product=DB.products[i];if((DB.promotions||[]).some(p=>p.active&&(p.productIds||[]).includes(product.id))){alert('Primero retira este producto de las promociones activas.');return}if(confirm('¿Eliminar '+product.name+'?')){DB.products.splice(i,1);mark();renderProducts()}return}
 });
-document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))mark()});
+document.addEventListener('input',e=>{if($('#adminView').contains(e.target)&&!e.target.closest('#changePasswordForm')&&e.target.matches('input,textarea,select'))mark()});
 document.addEventListener('change',async e=>{
  const inp=e.target.closest('[data-upload]');if(!inp||!inp.files?.[0])return;
  const f=inp.files[0],kind=inp.dataset.upload;
  try{
-   if(kind==='product'){const i=Number(inp.dataset.index),box=$('#upload_status_'+i);box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'products',1600,1600);DB.products[i].img=r.url;box.innerHTML='<div class="notice ok">WebP '+r.w+'×'+r.h+' · '+Math.round(r.old/1024)+' KB → '+Math.round(r.bytes/1024)+' KB</div>';mark();}
-   else {const box=$('#hero_status');box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'banners',1920,720);DB.customImages=DB.customImages||{};DB.customImages.hero=r.url;box.innerHTML='<div class="notice ok">WebP '+r.w+'×'+r.h+' · '+Math.round(r.bytes/1024)+' KB</div>';mark();}
+   if(kind==='product'){const i=Number(inp.dataset.index),box=$('#upload_status_'+i);box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'products',1600,1600);DB.products[i].img=r.url;const thumb=inp.closest('.item')?.querySelector('img.preview');if(thumb){thumb.src=r.url;thumb.style.visibility='visible'}box.innerHTML='<div class="notice ok">Imagen subida: WebP '+r.w+'×'+r.h+' · '+Math.round(r.old/1024)+' KB → '+Math.round(r.bytes/1024)+' KB. Pulsa GUARDAR CAMBIOS para publicar.</div>';mark();}
+   else {const box=$('#hero_status');box.textContent='Optimizando y enviando…';const r=await uploadMedia(f,'banners',1920,720);DB.customImages=DB.customImages||{};DB.customImages.hero=r.url;const preview=$('#heroPreview');if(preview){preview.src=r.url;preview.style.display='block'}box.innerHTML='<div class="notice ok">Banner subido: WebP '+r.w+'×'+r.h+' · '+Math.round(r.bytes/1024)+' KB. Pulsa GUARDAR CAMBIOS para publicar.</div>';mark();}
  }catch(err){alert('Error de imagen: '+err.message)}
 });
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const box=$('#loginMsg');try{await login($('#email').value,$('#password').value);await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(err){msg(box,err.message,'notice err')}});
 $('#saveAll').onclick=async()=>{try{collect();await saveStore();render()}catch(err){alert('No se pudo guardar: '+err.message)}};
-$('#logout').onclick=()=>{sessionStorage.removeItem('inmed_admin_token');location.reload()};
-(async()=>{const stored=sessionStorage.getItem('inmed_admin_token');if(!stored)return;token=stored;try{const u=await req('/auth/v1/user');user=u;const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');if(!rows.length)throw 0;await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(e){sessionStorage.removeItem('inmed_admin_token')}})();
+async function signOut(skipConfirm=false){
+ if(!skipConfirm&&dirty&&!confirm('Hay cambios sin guardar. ¿Salir de todas formas?'))return;
+ try{if(token)await req('/auth/v1/logout',{method:'POST'})}catch(e){}
+ clearSession();dirty=false;location.reload();
+}
+$('#logout').onclick=()=>signOut();
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+(async()=>{
+ sessionStorage.removeItem('inmed_admin_token');
+ // Supabase invitation and password-recovery email links return session tokens in the fragment.
+ // Process the callback before attempting restoration, and remove tokens from browser history immediately.
+ const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+ const query=new URLSearchParams(location.search);
+ const authError=hash.get('error_description')||query.get('error_description');
+ if(authError){
+  history.replaceState(null,'',location.pathname);
+  showRecoveryRequest('El enlace ha caducado o no es válido. Solicita uno nuevo desde aquí.','notice err');
+  return;
+ }
+ if(query.has('code')&&!hash.has('access_token')){
+  // Code-based PKCE links require a stored PKCE verifier. Never accept codes as credentials.
+  history.replaceState(null,'',location.pathname);
+  showRecoveryRequest('Este enlace utiliza un método de verificación incompatible con esta sesión. Solicita un nuevo enlace desde aquí.','notice err');
+  return;
+ }
+ if(hash.has('access_token')&&hash.has('refresh_token')){
+  try{
+   const callbackType=hash.get('type')||query.get('type');
+   setSession({access_token:hash.get('access_token'),refresh_token:hash.get('refresh_token'),expires_in:Number(hash.get('expires_in'))||3600});
+   history.replaceState(null,'',location.pathname);
+   user=await req('/auth/v1/user');
+   if(['invite','recovery'].includes(callbackType)){showInviteForm(callbackType);return}
+  }catch(e){
+   history.replaceState(null,'',location.pathname);
+   clearSession();
+   showRecoveryRequest('No se pudo validar el enlace. Solicita uno nuevo desde aquí.','notice err');
+   return;
+  }
+ }
+ let saved;try{saved=JSON.parse(sessionStorage.getItem('inmed_admin_session')||'null')}catch(e){}
+ if(!saved?.refresh_token)return;
+ token=saved.access_token;refreshToken=saved.refresh_token;expiry=Number(saved.expires_at)||0;
+ try{
+  await ensureToken();
+  user=await req('/auth/v1/user');
+  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
+  if(!rows.length)throw new Error('Sin permiso administrativo');
+  await loadStore();
+  $('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render();
+ }catch(e){clearSession()}
+})();
 })();
 </script>
 </body>
