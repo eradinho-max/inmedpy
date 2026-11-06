@@ -980,8 +980,8 @@ const DEFAULT = () => ({
     {id:'Glucómetros',      name:'Glucómetros',       img:'glucometro',  desc:'Control de glucosa'}
   ],
   products:[
-    {id:'p1',name:'Kit de Sutura InMed — 25 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-25',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
-      features:['25 piezas organizadas en estuche','Pad de silicona reutilizable de 3 capas','Instrumental de acero inoxidable','Hilos de nylon, seda y poliéster','Ideal para estudiantes y residentes'],includes:['1 almohadilla de sutura','1 portaagujas + 1 pinza','1 tijera quirúrgica + 1 bisturí','12 hilos con aguja','Estuche con cierre y manual'],specs:{Piezas:'25',Material:'Acero inoxidable / silicona',Nivel:'Estudiante y residente',SKU:'KIT-SUT-25'}},
+    {id:'p1',name:'Kit de Sutura InMed — 19 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-25',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
+      features:['19 piezas organizadas en estuche','Pad de silicona reutilizable de 3 capas','Instrumental de acero inoxidable','Hilos de nylon, seda y poliéster','Ideal para estudiantes y residentes'],includes:['1 almohadilla de sutura','1 portaagujas + 1 pinza','1 tijera quirúrgica + 1 bisturí','12 hilos con aguja','Estuche con cierre y manual'],specs:{Piezas:'25',Material:'Acero inoxidable / silicona',Nivel:'Estudiante y residente',SKU:'KIT-SUT-25'}},
     {id:'p2',name:'Estetoscopio BIC Eternity III',cat:'Estetoscopios',short:'Doble campana, acero inoxidable. 5 colores.',desc:'El clásico BIC Eternity III con doble campana de acero inoxidable, tubo de PVC flexible y olivas suaves. Disponible en cinco combinaciones de color con terminación Rainbow.',price:329000,promo:289000,stock:18,sku:'BIC-ET3',img:'bic-rosa',rating:4.9,reviews:52,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
       features:['Doble campana adulto / pediátrico','Acero inoxidable pulido','Tubo flexible de doble lumen','Olivas suaves intercambiables','Incluye estuche y accesorios'],includes:['Estetoscopio BIC Eternity III','Par de olivas de repuesto','Diafragmas de repuesto','Estuche protector'],specs:{Modelo:'Eternity III',Campana:'Doble, acero inoxidable',Tubo:'PVC doble lumen',Garantía:'12 meses',SKU:'BIC-ET3'},
       variants:[
@@ -1174,11 +1174,15 @@ function stars(r){ return `<div class="stars"><i>★★★★★</i> ${Number(r)
    ========================================================================== */
 function renderStore(){
   const B=DB.banners, C=DB.settings;
-  $('#topAnnounce').innerHTML=B.showAnnouncement?B.announcement:'&nbsp;';
+  // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
+  const announcement=String(B.announcement||'');
+  const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
+  $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?announcement:'Envíos a todo Paraguay · Atención por WhatsApp';
   $('#heroTitle').innerHTML=B.heroTitle;
   $('#heroSub').textContent=B.heroSub;
-  $('#heroBadge').innerHTML=B.heroBadge;
-  $('#heroBadge').hidden=!B.showHeroBadge;
+  const heroCampaign=B.showOffer?activeCampaign():null;
+  $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
+  $('#heroBadge').hidden=!B.showHeroBadge||!heroCampaign;
   $('#heroImg').src=img('hero');
   $('#floatBText').innerHTML='Envío gratis*<small>Desde '+gs(C.freeShipMin)+'</small>';
   const campaign=B.showOffer?activeCampaign():null;
