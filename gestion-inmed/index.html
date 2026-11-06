@@ -35,14 +35,25 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
         <div class="field" style="margin-top:12px"><label>Contraseña</label><input id="password" type="password" autocomplete="current-password" required></div>
         <button class="btn primary" style="width:100%;margin-top:16px">ENTRAR</button>
       </form>
-      <div id="loginMsg"></div>
+      <div id="loginMsg" role="status" aria-live="polite"></div>
+      <button type="button" class="btn ghost" id="forgotPassword" style="width:100%;margin-top:12px">¿Olvidaste tu contraseña?</button>
+      <section id="recoverView" class="hidden" aria-label="Recuperación de contraseña">
+        <h2 style="margin-top:18px">Recuperar acceso</h2>
+        <p class="muted">Te enviaremos un enlace para crear una nueva contraseña.</p>
+        <form id="recoverForm">
+          <div class="field"><label for="recoverEmail">Correo</label><input id="recoverEmail" type="email" autocomplete="email" required></div>
+          <button class="btn primary" style="width:100%;margin-top:14px">ENVIAR ENLACE</button>
+        </form>
+        <button type="button" id="backToLogin" class="btn ghost" style="width:100%;margin-top:10px">VOLVER AL ACCESO</button>
+        <div id="recoverMsg" role="status" aria-live="polite"></div>
+      </section>
       <section id="inviteView" class="hidden">
-        <h2>Activar cuenta administrativa</h2>
+        <h2 id="credentialTitle">Activar cuenta administrativa</h2>
         <p class="muted" id="inviteEmail"></p>
         <form id="inviteForm">
           <div class="field"><label for="invitePassword">Crear contraseña (mínimo 12 caracteres)</label><input id="invitePassword" type="password" autocomplete="new-password" minlength="12" required></div>
           <div class="field" style="margin-top:12px"><label for="invitePasswordConfirm">Confirmar contraseña</label><input id="invitePasswordConfirm" type="password" autocomplete="new-password" minlength="12" required></div>
-          <button class="btn primary" style="width:100%;margin-top:16px">ACTIVAR MI CUENTA</button>
+          <button id="setPasswordButton" class="btn primary" style="width:100%;margin-top:16px">GUARDAR CONTRASEÑA</button>
         </form>
         <div id="inviteMsg" role="status" aria-live="polite"></div>
       </section>
@@ -164,21 +175,62 @@ function renderSettings(){
  const s=DB.settings||{};
  $('#content').innerHTML='<div class="card"><h2>Configuración</h2><div class="grid">'+field('Nombre','s_name',s.storeName)+field('WhatsApp','s_whatsapp',s.whatsapp)+field('Teléfono visible','s_phone',s.phone)+field('Correo','s_email',s.email)+field('Envío gratis desde','s_ship',s.freeShipMin,'number')+'</div></div>';
 }
-function showInviteForm(){
+function showLogin(message='',kind='notice ok'){
+ $('#loginForm').classList.remove('hidden');
+ $('#forgotPassword').classList.remove('hidden');
+ $('#recoverView').classList.add('hidden');
+ $('#inviteView').classList.add('hidden');
+ if(message)msg($('#loginMsg'),message,kind);else $('#loginMsg').textContent='';
+}
+function showRecoveryRequest(message='',kind='notice'){
  $('#loginForm').classList.add('hidden');
- $('#loginMsg').textContent='';
+ $('#forgotPassword').classList.add('hidden');
+ $('#inviteView').classList.add('hidden');
+ $('#recoverView').classList.remove('hidden');
+ $('#recoverEmail').value=$('#email').value||$('#recoverEmail').value;
+ if(message)msg($('#recoverMsg'),message,kind);
+}
+$('#forgotPassword').addEventListener('click',()=>showRecoveryRequest());
+$('#backToLogin').addEventListener('click',()=>showLogin());
+$('#recoverForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const email=$('#recoverEmail').value.trim();
+ const box=$('#recoverMsg'),btn=$('#recoverForm button');
+ btn.disabled=true;
+ try{
+  // Explicit redirect: avoid a stale Supabase Site URL pointing to localhost or an old preview.
+  const redirectTo=location.origin+location.pathname;
+  const response=await fetch(CFG.url+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{
+   method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email})
+  });
+  if(!response.ok)throw new Error('No fue posible enviar el enlace. Comprueba la configuración de correo y vuelve a intentarlo.');
+  msg(box,'Si existe una cuenta para este correo, recibirás un nuevo enlace. Usa el mensaje más reciente y abre el enlace en este navegador.','notice ok');
+ }catch(err){msg(box,err.message,'notice err')}finally{btn.disabled=false}
+});
+function showInviteForm(kind='invite'){
+ $('#loginForm').classList.add('hidden');
+ $('#forgotPassword').classList.add('hidden');
+ $('#recoverView').classList.add('hidden');
  $('#inviteView').classList.remove('hidden');
- $('#inviteEmail').textContent='Correo de la invitación: '+(user?.email||'');
+ const isRecovery=kind==='recovery';
+ $('#credentialTitle').textContent=isRecovery?'Restablecer contraseña':'Activar cuenta administrativa';
+ $('#inviteEmail').textContent=(isRecovery?'Define una nueva contraseña para: ':'Correo de la invitación: ')+(user?.email||'');
+ $('#setPasswordButton').textContent=isRecovery?'GUARDAR NUEVA CONTRASEÑA':'ACTIVAR MI CUENTA';
+ $('#inviteMsg').textContent='';
 }
 $('#inviteForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const pass=$('#invitePassword').value,confirmPass=$('#invitePasswordConfirm').value,box=$('#inviteMsg');
  if(pass.length<12||pass!==confirmPass){msg(box,'Las contraseñas no coinciden o tienen menos de 12 caracteres.','notice err');return}
+ const btn=$('#setPasswordButton');btn.disabled=true;
  try{
+  // A valid recovery/invitation session is required by Supabase for this operation.
   await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:pass})});
   $('#inviteForm').reset();
-  await signOut(true);
- }catch(err){msg(box,'No se pudo activar la cuenta: '+err.message,'notice err')}
+  try{await req('/auth/v1/logout',{method:'POST'})}catch(e){}
+  clearSession();
+  showLogin('Contraseña definida correctamente. Ya puedes entrar con tu correo y la nueva contraseña.','notice ok');
+ }catch(err){msg(box,'No se pudo guardar la contraseña: '+err.message,'notice err')}finally{btn.disabled=false}
 });
 function renderAccount(){
  $('#content').innerHTML='<div class="card" style="max-width:680px"><h2>Mi cuenta</h2><p class="muted">Cuenta autorizada: '+esc(user?.email||'')+'. Puedes cambiar tu contraseña sin modificar la tienda.</p>'+
@@ -246,14 +298,32 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
  // Supabase invitation and password-recovery email links return session tokens in the fragment.
  // Process the callback before attempting restoration, and remove tokens from browser history immediately.
  const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+ const query=new URLSearchParams(location.search);
+ const authError=hash.get('error_description')||query.get('error_description');
+ if(authError){
+  history.replaceState(null,'',location.pathname);
+  showRecoveryRequest('El enlace ha caducado o no es válido. Solicita uno nuevo desde aquí.','notice err');
+  return;
+ }
+ if(query.has('code')&&!hash.has('access_token')){
+  // Code-based PKCE links require a stored PKCE verifier. Never accept codes as credentials.
+  history.replaceState(null,'',location.pathname);
+  showRecoveryRequest('Este enlace utiliza un método de verificación incompatible con esta sesión. Solicita un nuevo enlace desde aquí.','notice err');
+  return;
+ }
  if(hash.has('access_token')&&hash.has('refresh_token')){
   try{
-   const callbackType=hash.get('type');
+   const callbackType=hash.get('type')||query.get('type');
    setSession({access_token:hash.get('access_token'),refresh_token:hash.get('refresh_token'),expires_in:Number(hash.get('expires_in'))||3600});
-   history.replaceState(null,'',location.pathname+location.search);
+   history.replaceState(null,'',location.pathname);
    user=await req('/auth/v1/user');
-   if(['invite','recovery'].includes(callbackType)){showInviteForm();return}
-  }catch(e){clearSession();msg($('#loginMsg'),'El enlace de activación no es válido o está vencido.','notice err');return}
+   if(['invite','recovery'].includes(callbackType)){showInviteForm(callbackType);return}
+  }catch(e){
+   history.replaceState(null,'',location.pathname);
+   clearSession();
+   showRecoveryRequest('No se pudo validar el enlace. Solicita uno nuevo desde aquí.','notice err');
+   return;
+  }
  }
  let saved;try{saved=JSON.parse(sessionStorage.getItem('inmed_admin_session')||'null')}catch(e){}
  if(!saved?.refresh_token)return;
