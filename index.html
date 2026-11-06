@@ -1106,7 +1106,8 @@ function cartAvailability(it){
   if(!S.catalogReady||!it||typeof it.id!=='string')return {ok:false,reason:'Catálogo no disponible'};
   if(it.kind==='combo'){
     const combo=(DB.combos||[]).find(x=>x.id===it.id&&x.active!==false);
-    return combo?{ok:true,max:1}:{ok:false,reason:'Combo no disponible'};
+    const max=Math.floor(Number(combo?.stock));
+    return combo&&Number.isFinite(max)&&max>0?{ok:true,max}:{ok:false,reason:'Combo agotado o no disponible'};
   }
   const p=DB.products.find(x=>x.id===it.id&&x.active!==false);
   if(!p)return {ok:false,reason:'Producto no disponible'};
