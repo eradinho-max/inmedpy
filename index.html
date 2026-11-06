@@ -834,10 +834,10 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
     <section class="section" style="padding-top:0">
       <div class="container">
         <div class="news">
-          <div><div class="eyebrow" style="color:#FF6B7F">Newsletter InMed</div><h2>Consejos clínicos en tu correo</h2><p id="newsText"></p></div>
+          <div><div class="eyebrow" style="color:#FF6B7F">Newsletter InMed</div><h2>Recibí novedades de InMed</h2><p id="newsText"></p></div>
           <div>
-            <form class="news-form" id="newsForm"><input type="email" id="newsEmail" placeholder="Tu correo electrónico" required><button class="btn btn-primary" type="submit">QUIERO RECIBIR</button></form>
-            <small>Sin spam. Solo contenido útil y novedades. Podés darte de baja cuando quieras.</small>
+            <form class="news-form" id="newsForm"><input type="email" id="newsEmail" placeholder="Tu correo electrónico" required><button class="btn btn-primary" type="submit">SOLICITAR POR WHATSAPP</button></form>
+            <small>Se abrirá WhatsApp con tu solicitud. La suscripción no se registra hasta que envíes el mensaje y el equipo confirme. Podés solicitar la baja por WhatsApp.</small>
           </div>
         </div>
       </div>
@@ -1176,7 +1176,7 @@ function renderStore(){
   $('#offerText').textContent=B.offerText;
   $('#offerEyebrow').textContent='Oferta por tiempo limitado';
   $('.offer-wrap').hidden=!B.showOffer;
-  $('#newsText').textContent=B.newsText;
+  $('#newsText').textContent='Si querés recibir consejos clínicos y novedades, solicitá tu inscripción por WhatsApp.';
   $('#footerAbout').textContent=C.footer;
   $('#footerPhone').textContent=C.phone;
   $('#footerMail').textContent=C.email||'';
@@ -1799,8 +1799,12 @@ document.addEventListener('submit',async e=>{
     return;
   }
   if(f.id==='newsForm'){
-    e.preventDefault(); const email=$('#newsEmail').value.trim();
-    addLead('Newsletter',email,'Suscripción al newsletter',0); f.reset(); toast('¡Listo! Te vamos a escribir pronto.'); return;
+    e.preventDefault();
+    const email=$('#newsEmail').value.trim();
+    if(!email)return;
+    const request='Hola InMed, quiero solicitar la suscripción a las novedades y consejos clínicos por correo electrónico. Mi email es: '+email+'. ¿Podés confirmar la inscripción y cómo solicitar la baja?';
+    if(openWA(request)){f.reset();toast('Se abrió WhatsApp. Enviá el mensaje para solicitar tu inscripción.');}
+    return;
   }
   const kind=f.dataset.form; if(!kind) return;
   e.preventDefault();
