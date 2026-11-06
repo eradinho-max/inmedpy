@@ -795,17 +795,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
       </div>
     </section>
 
-    <!-- TESTIMONIALS -->
-    <section class="section soft">
-      <div class="container">
-        <div class="section-head"><div><div class="eyebrow">Quienes ya nos eligen</div><h2 class="h2">Profesionales que <span class="accent">confían</span></h2></div></div>
-        <div class="testi-grid">
-          <div class="testi"><div class="stars"><i>★★★★★</i> 5.0</div><p>“Llegó rapidísimo a Ciudad del Este. El estetoscopio es tal cual la foto y la atención por WhatsApp fue excelente.”</p><div class="testi-user"><div class="avatar">MC</div><div><strong>Dra. M. Cáceres</strong><small>Medicina general · CDE</small></div></div></div>
-          <div class="testi"><div class="stars"><i>★★★★★</i> 5.0</div><p>“Compré el kit de sutura para la facu y viene completísimo. Me sirvió muchísimo para prácticas.”</p><div class="testi-user"><div class="avatar">JR</div><div><strong>J. Rojas</strong><small>Estudiante de Medicina · Asunción</small></div></div></div>
-          <div class="testi"><div class="stars"><i>★★★★★</i> 5.0</div><p>“Equipamos el consultorio con el kit de semiología. Todo original, bien embalado y a buen precio.”</p><div class="testi-user"><div class="avatar">LB</div><div><strong>Lic. L. Benítez</strong><small>Enfermería · Encarnación</small></div></div></div>
-        </div>
-      </div>
-    </section>
+    <!-- Testimonios: publicar solo con reseñas reales confirmadas y consentimiento. -->
 
     <!-- BLOG -->
     <section class="section" id="blog">
@@ -990,8 +980,8 @@ const DEFAULT = () => ({
     {id:'Glucómetros',      name:'Glucómetros',       img:'glucometro',  desc:'Control de glucosa'}
   ],
   products:[
-    {id:'p1',name:'Kit de Sutura InMed — 25 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-25',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
-      features:['25 piezas organizadas en estuche','Pad de silicona reutilizable de 3 capas','Instrumental de acero inoxidable','Hilos de nylon, seda y poliéster','Ideal para estudiantes y residentes'],includes:['1 almohadilla de sutura','1 portaagujas + 1 pinza','1 tijera quirúrgica + 1 bisturí','12 hilos con aguja','Estuche con cierre y manual'],specs:{Piezas:'25',Material:'Acero inoxidable / silicona',Nivel:'Estudiante y residente',SKU:'KIT-SUT-25'}},
+    {id:'p1',name:'Kit de Sutura InMed — 19 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-25',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
+      features:['19 piezas organizadas en estuche','Pad de silicona reutilizable de 3 capas','Instrumental de acero inoxidable','Hilos de nylon, seda y poliéster','Ideal para estudiantes y residentes'],includes:['1 almohadilla de sutura','1 portaagujas + 1 pinza','1 tijera quirúrgica + 1 bisturí','12 hilos con aguja','Estuche con cierre y manual'],specs:{Piezas:'25',Material:'Acero inoxidable / silicona',Nivel:'Estudiante y residente',SKU:'KIT-SUT-25'}},
     {id:'p2',name:'Estetoscopio BIC Eternity III',cat:'Estetoscopios',short:'Doble campana, acero inoxidable. 5 colores.',desc:'El clásico BIC Eternity III con doble campana de acero inoxidable, tubo de PVC flexible y olivas suaves. Disponible en cinco combinaciones de color con terminación Rainbow.',price:329000,promo:289000,stock:18,sku:'BIC-ET3',img:'bic-rosa',rating:4.9,reviews:52,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
       features:['Doble campana adulto / pediátrico','Acero inoxidable pulido','Tubo flexible de doble lumen','Olivas suaves intercambiables','Incluye estuche y accesorios'],includes:['Estetoscopio BIC Eternity III','Par de olivas de repuesto','Diafragmas de repuesto','Estuche protector'],specs:{Modelo:'Eternity III',Campana:'Doble, acero inoxidable',Tubo:'PVC doble lumen',Garantía:'12 meses',SKU:'BIC-ET3'},
       variants:[
@@ -1094,12 +1084,31 @@ function activePromoFor(p){
   return (DB.promotions||[]).find(pr=>pr.active && pr.productIds.indexOf(p.id)>-1 && (!pr.start||pr.start<=today) && (!pr.end||pr.end>=today)) || null;
 }
 function priceOf(p,v){
-  const base = v? Number(v.price) : Number(p.price);
-  const pr = activePromoFor(p);
-  if(pr){ const cur=Math.round(base*(1-pr.percent/100)); return {cur,old:base,off:pr.percent,name:pr.name}; }
-  if(!v && p.promo && Number(p.promo)<Number(p.price)) return {cur:Number(p.promo),old:Number(p.price),off:Math.round((1-p.promo/p.price)*100)};
-  if(v && Number(v.price)<Number(p.price)) return {cur:Number(v.price),old:Number(p.price),off:Math.round((1-v.price/p.price)*100)};
-  return {cur:base,old:null,off:null};
+  const regular=Number(p.price), base=v?Number(v.price):regular;
+  if(!Number.isFinite(base)||base<0)return {cur:0,old:null,off:null};
+  const candidates=[base],promo=activePromoFor(p);
+  if(promo&&Number.isFinite(Number(promo.percent))&&Number(promo.percent)>0&&Number(promo.percent)<=100){
+    candidates.push(Math.round(base*(1-Number(promo.percent)/100)));
+  }
+  // Compare the individual price and the campaign: never replace a lower offer with a higher price.
+  if(!v&&p.promo!==null&&p.promo!==undefined&&Number.isFinite(Number(p.promo))
+    &&Number(p.promo)>=0&&Number(p.promo)<base)candidates.push(Number(p.promo));
+  const cur=Math.min(...candidates);
+  const original=(v&&regular>base)?regular:base;
+  const old=cur<original?original:null;
+  const off=old&&old>0?Math.round((1-cur/old)*100):null;
+  return {cur,old,off,name:promo?.name||null};
+}
+function publicCategoryName(id){
+  return (DB.categories||[]).find(c=>c.id===id)?.name||id||'Equipamiento médico';
+}
+function activeCampaign(){
+  const today=todayStr();
+  return (DB.promotions||[]).find(pr=>pr.active
+    && Number(pr.percent)>0&&Number(pr.percent)<=100
+    && Array.isArray(pr.productIds)
+    && pr.productIds.some(id=>DB.products.some(p=>p.id===id&&p.active!==false))
+    && (!pr.start||pr.start<=today)&&(!pr.end||pr.end>=today))||null;
 }
 const stockOf=(p,v)=> v? Number(v.stock) : Number(p.stock);
 function cartAvailability(it){
@@ -1165,17 +1174,25 @@ function stars(r){ return `<div class="stars"><i>★★★★★</i> ${Number(r)
    ========================================================================== */
 function renderStore(){
   const B=DB.banners, C=DB.settings;
-  $('#topAnnounce').innerHTML=B.showAnnouncement?B.announcement:'&nbsp;';
+  // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
+  const announcement=String(B.announcement||'');
+  const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
+  $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?announcement:'Envíos a todo Paraguay · Atención por WhatsApp';
   $('#heroTitle').innerHTML=B.heroTitle;
   $('#heroSub').textContent=B.heroSub;
-  $('#heroBadge').innerHTML=B.heroBadge;
-  $('#heroBadge').hidden=!B.showHeroBadge;
+  const heroCampaign=B.showOffer?activeCampaign():null;
+  $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
+  $('#heroBadge').hidden=!B.showHeroBadge||!heroCampaign;
   $('#heroImg').src=img('hero');
   $('#floatBText').innerHTML='Envío gratis*<small>Desde '+gs(C.freeShipMin)+'</small>';
-  $('#offerTitle').textContent=B.offerTitle;
-  $('#offerText').textContent=B.offerText;
-  $('#offerEyebrow').textContent='Oferta por tiempo limitado';
-  $('.offer-wrap').hidden=!B.showOffer;
+  const campaign=B.showOffer?activeCampaign():null;
+  const cats=campaign?[...new Set((campaign.productIds||[]).map(id=>
+    DB.products.find(p=>p.id===id)?.cat).filter(Boolean).map(publicCategoryName))]:[];
+  $('#offerTitle').textContent=campaign?(campaign.name+' · '+Number(campaign.percent)+'% OFF'):'';
+  $('#offerText').textContent=campaign?
+    ('En '+(cats.join(' y ')||'productos')+' seleccionados. Se muestra siempre el mejor precio disponible. Consultá el stock antes de comprar.'):'';
+  $('#offerEyebrow').textContent=campaign?'Promoción vigente en productos seleccionados':'';
+  $('.offer-wrap').hidden=!campaign;
   $('#newsText').textContent='Si querés recibir consejos clínicos y novedades, solicitá tu inscripción por WhatsApp.';
   $('#footerAbout').textContent=C.footer;
   $('#footerPhone').textContent=C.phone;
@@ -1208,7 +1225,7 @@ function filteredProducts(){
 }
 function productCard(p){
   const pr=priceOf(p), st=Number(p.stock), out=st<=0, low=st>0&&st<=3;
-  const tagList=(p.tags||[]).slice(); if(pr.off&&tagList.indexOf('OFERTA')===-1)tagList.push('OFERTA');
+  const tagList=(p.tags||[]).filter(t=>t!=='OFERTA'&&t!=='MÁS VENDIDO');if(pr.off)tagList.push('OFERTA');
   const badges=tagList.slice(0,2).map(t=>`<span class="badge ${t==='OFERTA'?'badge-red':'badge-dark'}">${esc(t)}</span>`).join('');
   const fav=S.favs.indexOf(p.id)>-1;
   return `<article class="prod-card">
@@ -1218,10 +1235,10 @@ function productCard(p){
       <img src="${img(p.img)}" alt="${esc(p.name)}" loading="lazy">
     </div>
     <div class="prod-body">
-      <div class="prod-cat">${esc(p.cat)}</div>
+      <div class="prod-cat">${esc(publicCategoryName(p.cat))}</div>
       <div class="prod-title" data-act="open-pdp" data-id="${p.id}">${esc(p.name)}</div>
       <div class="prod-desc">${esc(p.short)}</div>
-      ${stars(p.rating)}
+      <div style="font-size:11px;color:var(--gray);margin:6px 0">Código: ${esc(p.sku||'Consultar')}</div>
       <div class="price-row">${pr.old?`<div class="price-old">${gs(pr.old)}</div>`:''}<span class="price"><span class="cur">Gs.</span> ${Math.round(pr.cur).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}</span>${pr.off?`<span class="price-off">-${pr.off}%</span>`:''}</div>
       <div class="prod-meta">
         ${out?'<span class="tag-amber">Agotado</span>':low?'<span class="tag-amber">Últimas '+st+' unidades</span>':'<span class="tag-green">En stock</span>'}
@@ -1296,13 +1313,24 @@ function renderFAQ(){
   $('#faqList').innerHTML=FAQ.map((f,i)=>`<div class="faq-item ${i===0?'open':''}"><button class="faq-q" data-act="faq"><span>${esc(f.q)}</span><span class="plus">+</span></button><div class="faq-a">${esc(f.a)}</div></div>`).join('');
 }
 function renderCountdown(){
-  const end=new Date(DB.banners.offerEnd).getTime();
+  const campaign=DB.banners.showOffer?activeCampaign():null;
+  if(!campaign){
+    $('.offer-wrap').hidden=true;
+    return;
+  }
+  const end=campaign.end?new Date(campaign.end+'T23:59:59').getTime():NaN;
   const diff=end-Date.now();
-  let boxes;
-  if(!DB.banners.showOffer||isNaN(end)||diff<=0) boxes=[['00','Días'],['00','Horas'],['00','Min'],['00','Seg']];
-  else{ const d=Math.floor(diff/86400000),h=Math.floor(diff/3600000)%24,m=Math.floor(diff/60000)%60,s=Math.floor(diff/1000)%60;
-    boxes=[[String(d).padStart(2,'0'),'Días'],[String(h).padStart(2,'0'),'Horas'],[String(m).padStart(2,'0'),'Min'],[String(s).padStart(2,'0'),'Seg']]; }
-  $('#countdown').innerHTML=boxes.map(b=>`<div class="cd-box"><b>${b[0]}</b><small>${b[1]}</small></div>`).join('');
+  if(!Number.isFinite(end)){
+    $('#countdown').innerHTML='';
+    return;
+  }
+  if(diff<=0){
+    $('.offer-wrap').hidden=true;
+    return;
+  }
+  const d=Math.floor(diff/86400000),h=Math.floor(diff/3600000)%24,m=Math.floor(diff/60000)%60,z=Math.floor(diff/1000)%60;
+  const boxes=[[String(d).padStart(2,'0'),'Días'],[String(h).padStart(2,'0'),'Horas'],[String(m).padStart(2,'0'),'Min'],[String(z).padStart(2,'0'),'Seg']];
+  $('#countdown').innerHTML=boxes.map(b=>'<div class="cd-box"><b>'+b[0]+'</b><small>'+b[1]+'</small></div>').join('');
 }
 
 /* ---------- carrito ---------- */
@@ -1382,7 +1410,7 @@ function renderPDP(){
   const vs=p.variants||[], v=vs.find(x=>x.name===S.pdp.variant), pr=priceOf(p,v), st=stockOf(p,v);
   const gallery=vs.length?vs.map(x=>x.img):[p.img].concat(p.imgs||[]);
   const main=v?v.img:p.img;
-  $('#pdpBreadcrumb').innerHTML='Inicio <span>›</span> '+esc(p.cat)+' <span>›</span> <b>'+esc(p.name)+'</b>';
+  $('#pdpBreadcrumb').innerHTML='Inicio <span>›</span> '+esc(publicCategoryName(p.cat))+' <span>›</span> <b>'+esc(p.name)+'</b>';
   const tabs=[['features','Características'],['includes','Qué incluye'],['specs','Especificaciones'],['shipping','Envío']];
   let body='';
   if(S.pdp.tab==='features') body='<ul>'+(p.features||[]).map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul><p>'+esc(p.desc)+'</p>';
@@ -1397,9 +1425,9 @@ function renderPDP(){
         <div class="pdp-thumbs">${gallery.map((k,i)=>`<button class="${k===main?'active':''}" data-act="pdp-img" data-val="${esc(k)}" data-i="${i}"><img src="${img(k)}" alt="Vista ${i+1}"></button>`).join('')}</div>
       </div>
       <div>
-        <div class="prod-cat">${esc(p.cat)}${pr.off?' · <span style="color:var(--red)">OFERTA -'+pr.off+'%</span>':''}</div>
+        <div class="prod-cat">${esc(publicCategoryName(p.cat))}${pr.off?' · <span style="color:var(--red)">OFERTA -'+pr.off+'%</span>':''}</div>
         <h2 class="pdp-title">${esc(p.name)}</h2>
-        ${stars(p.rating)} <span style="font-size:11px;color:var(--gray)">${p.reviews||0} opiniones</span>
+        <span style="font-size:12px;color:var(--gray)">SKU: ${esc(v?v.sku:(p.sku||'Consultar'))}</span>
         <div class="pdp-price">${pr.old?`<div class="price-old" style="font-size:14px">${gs(pr.old)}</div>`:''}<span class="price"><span class="cur">Gs.</span> ${Math.round(pr.cur).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}</span>${pr.off?`<span class="price-off">-${pr.off}%</span>`:''}</div>
         <p class="pdp-short">${esc(p.desc)}</p>
         ${vs.length?`<div style="margin-top:18px"><div style="font-size:12px;font-weight:700;margin-bottom:9px">Color: <span style="color:var(--gray);font-weight:500">${esc(v?v.name:'')}</span></div>
