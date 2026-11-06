@@ -72,7 +72,7 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 <script>
 (()=>{'use strict';
 const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
-let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null;
+let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null,saving=false;
 const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Gs. '+Math.round(Number(n)||0).toLocaleString('es-PY');
@@ -116,24 +116,40 @@ async function loadStore(){
  if(!rows.length)throw new Error('No existe store_state/main');
  DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
 }
-function validateStore(){
- if(!DB||!Array.isArray(DB.products)||!Array.isArray(DB.categories))throw new Error('El catálogo no tiene una estructura válida.');
- const ids=new Set();
- for(const p of DB.products){
-  if(!p.id||ids.has(p.id))throw new Error('Hay productos sin ID o con ID repetido.');
-  ids.add(p.id);
-  if(!Number.isFinite(Number(p.price))||Number(p.price)<0||!Number.isFinite(Number(p.stock))||Number(p.stock)<0)throw new Error('Precio o stock inválido en '+(p.name||p.id));
+function validateStore(data=DB){
+ if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions))throw new Error('El catálogo no tiene una estructura válida.');
+ const ids=new Set(), categories=new Set();
+ for(const c of data.categories){
+  if(typeof c.id!=='string'||!c.id.trim()||categories.has(c.id))throw new Error('Categoría sin ID o ID duplicado.');
+  if(!String(c.name||'').trim())throw new Error('Todas las categorías deben tener un nombre.');
+  categories.add(c.id);
  }
+ for(const p of data.products){
+  if(typeof p.id!=='string'||!p.id.trim()||ids.has(p.id))throw new Error('Hay productos sin ID o con ID repetido.');
+  ids.add(p.id);
+  if(!String(p.name||'').trim())throw new Error('Hay productos sin nombre.');
+  if(!categories.has(p.cat))throw new Error('Categoría inválida para '+(p.name||p.id));
+  if(!Number.isFinite(p.price)||p.price<0||!Number.isInteger(p.stock)||p.stock<0)throw new Error('Precio o stock inválido en '+p.name);
+  if(p.promo!=null&&(!Number.isFinite(p.promo)||p.promo<0||p.promo>p.price))throw new Error('Precio promocional inválido en '+p.name);
+ }
+ for(const promo of data.promotions){
+  if(!Number.isFinite(Number(promo.percent))||Number(promo.percent)<0||Number(promo.percent)>100)throw new Error('Descuento fuera de 0–100% en '+(promo.name||promo.id));
+  if(promo.active&&!(promo.productIds||[]).every(id=>ids.has(id)))throw new Error('Promoción activa con productos inexistentes: '+(promo.name||promo.id));
+ }
+ return true;
 }
 async function saveStore(){
- if(!DB||!dirty)return;
+ if(!DB||!dirty||saving)return;
  validateStore();
- $('#syncStatus').textContent='Guardando…';
- const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
- const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
- if(!Array.isArray(rows)||rows.length!==1)throw new Error('El catálogo fue modificado desde otra sesión. No se sobrescribió. Copia tu respaldo JSON y recarga.');
- lastSyncedAt=rows[0].updated_at;dirty=false;
- $('#syncStatus').textContent='Guardado en Supabase · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+ saving=true;$('#saveAll').disabled=true;$('#syncStatus').textContent='Guardando…';
+ try{
+  const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
+  const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(rows)||rows.length!==1)throw new Error('Otra sesión modificó el catálogo. No se sobrescribieron sus cambios. Exporta el respaldo JSON antes de recargar.');
+  lastSyncedAt=rows[0].updated_at;dirty=false;
+  $('#syncStatus').textContent='Guardado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+ }catch(err){$('#syncStatus').textContent='Error al guardar · cambios pendientes';throw err}
+ finally{saving=false;$('#saveAll').disabled=false}
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
