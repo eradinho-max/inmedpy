@@ -4,17 +4,21 @@
 <!-- SEO/Analytics preservados do site original -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3YWWXYW6LT"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=window.gtag||gtag;gtag('js',new Date());gtag('config','G-3YWWXYW6LT');</script>
-<link rel="canonical" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<link rel="alternate" hreflang="es-PY" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<link rel="alternate" hreflang="x-default" href="https://inmed-py.github.io/kit-de-sutura-paraguay/">
-<meta property="og:locale" content="es_PY"><meta property="og:type" content="website"><meta property="og:site_name" content="InMed Soluciones Médicas"><meta property="og:url" content="https://inmed-py.github.io/kit-de-sutura-paraguay/">
+<link rel="canonical" href="https://inmedpy.vercel.app/">
+<link rel="alternate" hreflang="es-PY" href="https://inmedpy.vercel.app/">
+<link rel="alternate" hreflang="x-default" href="https://inmedpy.vercel.app/">
+<meta property="og:locale" content="es_PY"><meta property="og:type" content="website"><meta property="og:site_name" content="InMed Soluciones Médicas"><meta property="og:url" content="https://inmedpy.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
 <script defer src="/site-analytics.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>InMed | Equipamiento médico en Paraguay</title>
+<title>InMed Paraguay | Kits de Sutura y Equipamiento Médico</title>
+<meta property="og:title" content="InMed Paraguay | Kits de Sutura y Equipamiento Médico">
+<meta property="og:description" content="Kits de sutura para estudiantes, estetoscopios, oxímetros y equipamiento médico con envíos en Paraguay.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"InMed Soluciones Médicas","url":"https://inmedpy.vercel.app/","inLanguage":"es-PY"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"InMed Soluciones Médicas","url":"https://inmedpy.vercel.app/","address":{"@type":"PostalAddress","addressLocality":"Asunción","addressCountry":"PY"}}</script>
 <meta name="inmed-build" content="public-storefront-no-admin">
-<meta name="description" content="Equipamiento médico para estudiantes, profesionales y cuidado en casa. Estetoscopios, kits de sutura, oxímetros y más. Envíos a todo Paraguay.">
+<meta name="description" content="Kits de sutura para estudiantes de Medicina en Paraguay, estetoscopios BIC y equipamiento médico. Consultá precios, disponibilidad y envíos con InMed.">
 <meta name="theme-color" content="#D90429">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23D90429'/%3E%3Cpath d='M27 12h10v15h15v10H37v15H27V37H12V27h15z' fill='white'/%3E%3C/svg%3E">
 <style>/* ============================================================
@@ -727,6 +731,7 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
           <div><div class="eyebrow">Selección InMed</div><h2 class="h2">Productos <span class="accent">destacados</span></h2><p class="lead">Equipamiento elegido por estudiantes y profesionales de la salud.</p></div>
           <a href="#productos" class="link-arrow" id="seeAll">Ver todos los productos <svg class="ic" style="width:16px;height:16px"><use href="#i-arrow"/></svg></a>
         </div>
+        <p style="margin:0 0 18px;font-size:14px"><a href="/kit-de-sutura-paraguay/" style="font-weight:750;color:#D90429">¿Buscás un kit de sutura para practicar? Conocé el kit de 19 piezas y nuestras guías de entrenamiento.</a></p>
         <div class="filter-bar" id="filterBar"></div>
         <div class="prod-grid" id="prodGrid"></div>
         <div class="center-actions"><button class="btn btn-outline" id="loadMore">MOSTRAR MÁS PRODUCTOS</button></div>
@@ -1183,7 +1188,7 @@ function renderStore(){
   $('#footerMail').closest('li').hidden=!String(C.email||'').trim();
   $('#footerCopy').textContent=C.copy;
   $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
-  document.title=C.storeName+' | Equipamiento médico en Paraguay';
+  document.title=(C.storeName||'InMed')+' Paraguay | Kits de Sutura y Equipamiento Médico';
   renderCategories(); renderFilters(); renderProducts(); renderBIC(); renderCombos(); renderPosts(); renderFAQ(); renderCountdown(); renderCart();
 }
 function renderCategories(){
