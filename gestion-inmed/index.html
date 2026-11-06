@@ -183,7 +183,10 @@ function renderCategories(){
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
- (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+'</div><div class="field" style="margin-top:12px"><label>IDs de productos separados por coma</label><input id="pr_products_'+i+'" value="'+esc((p.productIds||[]).join(','))+'"></div><div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div></div>').join('')+'</div>';
+ (DB.promotions||[]).map((p,i)=>'<div class="item"><div class="grid3">'+field('Nombre','pr_name_'+i,p.name)+field('Descuento %','pr_percent_'+i,p.percent,'number')+field('Fin','pr_end_'+i,p.end,'date')+
+ '</div><div class="field" style="margin-top:12px"><label>Productos incluidos</label><div class="grid">'+(DB.products||[]).map(x=>'<label class="row"><input type="checkbox" style="width:auto" data-promo-product="'+i+'" value="'+esc(x.id)+'" '+((p.productIds||[]).includes(x.id)?'checked':'')+'><span>'+esc(x.name)+'</span></label>').join('')+'</div></div>'+
+ '<div class="field" style="margin-top:12px"><label>Estado</label><select id="pr_active_'+i+'"><option value="1" '+(p.active?'selected':'')+'>Activa</option><option value="0" '+(!p.active?'selected':'')+'>Pausada</option></select></div>'+
+ '<button class="btn danger" style="margin-top:12px" data-delete-promo="'+i+'">Eliminar promoción</button></div>').join('')+'</div>';
  $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr-'+crypto.randomUUID(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
 function renderBanners(){
@@ -286,13 +289,14 @@ function renderAccount(){
  };
 }
 function renderJSON(){
- $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Vista técnica. Útil para copiar un respaldo manual antes de cambios grandes.</p><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn primary" style="margin-top:12px">APLICAR JSON</button></div>';
- $('#applyJson').onclick=()=>{try{DB=JSON.parse($('#jsonBox').value);mark();render()}catch(e){alert('JSON inválido')}}
+ $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Descarga una copia antes de importar o editar muchos productos. No se guarda automáticamente.</p><button class="btn ghost" id="downloadJSON" type="button">DESCARGAR RESPALDO</button><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace;margin-top:12px">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn danger" style="margin-top:12px">REEMPLAZAR DATOS EN MEMORIA</button><p class="muted">Para persistir una importación válida debes pulsar GUARDAR CAMBIOS.</p></div>';
+ $('#downloadJSON').onclick=()=>{const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='inmed-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+ $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
  (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.active=g('p_active_'+i).value==='1'});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
- (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=$('#pr_products_'+i).value.split(',').map(x=>x.trim()).filter(Boolean);p.active=$('#pr_active_'+i).value==='1'}});
+ (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
  if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value;b.offerTitle=$('#b_offerTitle').value}
  if(tab==='settings'){const s=DB.settings;s.storeName=$('#s_name').value;s.whatsapp=$('#s_whatsapp').value;s.phone=$('#s_phone').value;s.email=$('#s_email').value;s.freeShipMin=Number($('#s_ship').value)||0}
 }
@@ -307,6 +311,8 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
+ const removePromo=e.target.closest('[data-delete-promo]');
+ if(removePromo){collect();const i=Number(removePromo.dataset.deletePromo);if(confirm('¿Eliminar esta promoción?')){DB.promotions.splice(i,1);mark();renderPromotions()}return}
  const d=e.target.closest('[data-delete-product]');if(d){const i=Number(d.dataset.deleteProduct);collect();const product=DB.products[i];if((DB.promotions||[]).some(p=>p.active&&(p.productIds||[]).includes(product.id))){alert('Primero retira este producto de las promociones activas.');return}if(confirm('¿Eliminar '+product.name+'?')){DB.products.splice(i,1);mark();renderProducts()}return}
 });
 document.addEventListener('input',e=>{if($('#adminView').contains(e.target)&&!e.target.closest('#changePasswordForm')&&e.target.matches('input,textarea,select'))mark()});
