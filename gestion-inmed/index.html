@@ -36,6 +36,16 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
         <button class="btn primary" style="width:100%;margin-top:16px">ENTRAR</button>
       </form>
       <div id="loginMsg"></div>
+      <section id="inviteView" class="hidden">
+        <h2>Activar cuenta administrativa</h2>
+        <p class="muted" id="inviteEmail"></p>
+        <form id="inviteForm">
+          <div class="field"><label for="invitePassword">Crear contraseña (mínimo 12 caracteres)</label><input id="invitePassword" type="password" autocomplete="new-password" minlength="12" required></div>
+          <div class="field" style="margin-top:12px"><label for="invitePasswordConfirm">Confirmar contraseña</label><input id="invitePasswordConfirm" type="password" autocomplete="new-password" minlength="12" required></div>
+          <button class="btn primary" style="width:100%;margin-top:16px">ACTIVAR MI CUENTA</button>
+        </form>
+        <div id="inviteMsg" role="status" aria-live="polite"></div>
+      </section>
     </div>
   </section>
 
@@ -154,6 +164,22 @@ function renderSettings(){
  const s=DB.settings||{};
  $('#content').innerHTML='<div class="card"><h2>Configuración</h2><div class="grid">'+field('Nombre','s_name',s.storeName)+field('WhatsApp','s_whatsapp',s.whatsapp)+field('Teléfono visible','s_phone',s.phone)+field('Correo','s_email',s.email)+field('Envío gratis desde','s_ship',s.freeShipMin,'number')+'</div></div>';
 }
+function showInviteForm(){
+ $('#loginForm').classList.add('hidden');
+ $('#loginMsg').textContent='';
+ $('#inviteView').classList.remove('hidden');
+ $('#inviteEmail').textContent='Correo de la invitación: '+(user?.email||'');
+}
+$('#inviteForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const pass=$('#invitePassword').value,confirmPass=$('#invitePasswordConfirm').value,box=$('#inviteMsg');
+ if(pass.length<12||pass!==confirmPass){msg(box,'Las contraseñas no coinciden o tienen menos de 12 caracteres.','notice err');return}
+ try{
+  await req('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:pass})});
+  $('#inviteForm').reset();
+  await signOut(true);
+ }catch(err){msg(box,'No se pudo activar la cuenta: '+err.message,'notice err')}
+});
 function renderAccount(){
  $('#content').innerHTML='<div class="card" style="max-width:680px"><h2>Mi cuenta</h2><p class="muted">Cuenta autorizada: '+esc(user?.email||'')+'. Puedes cambiar tu contraseña sin modificar la tienda.</p>'+
  '<form id="changePasswordForm"><div class="field"><label for="oldPass">Contraseña actual</label><input id="oldPass" type="password" autocomplete="current-password" required></div>'+
@@ -217,6 +243,18 @@ $('#logout').onclick=()=>signOut();
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 (async()=>{
  sessionStorage.removeItem('inmed_admin_token');
+ // Supabase invitation and password-recovery email links return session tokens in the fragment.
+ // Process the callback before attempting restoration, and remove tokens from browser history immediately.
+ const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+ if(hash.has('access_token')&&hash.has('refresh_token')){
+  try{
+   const callbackType=hash.get('type');
+   setSession({access_token:hash.get('access_token'),refresh_token:hash.get('refresh_token'),expires_in:Number(hash.get('expires_in'))||3600});
+   history.replaceState(null,'',location.pathname+location.search);
+   user=await req('/auth/v1/user');
+   if(['invite','recovery'].includes(callbackType)){showInviteForm();return}
+  }catch(e){clearSession();msg($('#loginMsg'),'El enlace de activación no es válido o está vencido.','notice err');return}
+ }
  let saved;try{saved=JSON.parse(sessionStorage.getItem('inmed_admin_session')||'null')}catch(e){}
  if(!saved?.refresh_token)return;
  token=saved.access_token;refreshToken=saved.refresh_token;expiry=Number(saved.expires_at)||0;
