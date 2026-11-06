@@ -203,7 +203,20 @@ $('#recoverForm').addEventListener('submit',async e=>{
   const response=await fetch(CFG.url+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{
    method:'POST',headers:{apikey:CFG.key,'Content-Type':'application/json'},body:JSON.stringify({email})
   });
-  if(!response.ok)throw new Error('No fue posible enviar el enlace. Comprueba la configuración de correo y vuelve a intentarlo.');
+  if(!response.ok){
+   const body=await response.json().catch(()=>({}));
+   const code=String(body.code||body.error_code||'').toLowerCase();
+   if(response.status===429||code==='over_email_send_rate_limit'||code==='over_request_rate_limit'){
+    throw new Error('Se alcanzó el límite de correos del proyecto Supabase (error 429). No sigas intentando ahora: espera a que se restablezca la cuota de envío o configura SMTP propio en Supabase.');
+   }
+   if(code==='email_address_not_authorized'){
+    throw new Error('El servicio de correo integrado no autoriza este destinatario. Configura SMTP propio o utiliza un miembro autorizado de la organización.');
+   }
+   if(response.status>=500||code.includes('smtp')){
+    throw new Error('El servicio de correo de Supabase no está disponible o tiene un problema de configuración SMTP.');
+   }
+   throw new Error('No se pudo enviar el enlace (HTTP '+response.status+'). Revisa Authentication > Logs en Supabase.');
+  }
   msg(box,'Si existe una cuenta para este correo, recibirás un nuevo enlace. Usa el mensaje más reciente y abre el enlace en este navegador.','notice ok');
  }catch(err){msg(box,err.message,'notice err')}finally{btn.disabled=false}
 });
