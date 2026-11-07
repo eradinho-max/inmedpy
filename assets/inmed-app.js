@@ -12,6 +12,12 @@ const img = k => {
   return IMG[v] || IMG['bic-rosa'] || '';
 };
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Permit only the intentional decorative tags in merchant-editable banners.
+const safeRich = (value,tags=['em','b']) => {
+  let html=esc(value);
+  for(const tag of tags){const re=new RegExp('&lt;(/?)'+tag+'&gt;','gi');html=html.replace(re,(_m,slash)=>'<'+slash+tag+'>');}
+  return html;
+};
 const gs  = n => 'Gs. '+Math.round(Number(n)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 const norm= s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const slug= s => norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -248,8 +254,8 @@ function renderStore(){
   // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
   const announcement=String(B.announcement||'');
   const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
-  $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?announcement:'Envíos a todo Paraguay · Atención por WhatsApp';
-  $('#heroTitle').innerHTML=B.heroTitle;
+  $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?safeRich(announcement,['b']):'Envíos a todo Paraguay · Atención por WhatsApp';
+  $('#heroTitle').innerHTML=safeRich(B.heroTitle,['em']);
   $('#heroSub').textContent=B.heroSub;
   const heroCampaign=B.showOffer?activeCampaign():null;
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
@@ -1018,8 +1024,8 @@ $('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed
 $('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed 👋, quiero hacer una consulta.');});
 $('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto InMed','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Lunes a viernes de 08:00 a 18:00.</p><p>Envíos a todo el país.</p>');});
 $('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre InMed','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
-$('#bicAdd').addEventListener('click',()=>{const p=bicProduct(),v=(p.variants||[])[S.bic];if(v&&v.stock>0)addToCart(p.id,v.name,1,'product');else openWA('Hola InMed 👋, quiero consultar disponibilidad del BIC Eternity '+v.name+'.');});
-$('#bicWhats').addEventListener('click',()=>{const p=bicProduct(),v=(p.variants||[])[S.bic];openWA('Hola InMed 👋, quiero consultar por el BIC Eternity III · '+v.name+' ('+v.sku+') a '+gs(priceOf(p,v).cur)+'. ¿Está disponible?',{text:'BIC Eternity '+v.name,total:priceOf(p,v).cur});});
+$('#bicAdd').addEventListener('click',()=>{const p=bicProduct();if(!p)return;const v=(p.variants||[])[S.bic];if(!v)return;if(v.stock>0)addToCart(p.id,v.name,1,'product');else openWA('Hola InMed 👋, quiero consultar disponibilidad de '+p.name+' · '+v.name+'.');});
+$('#bicWhats').addEventListener('click',()=>{const p=bicProduct();if(!p)return;const v=(p.variants||[])[S.bic];if(!v)return;openWA('Hola InMed 👋, quiero consultar por '+p.name+' · '+v.name+' ('+(v.sku||p.sku||'')+') a '+gs(priceOf(p,v).cur)+'. ¿Está disponible?',{text:p.name+' · '+v.name,total:priceOf(p,v).cur});});
 $('#loadMore').addEventListener('click',()=>{S.visible+=4;renderProducts();});
 $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',true);});
 $('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allPosts;renderPosts();});
