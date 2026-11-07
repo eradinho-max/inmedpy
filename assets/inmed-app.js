@@ -278,7 +278,19 @@ function renderStore(){
   $('#footerCopy').textContent=C.copy;
   $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
   document.title=(C.storeName||'InMed')+' Paraguay | Kits de Sutura y Equipamiento Médico';
-  renderCategories(); renderFilters(); renderProducts(); renderBIC(); renderCombos(); renderPosts(); renderFAQ(); renderCountdown(); renderCart();
+  renderNavigation(); renderCategories(); renderFilters(); renderProducts(); renderBIC(); renderCombos(); renderPosts(); renderFAQ(); renderCountdown(); renderCart();
+}
+function renderNavigation(){
+  // Categories come from the active catalog: no permanently hardcoded demo navigation.
+  const categories=(DB.categories||[]).filter(cat=>activeProducts().some(p=>p.cat===cat.id));
+  $('#navLinks').innerHTML=
+    '<a href="#inicio" data-cat="all">Inicio</a>'+
+    categories.map(cat=>'<a href="#productos" data-cat="'+esc(cat.id)+'">'+esc(cat.name)+'</a>').join('')+
+    ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
+    '<a href="#ofertas" class="nav-offer" data-cat="ofertas">Ofertas</a>'+
+    '<a href="#blog">Blog</a><span class="nav-spacer"></span>'+
+    '<span class="nav-note"><b>●</b> Envíos a todo Paraguay</span>';
+  $('#navLinks a[data-cat]').forEach(a=>a.classList.toggle('active',a.dataset.cat===S.filter));
 }
 function renderCategories(){
   $('#catGrid').innerHTML=DB.categories.map(c=>`
@@ -345,7 +357,7 @@ function setFilter(f,scroll){
 function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 
 /* ---------- BIC Eternity ---------- */
-function bicProduct(){ return DB.products.find(p=>p.id==='p2'&&p.active!==false&&(p.variants||[]).length)||DB.products.find(p=>p.active!==false&&(p.variants||[]).length)||null; }
+function bicProduct(){ return DB.products.find(p=>p.active!==false&&/\bBIC\b/i.test(p.name||'')&&/Eternity/i.test(p.name||'')&&(p.variants||[]).length)||null; }
 function renderBIC(){
   const p=bicProduct(), vs=p?.variants||[];
   if(!vs.length){ $('#bic').hidden=true; return; }
@@ -367,7 +379,9 @@ function renderBIC(){
 
 /* ---------- combos ---------- */
 function renderCombos(){
-  $('#comboGrid').innerHTML=(DB.combos||[]).map(c=>`
+  const available=(DB.combos||[]).filter(c=>c.active!==false&&Number(c.stock)>0);
+  $('#combos').hidden=!available.length;
+  $('#comboGrid').innerHTML=available.map(c=>`
     <div class="combo-card">
       <div class="combo-top"><div class="combo-imgs">${c.imgs.map(k=>`<img src="${img(k)}" alt="${esc(c.name)}">`).join('')}</div></div>
       <div class="combo-body">
@@ -516,7 +530,7 @@ function renderPDP(){
         <div class="pdp-qty"><span style="font-size:12px;font-weight:700">Cantidad</span><div class="qty"><button data-act="pdp-qty" data-val="-1">−</button><span>${S.pdp.qty}</span><button data-act="pdp-qty" data-val="1">+</button></div><span class="mono">${esc(v?v.sku:p.sku)}</span></div>
         <div class="pdp-buttons">
           <button class="btn btn-primary" data-act="pdp-add" ${st<=0?'disabled':''}>${st>0?'AGREGAR AL PEDIDO':'AGOTADO'}</button>
-          <button class="btn btn-outline" data-act="pdp-wa">COMPRAR POR WHATSAPP</button>
+          <button class="btn btn-outline" data-act="pdp-wa" ${st<=0?'disabled':''}>PEDIR POR WHATSAPP</button>
         </div>
         <div class="pdp-perks"><div>${ic('truck','width:15px;height:15px')} Envíos a todo el país</div><div>${ic('shield','width:15px;height:15px')} Producto original</div><div>${ic('chat','width:15px;height:15px')} Asesoría por WhatsApp</div></div>
       </div>
@@ -832,7 +846,7 @@ document.addEventListener('click',async e=>{
       renderPDP();
     }break;
     case 'pdp-add': pdpAdd(); break;
-    case 'pdp-wa': { if(!S.pdp)break; const p=DB.products.find(x=>x.id===S.pdp.id); const v=(p.variants||[]).find(x=>x.name===S.pdp.variant); const pr=priceOf(p,v); const msg='Hola InMed 👋, quiero comprar:\n\n• '+S.pdp.qty+'x '+p.name+(v?' · '+v.name:'')+' — '+gs(pr.cur*S.pdp.qty)+'\n\n¿Podés confirmarme disponibilidad y entrega?'; openWA(msg,{text:msg,total:pr.cur*S.pdp.qty}); break; }
+    case 'pdp-wa': { if(!S.pdp)break; const p=DB.products.find(x=>x.id===S.pdp.id);if(!p)break;const item={id:p.id,variant:S.pdp.variant,kind:'product'};const available=cartAvailability(item);if(!available.ok){toast(available.reason);break;}if(addToCart(p.id,S.pdp.variant,S.pdp.qty,'product')){closeAll();openCart();toast('Revisá el pedido y finalizá por WhatsApp para verificar precios y existencias.');}break; }
     /* admin */
     case 'admin-tab': S.adminTab=val; renderAdmin(); break;
     case 'product-new': showAdminModal(productForm(null)); break;
@@ -1031,11 +1045,12 @@ $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',tru
 $('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allPosts;renderPosts();});
 $('#offerBtn').addEventListener('click',e=>{e.preventDefault();setFilter('ofertas',true);});
 $$('[data-scroll]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();scrollTo(a.dataset.scroll);}));
-$$('#navLinks a[data-cat]').forEach(a=>a.addEventListener('click',e=>{
+$('#navLinks').addEventListener('click',e=>{
+  const a=e.target.closest('a[data-cat]');if(!a)return;
   e.preventDefault();
-  if(a.dataset.cat==='all'){ setFilter('all',false); window.scrollTo({top:0,behavior:'smooth'}); }
+  if(a.dataset.cat==='all'){setFilter('all',false);window.scrollTo({top:0,behavior:'smooth'});}
   else setFilter(a.dataset.cat,true);
-}));
+});
 $('#adminLogout').addEventListener('click',()=>{S.adminAuth=false;renderAdmin();});
 $('#adminExit').addEventListener('click',()=>{location.hash='#/';});
 
