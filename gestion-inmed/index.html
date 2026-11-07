@@ -179,7 +179,7 @@ function categorySelect(id,val){
 }
 function renderCategories(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
- (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div></div>').join('')+'</div>';
+ (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div><div style="margin-top:12px"><button class="btn danger" data-delete-category="'+i+'">Eliminar categoría</button></div></div>').join('')+'</div>';
  $('#addCat').onclick=()=>{collect();DB.categories.push({id:'cat-'+crypto.randomUUID(),name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
 }
 function renderPromotions(){
@@ -312,6 +312,15 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
+ const removeCategory=e.target.closest('[data-delete-category]');
+ if(removeCategory){
+  collect();
+  const i=Number(removeCategory.dataset.deleteCategory),category=DB.categories[i];
+  if(!category)return;
+  if((DB.products||[]).some(p=>p.cat===category.id)){alert('No puedes eliminar una categoría que todavía contiene productos. Mueve los productos a otra categoría primero.');return}
+  if(confirm('¿Eliminar la categoría '+category.name+'?')){DB.categories.splice(i,1);mark();renderCategories()}
+  return;
+ }
  const removePromo=e.target.closest('[data-delete-promo]');
  if(removePromo){collect();const i=Number(removePromo.dataset.deletePromo);if(confirm('¿Eliminar esta promoción?')){DB.promotions.splice(i,1);mark();renderPromotions()}return}
  const d=e.target.closest('[data-delete-product]');if(d){const i=Number(d.dataset.deleteProduct);collect();const product=DB.products[i];if((DB.promotions||[]).some(p=>p.active&&(p.productIds||[]).includes(product.id))){alert('Primero retira este producto de las promociones activas.');return}if(confirm('¿Eliminar '+product.name+'?')){DB.products.splice(i,1);mark();renderProducts()}return}
