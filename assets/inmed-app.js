@@ -313,7 +313,7 @@ function filteredProducts(){
   return list;
 }
 function productCard(p){
-  const pr=priceOf(p), st=Number(p.stock), out=st<=0, low=st>0&&st<=3;
+  const pr=priceOf(p), st=(p.variants||[]).length?(p.variants||[]).reduce((sum,v)=>sum+Math.max(0,Number(v.stock)||0),0):Math.max(0,Number(p.stock)||0), out=st<=0, low=st>0&&st<=3;
   const tagList=(p.tags||[]).filter(t=>t!=='OFERTA'&&t!=='MÁS VENDIDO');if(pr.off)tagList.push('OFERTA');
   const badges=tagList.slice(0,2).map(t=>`<span class="badge ${t==='OFERTA'?'badge-red':'badge-dark'}">${esc(t)}</span>`).join('');
   const fav=S.favs.indexOf(p.id)>-1;
