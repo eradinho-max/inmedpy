@@ -499,7 +499,7 @@ function renderPDP(){
   if(!S.pdp) return;
   const p=DB.products.find(x=>x.id===S.pdp.id); if(!p) return;
   const vs=p.variants||[], v=vs.find(x=>x.name===S.pdp.variant), pr=priceOf(p,v), st=stockOf(p,v);
-  const gallery=vs.length?vs.map(x=>x.img):[p.img].concat(p.imgs||[]);
+  const gallery=[...(v?.img?[v.img]:[]),p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,5);
   const main=v?v.img:p.img;
   $('#pdpBreadcrumb').innerHTML='Inicio <span>›</span> '+esc(publicCategoryName(p.cat))+' <span>›</span> <b>'+esc(p.name)+'</b>';
   const tabs=[['features','Características'],['includes','Qué incluye'],['specs','Especificaciones'],['shipping','Envío']];
