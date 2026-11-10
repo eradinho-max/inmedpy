@@ -369,27 +369,49 @@ function setFilter(f,scroll){
 }
 function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 
-/* ---------- BIC Eternity ---------- */
-function bicProduct(){ return DB.products.find(p=>p.active!==false&&/\bBIC\b/i.test(p.name||'')&&/Eternity/i.test(p.name||'')&&(p.variants||[]).length)||null; }
-function renderBIC(){
-  const p=bicProduct(), vs=p?.variants||[];
-  if(!vs.length){ $('#bic').hidden=true; return; }
-  $('#bic').hidden=false;
-  S.bic=Math.min(S.bic,vs.length-1);
-  const v=vs[S.bic], pr=priceOf(p,v), st=Number(v.stock);
-  $('#bicImg').src=img(v.img);
-  $('#bicDiscount').textContent=pr.off?'-'+pr.off+'%':'DISPONIBLE';
-  $('#bicSwatches').innerHTML=vs.map((x,i)=>`<div class="swatch-item"><button class="swatch ${i===S.bic?'active':''}" data-act="bic" data-val="${i}" aria-label="${esc(x.name)}"><span style="background:${esc(x.color)}"></span></button><div class="swatch-label">${esc(x.name.split(' / ')[0])}</div></div>`).join('');
-  $('#bicVariantBox').innerHTML=`
-    <div><small>Variante seleccionada</small><b>${esc(v.name)}</b></div>
-    <div><small>Precio</small><b>${gs(pr.cur)}</b></div>
-    <div class="vb-${st>0?'green':'amber'}"><small>${st>0?'Disponible':'Sin stock'}</small><b>${st>0?st+' unidades':'Agotado'}</b></div>
-    <div><small>SKU</small><b class="mono" style="font-size:14px">${esc(v.sku)}</b></div>`;
-  $('#bicAdd').disabled=st<=0;
-  $('#bicAdd').innerHTML=st>0?'AGREGAR AL PEDIDO '+ic('cart','width:16px;height:16px'):'CONSULTAR DISPONIBILIDAD';
-  $('#bicVariantStrip').innerHTML=vs.map((x,i)=>`<button class="variant-pill ${i===S.bic?'active':''}" data-act="bic" data-val="${i}">${esc(x.name)} · ${gs(priceOf(p,x).cur)}</button>`).join('');
+/* ---------- Destaque comercial: dados reais do catálogo ---------- */
+function featuredProducts(){
+ const configured=DB.settings?.featuredProductId;
+ const chosen=DB.products.find(p=>p.id===configured&&p.active!==false);
+ if(!chosen)return [];
+ return DB.products.filter(p=>p.active!==false&&p.cat===chosen.cat&&Number.isFinite(Number(p.price))).slice(0,12);
 }
-
+function featuredProduct(){
+ const group=featuredProducts();
+ return group[S.bic]||group[0]||null;
+}
+function renderBIC(){
+ const selectedId=DB.settings?.featuredProductId;
+ const group=featuredProducts();
+ const selected=group.findIndex(p=>p.id===selectedId);
+ if(!group.length){$('#bic').hidden=true;return}
+ if(!group[S.bic]||!group[S.bic].id)S.bic=Math.max(0,selected);
+ const p=featuredProduct(),pr=priceOf(p),st=Math.max(0,Number(p.stock)||0);
+ $('#bic').hidden=false;
+ const title=$('#featuredTitle'),desc=$('#featuredDescription'),eyebrow=$('#featuredEyebrow'),tag=$('#featuredTag');
+ if(title)title.textContent=p.name;
+ if(desc)desc.textContent=p.short||p.desc||'';
+ if(eyebrow)eyebrow.textContent=publicCategoryName(p.cat);
+ if(tag)tag.textContent=publicCategoryName(p.cat).toUpperCase();
+ $('#bicImg').src=img(p.img);
+ $('#bicImg').alt=p.name;
+ $('#bicDiscount').textContent=pr.off?'-'+pr.off+'%':(st>0?'DISPONIBLE':'SIN STOCK');
+ $('#bicSwatches').innerHTML=group.map((x,i)=>`
+ <div class="swatch-item">
+   <button type="button" class="swatch ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}" aria-label="${esc(x.name)}" title="${esc(x.name)}">
+     <img src="${img(x.img)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+   </button>
+   <div class="swatch-label">${esc(x.name)}</div>
+ </div>`).join('');
+ $('#bicVariantBox').innerHTML=`
+   <div><small>Producto seleccionado</small><b>${esc(p.name)}</b></div>
+   <div><small>Precio actual</small><b>${gs(pr.cur)}</b></div>
+   <div class="vb-${st>0?'green':'amber'}"><small>${st>0?'Disponible':'Sin stock'}</small><b>${st>0?st+' unidades':'Agotado'}</b></div>
+   <div><small>SKU</small><b class="mono" style="font-size:14px">${esc(p.sku||'—')}</b></div>`;
+ $('#bicAdd').disabled=false;
+ $('#bicAdd').textContent='VER PRODUCTO';
+ $('#bicVariantStrip').innerHTML=group.map((x,i)=>`<button class="variant-pill ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}">${esc(x.name)} · ${gs(priceOf(x).cur)}</button>`).join('');
+}
 /* ---------- combos ---------- */
 function renderCombos(){
   const available=(DB.combos||[]).filter(c=>c.active!==false&&Number(c.stock)>0&&Number(c.price)>=0);
@@ -1051,8 +1073,8 @@ $('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed
 $('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed 👋, quiero hacer una consulta.');});
 $('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto InMed','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Lunes a viernes de 08:00 a 18:00.</p><p>Envíos a todo el país.</p>');});
 $('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre InMed','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
-$('#bicAdd').addEventListener('click',()=>{const p=bicProduct();if(!p)return;const v=(p.variants||[])[S.bic];if(!v)return;if(v.stock>0)addToCart(p.id,v.name,1,'product');else openWA('Hola InMed 👋, quiero consultar disponibilidad de '+p.name+' · '+v.name+'.');});
-$('#bicWhats').addEventListener('click',()=>{const p=bicProduct();if(!p)return;const v=(p.variants||[])[S.bic];if(!v)return;openWA('Hola InMed 👋, quiero consultar por '+p.name+' · '+v.name+' ('+(v.sku||p.sku||'')+') a '+gs(priceOf(p,v).cur)+'. ¿Está disponible?',{text:p.name+' · '+v.name,total:priceOf(p,v).cur});});
+$('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(p)showPDP(p.id);});
+$('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola InMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});
 $('#loadMore').addEventListener('click',()=>{S.visible+=4;renderProducts();});
 $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',true);});
 $('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allPosts;renderPosts();});
