@@ -524,11 +524,17 @@ function renderCart(){
     </div><div style="text-align:right"><b style="font-family:var(--f-title);font-size:12.5px">${gs(x.price*it.qty)}</b></div></div>`;
   }).join('');
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
-  const free=sub>=Number(DB.settings.freeShipMin);
-  const ship=free?0:25000, total=sub+ship;
+  // An item advertised as free shipping must not acquire a shipping fee at checkout.
+  const shippingMinimum=Math.max(0,Number(DB.settings.freeShipMin)||0);
+  const allFreeShipping=cart.length>0&&cart.every(it=>{
+    if(it.kind==='combo')return (DB.combos||[]).find(c=>c.id===it.id)?.freeShip===true;
+    return DB.products.find(p=>p.id===it.id)?.freeShip===true;
+  });
+  const free=allFreeShipping||(shippingMinimum>0&&sub>=shippingMinimum);
+  const ship=free?0:25000,total=sub+ship;
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
     <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
-    ${!free?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(DB.settings.freeShipMin-sub)} para envío gratis</div>`:''}
+    ${!free&&shippingMinimum>sub?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(shippingMinimum-sub)} para envío gratis</div>`:''}
     <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"sin cargo según el mínimo de compra":gs(ship)}. InMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
@@ -561,13 +567,13 @@ function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').cl
 
 /* ---------- ficha de producto ---------- */
 function openPDP(id,variant){
-  const p=DB.products.find(x=>x.id===id); if(!p) return;
+  const p=DB.products.find(x=>x.id===id&&x.active!==false); if(!p){toast('Este producto ya no está disponible.');return;}
   S.pdp={id,variant:variant||((saleVariants(p)[0]||{}).name||''),qty:1,tab:'features'};
   renderPDP(); closeAll(); $('#overlay').classList.add('show'); $('#productModal').classList.add('show');
 }
 function renderPDP(){
   if(!S.pdp) return;
-  const p=DB.products.find(x=>x.id===S.pdp.id); if(!p) return;
+  const p=DB.products.find(x=>x.id===S.pdp.id&&x.active!==false); if(!p){S.pdp=null;closeAll();return;}
   const vs=saleVariants(p),v=vs.find(x=>x.name===S.pdp.variant),pr=priceOf(p,v),st=stockOf(p,v);
   const gallery=[...(v?.img?[v.img]:[]),p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,5);
   const main=v?v.img:p.img;
@@ -843,7 +849,7 @@ document.addEventListener('click',async e=>{
     case 'filter': setFilter(val,true); break;
     case 'open-pdp': openPDP(id); break;
     case 'add': addToCart(id,'',1,'product'); break;
-    case 'consult': { const p=DB.products.find(x=>x.id===id); openWA('Hola InMed 👋, quiero consultar disponibilidad de: '+p.name+' ('+p.sku+'). ¿Cuándo vuelve a estar disponible?'); break; }
+    case 'consult': { const p=DB.products.find(x=>x.id===id&&x.active!==false);if(!p)break;openWA('Hola InMed 👋, quiero consultar disponibilidad de: '+p.name+' ('+p.sku+'). ¿Cuándo vuelve a estar disponible?'); break; }
     case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); renderProducts(); break; }
     case 'bic': S.bic=Number(val); renderBIC(); break;
     case 'combo-add': addToCart(id,'',1,'combo'); break;
