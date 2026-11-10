@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>Gestión InMed</title>
 <script src="/supabase-config.js"></script>
+<script src="/assets/inmed-images.js"></script>
 <style>
 :root{--red:#D90429;--dark:#1E293B;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--green:#2A9D8F}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--dark)}
@@ -225,7 +226,12 @@ async function saveStore(){
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
 function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='combos')renderCombosAdmin(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
-function pImage(p){return /^https?:/i.test(p.img||'')?p.img:''}
+function imageSrc(value){
+ const key=String(value||'');
+ if(/^https?:\/\//i.test(key)||/^data:image\//i.test(key))return key;
+ return window.IMAGES?.[key]||'';
+}
+function pImage(p){return imageSrc(p.img)}
 function combinedDescription(p){
  const parts=[String(p.desc||'').trim()];
  if(Array.isArray(p.features)&&p.features.length)parts.push('CARACTERÍSTICAS\n'+p.features.map(x=>'• '+x).join('\n'));
@@ -324,7 +330,7 @@ function renderCombosAdmin(){
    textAreaField('Contenido del combo (uno por línea)','combo_items',(c.items||[]).join('\n'))+
    '<div class="field" style="margin-top:16px"><label>Imágenes (hasta 3)</label><div class="product-image-grid">'+
    Array.from({length:3},(_,slot)=>'<div class="product-image-slot"><div class="image-slot-title">Foto '+(slot+1)+'</div>'+
-   (imgs[slot]?'<img class="image-slot-preview" alt="Foto '+(slot+1)+'" src="'+esc(/^https?:\/\//i.test(imgs[slot])?imgs[slot]:'')+'">':'<div class="image-slot-empty">Sin imagen nueva</div>')+
+   (imgs[slot]?'<img class="image-slot-preview" alt="Foto '+(slot+1)+'" src="'+esc(imageSrc(imgs[slot]))+'">':'<div class="image-slot-empty">Sin imagen nueva</div>')+
    '<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="combo" data-combo-id="'+esc(c.id)+'" data-slot="'+slot+'">'+
    (imgs[slot]?'<button class="btn ghost" type="button" data-combo-remove-image="'+slot+'">Eliminar foto</button>':'')+'</div>').join('')+
    '</div><div id="combo_upload_status" role="status"></div></div>'+
@@ -333,7 +339,7 @@ function renderCombosAdmin(){
  }
  root.innerHTML='<div class="catalog-list-head"><div><h2>Combos</h2><p class="muted">Crea, edita, duplica y elimina combos.</p></div><button class="btn primary" type="button" id="addCombo">+ NUEVO COMBO</button></div>'+
  '<div class="catalog-list">'+((DB.combos||[]).map(c=>'<div class="catalog-row">'+
- '<div class="catalog-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px">📦</div>'+
+ '<img class="catalog-thumb" src="'+esc(imageSrc((c.imgs||[])[0]))+'" alt="" loading="lazy">'+
  '<div class="catalog-product"><strong>'+esc(c.name)+'</strong><small>'+esc(c.sku||'Sin SKU')+'</small></div>'+
  '<div class="catalog-price">'+money(c.price)+'</div><div class="catalog-stock">'+Number(c.stock||0)+' un.</div>'+
  '<span class="badge '+(c.active===false?'off':'')+'">'+(c.active===false?'Oculto':'Activo')+'</span>'+
