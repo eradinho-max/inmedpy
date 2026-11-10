@@ -379,14 +379,14 @@ function renderBIC(){
 
 /* ---------- combos ---------- */
 function renderCombos(){
-  const available=(DB.combos||[]).filter(c=>c.active!==false&&Number(c.stock)>0);
+  const available=(DB.combos||[]).filter(c=>c.active!==false&&Number(c.stock)>0&&Number(c.price)>=0);
   $('#combos').hidden=!available.length;
   $('#comboGrid').innerHTML=available.map(c=>`
     <div class="combo-card">
-      <div class="combo-top"><div class="combo-imgs">${c.imgs.map(k=>`<img src="${img(k)}" alt="${esc(c.name)}">`).join('')}</div></div>
+      <div class="combo-top"><div class="combo-imgs">${(Array.isArray(c.imgs)?c.imgs:[]).filter(Boolean).slice(0,3).map(k=>`<img src="${img(k)}" alt="${esc(c.name)}">`).join('')}</div></div>
       <div class="combo-body">
         <h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p>
-        <div class="combo-price"><span class="price"><span class="cur">Gs.</span> ${Math.round(c.price).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}</span><span class="price-old">${gs(c.old)}</span><span class="combo-save">Ahorrás ${gs(c.old-c.price)}</span></div>
+        <div class="combo-price"><span class="price"><span class="cur">Gs.</span> ${Math.round(c.price).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}</span>${Number(c.old)>Number(c.price)?`<span class="price-old">${gs(c.old)}</span><span class="combo-save">Ahorrás ${gs(c.old-c.price)}</span>`:''}</div>
         <button class="btn btn-primary btn-block" data-act="combo-add" data-id="${c.id}">AGREGAR COMBO ${ic('plus','width:15px;height:15px')}</button>
       </div>
     </div>`).join('');
