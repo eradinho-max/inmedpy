@@ -559,11 +559,12 @@ function renderPDP(){
   const gallery=[...(v?.img?[v.img]:[]),p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,5);
   const main=v?v.img:p.img;
   $('#pdpBreadcrumb').innerHTML='Inicio <span>›</span> '+esc(publicCategoryName(p.cat))+' <span>›</span> <b>'+esc(p.name)+'</b>';
-  const tabs=[['features','Características'],['includes','Qué incluye'],['specs','Especificaciones'],['shipping','Envío']];
+  const tabs=[['features','Características'],['shipping','Envío']];
+   if(!tabs.some(t=>t[0]===S.pdp.tab)) S.pdp.tab='features';
   let body='';
-  if(S.pdp.tab==='features') body='<ul>'+(p.features||[]).map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul><p>'+esc(p.desc)+'</p>';
-  if(S.pdp.tab==='includes') body='<ul>'+(p.includes||[]).map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul>';
-  if(S.pdp.tab==='specs') body='<table class="spec-table">'+Object.entries(p.specs||{}).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')+`<tr><td>Stock disponible</td><td>${st>0?st+' unidades':'Agotado'}</td></tr></table>`;
+  if(S.pdp.tab==='features') body='<div class="product-description">'+esc(p.desc||p.short||'Información del producto no disponible.').replace(/\n/g,'<br>')+'</div>';
+  
+  
   if(S.pdp.tab==='shipping') body='<p>Despachamos a todo Paraguay. Coordinamos el retiro o envío por WhatsApp y te confirmamos plazo y costo antes de cerrar el pedido.</p><ul><li>Envío gratis en productos seleccionados</li><li>Envío gratis en pedidos desde '+gs(DB.settings.freeShipMin)+'</li><li>Entrega coordinada con el cliente</li></ul>';
   const related=activeProducts().filter(x=>x.id!==p.id&&x.cat===p.cat).slice(0,3);
   $('#pdpContent').innerHTML=`
