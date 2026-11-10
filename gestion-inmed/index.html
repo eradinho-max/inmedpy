@@ -105,7 +105,7 @@ const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
 let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null,saving=false;
 let productCategory=null,productEditingId=null,productQuery='',productPage=0,uploading=0,comboEditingId=null;
 const PRODUCT_PAGE_SIZE=20;
-const tabs=[['products','Productos'],['categories','Categorías'],['combos','Combos'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
+const tabs=[['products','Productos'],['categories','Categorías'],['combos','Combos'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Gs. '+Math.round(Number(n)||0).toLocaleString('es-PY');
 function imageSlots(p){return [p.img||'',...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).slice(0,5)}
@@ -225,7 +225,7 @@ async function saveStore(){
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
-function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='combos')renderCombosAdmin(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
+function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='combos')renderCombosAdmin(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderProducts();}
 function imageSrc(value){
  const key=String(value||'');
  if(/^https?:\/\//i.test(key)||/^data:image\//i.test(key))return key;
@@ -303,8 +303,8 @@ function categorySelect(id,val){
  return '<div class="field"><label for="'+id+'">Categoría</label><select id="'+id+'" required>'+options+'</select></div>';
 }
 function renderCategories(){
- $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
- (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div><div style="margin-top:12px"><button class="btn danger" data-delete-category="'+i+'">Eliminar categoría</button></div></div>').join('')+'</div>';
+ $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Cambia el nombre visible de cada categoría en el campo Nombre. El código interno se mantiene automáticamente.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
+ (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+field('Nombre de la categoría','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div><div style="margin-top:12px"><button class="btn danger" data-delete-category="'+i+'">Eliminar categoría</button></div></div>').join('')+'</div>';
  $('#addCat').onclick=()=>{collect();DB.categories.push({id:'cat-'+crypto.randomUUID(),name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
 }
 function newComboSku(){
@@ -478,11 +478,6 @@ function renderAccount(){
    await signOut(true);
   }catch(err){msg(box,'No se pudo cambiar la contraseña: '+err.message,'notice err')}
  };
-}
-function renderJSON(){
- $('#content').innerHTML='<div class="card"><h2>Respaldo JSON</h2><p class="muted">Descarga una copia antes de importar o editar muchos productos. No se guarda automáticamente.</p><button class="btn ghost" id="downloadJSON" type="button">DESCARGAR RESPALDO</button><textarea id="jsonBox" style="min-height:420px;font-family:ui-monospace,monospace;margin-top:12px">'+esc(JSON.stringify(DB,null,2))+'</textarea><button id="applyJson" class="btn danger" style="margin-top:12px">REEMPLAZAR DATOS EN MEMORIA</button><p class="muted">Para persistir una importación válida debes pulsar GUARDAR CAMBIOS.</p></div>';
- $('#downloadJSON').onclick=()=>{const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='inmed-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
- $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
  collectCombo();
