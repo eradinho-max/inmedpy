@@ -260,7 +260,7 @@ function renderStore(){
   const heroCampaign=B.showOffer?activeCampaign():null;
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
   $('#heroBadge').hidden=!B.showHeroBadge||!heroCampaign;
-  $('#heroImg').src=img('hero');
+  renderHeroGallery();
   $('#floatBText').innerHTML='Envío gratis*<small>Desde '+gs(C.freeShipMin)+'</small>';
   const campaign=B.showOffer?activeCampaign():null;
   const cats=campaign?[...new Set((campaign.productIds||[]).map(id=>
@@ -305,12 +305,34 @@ function renderNavigation(){
     '<span class="nav-note"><b>●</b> Envíos a todo Paraguay</span>';
   $('#navLinks a[data-cat]').forEach(a=>a.classList.toggle('active',a.dataset.cat===S.filter));
 }
+function renderHeroGallery(){
+ const custom=DB.customImages?.hero;
+ const photo=$('#heroImg'),gallery=$('#heroProductGallery');
+ if(custom){
+   photo.src=img(custom);photo.hidden=false;gallery.hidden=true;
+   return;
+ }
+ photo.hidden=true;gallery.hidden=false;
+ const pick=(category)=>activeProducts().find(p=>p.cat===category&&p.img);
+ const selection=[pick('Sutura'),pick('Estetoscopios'),pick('Termómetros')].filter(Boolean);
+ const unique=selection.filter((p,i,a)=>a.findIndex(x=>x.id===p.id)===i);
+ gallery.innerHTML=unique.map((p,i)=>`<div class="hero-product-card hero-product-${i+1}">
+  <img src="${img(p.img)}" alt="${esc(p.name)}" loading="${i===0?'eager':'lazy'}">
+  <span>${esc(publicCategoryName(p.cat))}</span>
+ </div>`).join('');
+ gallery.hidden=!unique.length;
+}
 function renderCategories(){
-  $('#catGrid').innerHTML=DB.categories.map(c=>`
+  $('#catGrid').innerHTML=DB.categories.map(c=>{
+    const originalCover=['Oxímetros','Glucómetros'].includes(c.id);
+    const chosen=originalCover?null:activeProducts().find(p=>p.cat===c.id&&p.img);
+    const cover=chosen?.img||c.img;
+    return `
     <div class="cat-card" data-act="filter" data-val="${esc(c.id)}" role="button" tabindex="0">
-      <div class="cat-img"><img src="${img(c.img)}" alt="${esc(c.name)}"></div>
+      <div class="cat-img"><img src="${img(cover)}" alt="${esc(c.name)}" loading="lazy"></div>
       <strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function renderFilters(){
   const chips=[{id:'all',name:'Todos'},{id:'ofertas',name:'Ofertas'},...DB.categories.map(c=>({id:c.id,name:c.name}))];
@@ -399,12 +421,10 @@ function renderBIC(){
  $('#bicImg').alt=p.name;
  $('#bicDiscount').textContent=pr.off?'-'+pr.off+'%':(st>0?'DISPONIBLE':'SIN STOCK');
  $('#bicSwatches').innerHTML=group.map((x,i)=>`
- <div class="swatch-item">
-   <button type="button" class="swatch ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}" aria-label="${esc(x.name)}" title="${esc(x.name)}">
-     <img src="${img(x.img)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
-   </button>
-   <div class="swatch-label">${esc(x.name)}</div>
- </div>`).join('');
+ <button type="button" class="featured-option ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}" aria-label="Seleccionar ${esc(x.name)}" aria-pressed="${x.id===p.id}">
+   <img src="${img(x.img)}" alt="" loading="lazy">
+   <span class="featured-option-label">${esc(x.name)}</span>
+ </button>`).join('');
  $('#bicVariantBox').innerHTML=`
    <div><small>Producto seleccionado</small><b>${esc(p.name)}</b></div>
    <div><small>Precio actual</small><b>${gs(pr.cur)}</b></div>
@@ -412,7 +432,7 @@ function renderBIC(){
    <div><small>SKU</small><b class="mono" style="font-size:14px">${esc(p.sku||'—')}</b></div>`;
  $('#bicAdd').disabled=false;
  $('#bicAdd').textContent='CONSULTAR DISPONIBILIDAD';
- $('#bicVariantStrip').innerHTML=group.map((x,i)=>`<button class="variant-pill ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}">${esc(x.name)} · ${gs(priceOf(x).cur)}</button>`).join('');
+ $('#bicVariantStrip').innerHTML='';
 }
 /* ---------- combos ---------- */
 function renderCombos(){
