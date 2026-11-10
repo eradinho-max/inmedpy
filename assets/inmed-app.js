@@ -278,7 +278,20 @@ function renderStore(){
   $('#footerCopy').textContent=C.copy;
   $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
   document.title=(C.storeName||'InMed')+' Paraguay | Kits de Sutura y Equipamiento Médico';
-  renderNavigation(); renderCategories(); renderFilters(); renderProducts(); renderBIC(); renderCombos(); renderPosts(); renderFAQ(); renderCountdown(); renderCart();
+  // Render each merchandising section independently so a broken optional widget
+  // cannot erase categories, combos or the editorial grid.
+  const sections=[
+    ['navegación',renderNavigation],['categorías',renderCategories],['filtros',renderFilters],
+    ['productos',renderProducts],['destacado',renderBIC],['combos',renderCombos],
+    ['artículos',renderPosts],['preguntas',renderFAQ],['ofertas',renderCountdown],['carrito',renderCart]
+  ];
+  for(const [name,render] of sections){
+    try{render()}catch(error){
+      console.error('[InMed] Error al mostrar '+name,error);
+      if(name==='destacado')$('#bic').hidden=true;
+      if(name==='combos')$('#combos').hidden=true;
+    }
+  }
 }
 function renderNavigation(){
   // Categories come from the active catalog: no permanently hardcoded demo navigation.
