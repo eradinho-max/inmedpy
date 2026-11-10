@@ -187,6 +187,8 @@ function activeCampaign(){
     && pr.productIds.some(id=>DB.products.some(p=>p.id===id&&p.active!==false))
     && (!pr.start||pr.start<=today)&&(!pr.end||pr.end>=today))||null;
 }
+// Cada estetoscopio del catálogo es un producto independiente, no una variante del demo.
+const saleVariants=p=>p.cat==='Estetoscopios'?[]:(Array.isArray(p.variants)?p.variants:[]);
 const stockOf=(p,v)=> v? Number(v.stock) : Number(p.stock);
 function cartAvailability(it){
   if(!S.catalogReady||!it||typeof it.id!=='string')return {ok:false,reason:'Catálogo no disponible'};
@@ -197,7 +199,7 @@ function cartAvailability(it){
   }
   const p=DB.products.find(x=>x.id===it.id&&x.active!==false);
   if(!p)return {ok:false,reason:'Producto no disponible'};
-  const variants=p.variants||[];
+  const variants=saleVariants(p);
   const v=variants.length?variants.find(x=>x.name===it.variant):null;
   if(variants.length&&!v)return {ok:false,reason:'Seleccioná una variante válida'};
   const max=Math.floor(stockOf(p,v));
@@ -348,7 +350,7 @@ function filteredProducts(){
   return list;
 }
 function productCard(p){
-  const pr=priceOf(p), st=(p.variants||[]).length?(p.variants||[]).reduce((sum,v)=>sum+Math.max(0,Number(v.stock)||0),0):Math.max(0,Number(p.stock)||0), out=st<=0, low=st>0&&st<=3;
+  const variants=saleVariants(p),pr=priceOf(p),st=variants.length?variants.reduce((sum,v)=>sum+Math.max(0,Number(v.stock)||0),0):Math.max(0,Number(p.stock)||0),out=st<=0,low=st>0&&st<=3;
   const tagList=(p.tags||[]).filter(t=>t!=='OFERTA'&&t!=='MÁS VENDIDO');if(pr.off)tagList.push('OFERTA');
   const badges=tagList.slice(0,2).map(t=>`<span class="badge ${t==='OFERTA'?'badge-red':'badge-dark'}">${esc(t)}</span>`).join('');
   const fav=S.favs.indexOf(p.id)>-1;
@@ -370,7 +372,7 @@ function productCard(p){
       </div>
       <div class="prod-actions">
         <button class="btn btn-outline" data-act="open-pdp" data-id="${p.id}">VER PRODUCTO</button>
-        <button class="btn-add" data-act="${out?'consult':(p.variants&&p.variants.length?'open-pdp':'add')}" data-id="${p.id}" aria-label="Agregar al pedido">${ic(out?'chat':p.variants&&p.variants.length?'arrow':'plus','width:18px;height:18px')}</button>
+        <button class="btn-add" data-act="${out?'consult':(variants.length?'open-pdp':'add')}" data-id="${p.id}" aria-label="Agregar al pedido">${ic(out?'chat':variants.length?'arrow':'plus','width:18px;height:18px')}</button>
       </div>
     </div>
   </article>`;
@@ -485,7 +487,7 @@ function renderCountdown(){
 function lineInfo(it){
   if(it.kind==='combo'){ const c=(DB.combos||[]).find(x=>x.id===it.id)||{}; return {name:c.name||'Combo',img:c.imgs?c.imgs[0]:'sutura',price:Number(c.price)||0,sku:c.sku||''}; }
   const p=DB.products.find(x=>x.id===it.id); if(!p) return null;
-  const v=(p.variants||[]).find(x=>x.name===it.variant);
+  const v=saleVariants(p).find(x=>x.name===it.variant);
   const pr=priceOf(p,v);
   return {name:p.name+(v?' · '+v.name:''),img:v?v.img:p.img,price:pr.cur,sku:v?v.sku:p.sku,stock:stockOf(p,v)};
 }
@@ -549,13 +551,13 @@ function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').cl
 /* ---------- ficha de producto ---------- */
 function openPDP(id,variant){
   const p=DB.products.find(x=>x.id===id); if(!p) return;
-  S.pdp={id,variant:variant||((p.variants||[])[0]||{}).name||'',qty:1,tab:'features'};
+  S.pdp={id,variant:variant||((saleVariants(p)[0]||{}).name||''),qty:1,tab:'features'};
   renderPDP(); closeAll(); $('#overlay').classList.add('show'); $('#productModal').classList.add('show');
 }
 function renderPDP(){
   if(!S.pdp) return;
   const p=DB.products.find(x=>x.id===S.pdp.id); if(!p) return;
-  const vs=p.variants||[], v=vs.find(x=>x.name===S.pdp.variant), pr=priceOf(p,v), st=stockOf(p,v);
+  const vs=saleVariants(p),v=vs.find(x=>x.name===S.pdp.variant),pr=priceOf(p,v),st=stockOf(p,v);
   const gallery=[...(v?.img?[v.img]:[]),p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,5);
   const main=v?v.img:p.img;
   $('#pdpBreadcrumb').innerHTML='Inicio <span>›</span> '+esc(publicCategoryName(p.cat))+' <span>›</span> <b>'+esc(p.name)+'</b>';
@@ -895,7 +897,7 @@ document.addEventListener('click',async e=>{
       }
       break;
     }
-    case 'pdp-img': { if(S.pdp){S.pdp.variant='';} const modal=$('#productModal'); const main=$('.pdp-main-img img'); if(main)main.src=img(val); $$('.pdp-thumbs button').forEach(b=>b.classList.toggle('active',b.dataset.val===val)); break; }
+    case 'pdp-img': { const modal=$('#productModal'); const main=$('.pdp-main-img img'); if(main)main.src=img(val); $$('.pdp-thumbs button').forEach(b=>b.classList.toggle('active',b.dataset.val===val)); break; }
     case 'pdp-variant': if(S.pdp){S.pdp.variant=val;renderPDP();} break;
     case 'pdp-tab': if(S.pdp){S.pdp.tab=val;renderPDP();} break;
     case 'pdp-qty': if(S.pdp){
