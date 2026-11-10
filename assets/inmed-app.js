@@ -495,6 +495,15 @@ function renderCountdown(){
 }
 
 /* ---------- carrito ---------- */
+function shippingQuote(sub){
+  const minimum=Math.max(0,Number(DB.settings?.freeShipMin)||0);
+  const allFree=cart.length>0&&cart.every(it=>{
+    if(it.kind==='combo')return (DB.combos||[]).find(c=>c.id===it.id)?.freeShip===true;
+    return DB.products.find(p=>p.id===it.id)?.freeShip===true;
+  });
+  const free=allFree||(minimum>0&&sub>=minimum);
+  return {free,ship:free?0:25000,total:sub+(free?0:25000),shippingMinimum:minimum};
+}
 function lineInfo(it){
   if(it.kind==='combo'){ const c=(DB.combos||[]).find(x=>x.id===it.id)||{}; return {name:c.name||'Combo',img:c.imgs?c.imgs[0]:'sutura',price:Number(c.price)||0,sku:c.sku||''}; }
   const p=DB.products.find(x=>x.id===it.id); if(!p) return null;
@@ -524,18 +533,11 @@ function renderCart(){
     </div><div style="text-align:right"><b style="font-family:var(--f-title);font-size:12.5px">${gs(x.price*it.qty)}</b></div></div>`;
   }).join('');
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
-  // An item advertised as free shipping must not acquire a shipping fee at checkout.
-  const shippingMinimum=Math.max(0,Number(DB.settings.freeShipMin)||0);
-  const allFreeShipping=cart.length>0&&cart.every(it=>{
-    if(it.kind==='combo')return (DB.combos||[]).find(c=>c.id===it.id)?.freeShip===true;
-    return DB.products.find(p=>p.id===it.id)?.freeShip===true;
-  });
-  const free=allFreeShipping||(shippingMinimum>0&&sub>=shippingMinimum);
-  const ship=free?0:25000,total=sub+ship;
+  const {free,ship,total,shippingMinimum}=shippingQuote(sub);
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
     <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
     ${!free&&shippingMinimum>sub?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(shippingMinimum-sub)} para envío gratis</div>`:''}
-    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"sin cargo según el mínimo de compra":gs(ship)}. InMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
+    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"gratis":gs(ship)}. InMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
 }
@@ -559,8 +561,8 @@ function addToCart(id,variant,qty,kind){
 function cartMessage(){
   const lines=cart.map(it=>{const x=lineInfo(it);return '• '+it.qty+'x '+(x?x.name:'Producto')+' — '+gs(x?x.price*it.qty:0)});
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
-  const free=sub>=Number(DB.settings.freeShipMin), ship=free?0:25000;
-  return 'Hola InMed 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis según el mínimo de compra':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
+  const {free,ship}=shippingQuote(sub);
+  return 'Hola InMed 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
 }
 function openCart(){ closeInfo(); $('#overlay').classList.add('show'); $('#cartDrawer').classList.add('show'); $('#productModal').classList.remove('show'); }
 function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').classList.remove('show'); $('#productModal').classList.remove('show'); $('#searchDrop').hidden=true; closeInfo(); }
