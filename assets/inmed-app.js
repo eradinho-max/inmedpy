@@ -6,10 +6,21 @@
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>Array.prototype.slice.call(r.querySelectorAll(s));
 const IMG = window.IMAGES || {};
+const safeImageURL = value => {
+  const v=String(value||'').trim();
+  // Photo URLs are interpolated into HTML attributes; reject markup delimiters
+  // and control characters before they ever reach an image element.
+  if(!v || /[<>"'`\\\x00-\x1f\x7f]/.test(v))return '';
+  if(/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[a-z0-9+/=]+$/i.test(v))return v;
+  if(/^https:\/\//i.test(v)){
+    try{const url=new URL(v);return url.protocol==='https:'&&url.username===''&&url.password===''?v:''}catch(_){return ''}
+  }
+  return '';
+};
 const img = k => {
   const v=String(k||'');
-  if(/^https?:\/\//i.test(v)||/^data:image\//i.test(v)) return v;
-  return IMG[v] || IMG['bic-rosa'] || '';
+  const source=/^https?:\/\//i.test(v)||/^data:image\//i.test(v)?v:(IMG[v]||IMG['bic-rosa']||'');
+  return safeImageURL(source);
 };
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Permit only the intentional decorative tags in merchant-editable banners.
