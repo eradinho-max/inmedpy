@@ -29,14 +29,21 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 .catalog-list-head h2{margin-bottom:4px}.catalog-list-head p{margin:0}
 .catalog-toolbar{margin-bottom:14px}.catalog-toolbar label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}.catalog-toolbar input{max-width:480px}
 .catalog-list{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.catalog-row{display:grid;grid-template-columns:52px minmax(140px,1fr) 130px 75px 75px 75px;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.catalog-row{display:grid;grid-template-columns:52px minmax(140px,1fr) 110px 65px 66px minmax(246px,auto);align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .catalog-row:last-child{border-bottom:0}.catalog-thumb{width:52px;height:52px;object-fit:contain;border-radius:8px;background:var(--bg)}
-.catalog-actions{display:flex;gap:6px;flex-wrap:wrap}.catalog-actions .btn{padding:8px 10px;font-size:12px}
+.catalog-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-items:center;justify-self:end;width:100%;max-width:300px}
+.catalog-actions .btn{display:inline-flex;align-items:center;justify-content:center;min-height:37px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--dark);font-size:12px;font-weight:700;white-space:nowrap;transition:background .15s,border-color .15s}
+.catalog-actions .btn:hover{background:var(--bg);border-color:#94a3b8}
+.catalog-actions .btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.catalog-actions .btn.catalog-delete{color:#b42334;border-color:#fecdd3;background:#fff}
+.catalog-actions .btn.catalog-delete:hover{background:#fff1f2;border-color:#fb7185}
+.catalog-actions .btn:disabled{opacity:.55;cursor:wait}
+@media(max-width:1050px) and (min-width:761px){.catalog-row{grid-template-columns:48px minmax(125px,1fr) 90px 60px minmax(205px,auto)}.catalog-row>.badge{display:none}.catalog-actions .btn{padding:8px 6px}}
 .catalog-product{min-width:0}.catalog-product strong{display:block;overflow-wrap:anywhere;font-size:14px}.catalog-product small{display:block;color:var(--muted);margin-top:5px}
 .catalog-price,.catalog-stock{font-size:13px}.catalog-empty{padding:24px;color:var(--muted)}
 .catalog-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .product-editor .preview{width:130px;flex-shrink:0}
-@media(max-width:760px){.catalog-row{grid-template-columns:48px minmax(0,1fr) auto;gap:10px}.catalog-price,.catalog-stock{display:none}.catalog-row .badge{grid-column:2}.catalog-row .catalog-actions{grid-column:3;grid-row:1/3;flex-direction:column}.catalog-thumb{width:48px;height:48px}.catalog-category-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+@media(max-width:760px){.catalog-row{grid-template-columns:48px minmax(0,1fr) auto;gap:10px;padding:12px}.catalog-price,.catalog-stock{display:none}.catalog-row>.badge{grid-column:3;grid-row:1;justify-self:end}.catalog-row .catalog-actions{grid-column:1/-1;grid-row:auto;justify-self:stretch;max-width:none;margin-top:3px}.catalog-thumb{width:48px;height:48px}.catalog-category-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
 .product-image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:12px 0}
 .product-image-slot{min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
 .image-slot-title{font-size:12px;font-weight:700;margin-bottom:8px}.image-slot-preview,.image-slot-empty{height:120px;width:100%;object-fit:contain;background:var(--bg);border-radius:8px;margin-bottom:10px}
@@ -263,7 +270,7 @@ function renderProducts(){
   '<div class="catalog-price">'+money(p.promo??p.price)+'</div>'+
   '<div class="catalog-stock">'+(Number(p.stock)||0)+' un.</div>'+
   '<span class="badge '+(p.active===false?'off':'')+'">'+(p.active===false?'Oculto':'Activo')+'</span>'+
-  '<div class="catalog-actions"><button type="button" class="btn ghost" data-edit-product="'+esc(p.id)+'">Editar</button><button type="button" class="btn ghost" data-duplicate-product="'+esc(p.id)+'">Duplicar</button></div></div>').join('');
+  '<div class="catalog-actions" role="group" aria-label="Acciones de '+esc(p.name)+'"><button type="button" class="btn ghost" data-edit-product="'+esc(p.id)+'">Editar</button><button type="button" class="btn ghost" data-duplicate-product="'+esc(p.id)+'">Duplicar</button><button type="button" class="btn catalog-delete" data-delete-list-product="'+esc(p.id)+'" aria-label="Eliminar '+esc(p.name)+'">Excluir</button></div></div>').join('');
  const categoryName=category?.name||'Todos los productos';
  root.innerHTML='<div class="catalog-breadcrumb"><button type="button" class="btn ghost" data-back-categories="1">← Categorías</button><span>'+esc(categoryName)+'</span></div>'+
  '<div class="catalog-list-head"><div><h2>'+esc(categoryName)+'</h2><p class="muted">'+items.length+' producto(s) encontrados</p></div>'+
@@ -436,6 +443,36 @@ document.addEventListener('click',async e=>{
  if(e.target.closest('[data-back-categories]')){collect();productCategory=null;productEditingId=null;productQuery='';productPage=0;renderProducts();return}
  if(e.target.closest('[data-back-products]')){collect();productEditingId=null;renderProducts();return}
  const edit=e.target.closest('[data-edit-product]');if(edit){collect();productEditingId=edit.dataset.editProduct;renderProducts();return}
+ const deleteFromList=e.target.closest('[data-delete-list-product]');
+ if(deleteFromList){
+  if(saving||uploading>0){alert('Hay una operación en curso. Termínala antes de eliminar.');return}
+  if(dirty){alert('Tienes cambios pendientes. Guárdalos antes de eliminar otro producto.');return}
+  const id=deleteFromList.dataset.deleteListProduct;
+  const product=DB.products.find(p=>p.id===id);
+  if(!product)return;
+  const linked=(DB.promotions||[]).filter(p=>(p.productIds||[]).includes(id));
+  const notice=linked.length?'\nTambién se quitará de '+linked.length+' promoción(es).':'';
+  if(!confirm('¿Eliminar definitivamente el producto "'+product.name+'"?'+notice+'\nEsta acción no se puede deshacer.'))return;
+  const backup=JSON.stringify(DB);
+  deleteFromList.disabled=true;
+  deleteFromList.textContent='Excluyendo…';
+  try{
+   DB.products=DB.products.filter(p=>p.id!==id);
+   (DB.promotions||[]).forEach(p=>{if(Array.isArray(p.productIds))p.productIds=p.productIds.filter(x=>x!==id)});
+   mark();
+   await saveStore();
+   if(dirty)throw new Error('El producto no se pudo guardar como eliminado.');
+   renderProducts();
+   $('#syncStatus').textContent='Producto eliminado y cambios guardados';
+  }catch(err){
+   DB=JSON.parse(backup);
+   dirty=false;
+   $('#syncStatus').textContent='No se eliminó el producto';
+   renderProducts();
+   alert('No se pudo eliminar: '+err.message);
+  }
+  return;
+ }
  const duplicate=e.target.closest('[data-duplicate-product]');
  if(duplicate){
   if(uploading>0){alert('Espera a que terminen las fotos antes de duplicar.');return}
