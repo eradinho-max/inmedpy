@@ -206,8 +206,14 @@ async function saveStore(){
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
-function render(){renderTabs(); if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
+function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
 function pImage(p){return /^https?:/i.test(p.img||'')?p.img:''}
+function combinedDescription(p){
+ const parts=[String(p.desc||'').trim()];
+ if(Array.isArray(p.features)&&p.features.length)parts.push('CARACTERÍSTICAS\n'+p.features.map(x=>'• '+x).join('\n'));
+ if(Array.isArray(p.includes)&&p.includes.length)parts.push('CONTENIDO DEL PAQUETE\n'+p.includes.map(x=>'• '+x).join('\n'));
+ return parts.filter(Boolean).join('\n\n');
+}
 function productList(){
  const q=productQuery.trim().toLocaleLowerCase('es-PY');
  return DB.products.map((p,i)=>({p,i})).filter(({p})=>
@@ -216,6 +222,7 @@ function productList(){
 }
 function renderProducts(){
  const root=$('#content');
+ $('#saveAll').hidden=productEditingId!==null;
  if(productCategory===null){
   const cards=(DB.categories||[]).map(cat=>{
    const n=DB.products.filter(p=>p.cat===cat.id).length;
@@ -232,7 +239,7 @@ function renderProducts(){
   if(i<0){productEditingId=null;renderProducts();return;}
   const p=DB.products[i];
   root.innerHTML='<div class="catalog-breadcrumb"><button type="button" class="btn ghost" data-back-products="1">← Volver a la lista</button><span>'+esc(category?.name||'Todos los productos')+' / '+esc(p.name)+'</span></div>'+
-  '<div class="section-head"><h2>Editar producto</h2><p class="muted">Edita este producto y pulsa GUARDAR CAMBIOS para publicar.</p></div>'+
+  '<div class="section-head"><h2>Editar producto</h2><p class="muted">Modifica el producto y guarda los cambios al finalizar.</p></div>'+
   '<div class="item product-editor"><div class="row mobilecol" style="align-items:flex-start">'+
   '<img class="preview" src="'+esc(pImage(p))+'" alt="Foto del producto" onerror="this.style.visibility=\'hidden\'">'+
   '<div style="flex:1;min-width:0"><div class="grid3">'+
@@ -241,9 +248,9 @@ function renderProducts(){
   '</div><div class="grid" style="margin-top:12px">'+
   field('Descripción corta','p_short_'+i,p.short)+
   '<div class="field"><label>Estado</label><select id="p_active_'+i+'"><option value="1" '+(p.active!==false?'selected':'')+'>Activo</option><option value="0" '+(p.active===false?'selected':'')+'>Oculto</option></select></div></div>'+
-  textAreaField('Descripción completa','p_desc_'+i,p.desc)+textAreaField('Características (una por línea)','p_features_'+i,(p.features||[]).join('\n'))+textAreaField('Contenido del paquete (uno por línea)','p_includes_'+i,(p.includes||[]).join('\n'))+
+  textAreaField('Descripción del producto','p_desc_'+i,combinedDescription(p))+
   imageEditor(p,i)+
-  '<div class="row between" style="margin-top:16px;flex-wrap:wrap"><button type="button" class="btn danger" data-delete-product="'+i+'">Eliminar producto</button><div class="row" style="flex-wrap:wrap"><button type="button" class="btn ghost" data-duplicate-product="'+esc(p.id)+'">Duplicar producto</button><button type="button" class="btn ghost" data-back-products="1">Volver</button></div></div>'+
+  '<div class="row between" style="margin-top:16px;flex-wrap:wrap"><button type="button" class="btn danger" data-delete-product="'+i+'">Eliminar producto</button><div class="row" style="flex-wrap:wrap"><button type="button" class="btn ghost" data-duplicate-product="'+esc(p.id)+'">Duplicar producto</button><button type="button" class="btn ghost" data-back-products="1">Volver</button><button type="button" class="btn primary" id="saveProductBottom">GUARDAR PRODUCTO</button></div></div>'+
   '</div></div></div>';
   return;
  }
@@ -389,7 +396,7 @@ function renderJSON(){
  $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
- (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=g('p_features_'+i).value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);p.includes=g('p_includes_'+i).value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);p.active=g('p_active_'+i).value==='1'});
+ (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=[];p.includes=[];p.active=g('p_active_'+i).value==='1'});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
  (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.start=$('#pr_start_'+i).value;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
  if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value}
@@ -406,6 +413,25 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
+ if(e.target.closest('#saveProductBottom')){
+  if(uploading>0){alert('Espera a que termine la carga de imágenes.');return}
+  const button=e.target.closest('#saveProductBottom');
+  button.disabled=true;
+  try{
+   collect();
+   if(dirty)await saveStore();
+   if(dirty)throw new Error('No se pudieron guardar los cambios.');
+   const saved=DB.products.find(p=>p.id===productEditingId);
+   if(saved)productCategory=saved.cat;
+   productEditingId=null;
+   productQuery='';
+   productPage=0;
+   renderProducts();
+   $('#content').scrollIntoView({block:'start',behavior:'smooth'});
+  }catch(err){alert('No se pudo guardar: '+err.message)}
+  finally{button.disabled=false}
+  return;
+ }
  const catBtn=e.target.closest('[data-open-category]');if(catBtn){productCategory=catBtn.dataset.openCategory;productEditingId=null;productQuery='';productPage=0;renderProducts();return}
  if(e.target.closest('[data-back-categories]')){collect();productCategory=null;productEditingId=null;productQuery='';productPage=0;renderProducts();return}
  if(e.target.closest('[data-back-products]')){collect();productEditingId=null;renderProducts();return}
