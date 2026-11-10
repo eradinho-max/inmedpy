@@ -372,20 +372,22 @@ function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollInt
 /* ---------- Destaque comercial: dados reais do catálogo ---------- */
 function featuredProducts(){
  const configured=DB.settings?.featuredProductId;
- const chosen=DB.products.find(p=>p.id===configured&&p.active!==false);
+ if(configured==='__none__')return [];
+ const chosen=DB.products.find(p=>p.id===configured&&p.active!==false)
+   ||DB.products.find(p=>p.active!==false&&p.cat==='Estetoscopios')
+   ||DB.products.find(p=>p.active!==false);
  if(!chosen)return [];
- return DB.products.filter(p=>p.active!==false&&p.cat===chosen.cat&&Number.isFinite(Number(p.price))).slice(0,12);
+ const group=DB.products.filter(p=>p.active!==false&&p.cat===chosen.cat&&Number.isFinite(Number(p.price)));
+ return [chosen,...group.filter(p=>p.id!==chosen.id)].slice(0,12);
 }
 function featuredProduct(){
  const group=featuredProducts();
  return group[S.bic]||group[0]||null;
 }
 function renderBIC(){
- const selectedId=DB.settings?.featuredProductId;
  const group=featuredProducts();
- const selected=group.findIndex(p=>p.id===selectedId);
  if(!group.length){$('#bic').hidden=true;return}
- if(!group[S.bic]||!group[S.bic].id)S.bic=Math.max(0,selected);
+ if(!group[S.bic]||!group[S.bic].id)S.bic=0;
  const p=featuredProduct(),pr=priceOf(p),st=Math.max(0,Number(p.stock)||0);
  $('#bic').hidden=false;
  const title=$('#featuredTitle'),desc=$('#featuredDescription'),eyebrow=$('#featuredEyebrow'),tag=$('#featuredTag');
@@ -409,7 +411,7 @@ function renderBIC(){
    <div class="vb-${st>0?'green':'amber'}"><small>${st>0?'Disponible':'Sin stock'}</small><b>${st>0?st+' unidades':'Agotado'}</b></div>
    <div><small>SKU</small><b class="mono" style="font-size:14px">${esc(p.sku||'—')}</b></div>`;
  $('#bicAdd').disabled=false;
- $('#bicAdd').textContent='VER PRODUCTO';
+ $('#bicAdd').textContent='CONSULTAR DISPONIBILIDAD';
  $('#bicVariantStrip').innerHTML=group.map((x,i)=>`<button class="variant-pill ${x.id===p.id?'active':''}" data-act="bic" data-val="${i}">${esc(x.name)} · ${gs(priceOf(x).cur)}</button>`).join('');
 }
 /* ---------- combos ---------- */
@@ -1073,7 +1075,7 @@ $('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed
 $('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola InMed 👋, quiero hacer una consulta.');});
 $('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto InMed','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Lunes a viernes de 08:00 a 18:00.</p><p>Envíos a todo el país.</p>');});
 $('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre InMed','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
-$('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(p)showPDP(p.id);});
+$('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola InMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar disponibilidad y entrega?');});
 $('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola InMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});
 $('#loadMore').addEventListener('click',()=>{S.visible+=4;renderProducts();});
 $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',true);});
