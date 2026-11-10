@@ -102,9 +102,9 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 (()=>{'use strict';
 const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
 let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null,saving=false;
-let productCategory=null,productEditingId=null,productQuery='',productPage=0,uploading=0;
+let productCategory=null,productEditingId=null,productQuery='',productPage=0,uploading=0,comboEditingId=null;
 const PRODUCT_PAGE_SIZE=20;
-const tabs=[['products','Productos'],['categories','Categorías'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
+const tabs=[['products','Productos'],['categories','Categorías'],['combos','Combos'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta'],['json','Respaldo JSON']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Gs. '+Math.round(Number(n)||0).toLocaleString('es-PY');
 function imageSlots(p){return [p.img||'',...(Array.isArray(p.imgs)?p.imgs:[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).slice(0,5)}
@@ -190,6 +190,17 @@ function validateStore(data=DB){
   skus.add(skuKey);
   if(Array.isArray(p.imgs)&&p.imgs.length>4)throw new Error('Máximo cinco fotos por producto: '+p.name);
  }
+ const comboIds=new Set(),comboSkus=new Set();
+ for(const combo of data.combos){
+  if(!String(combo.id||'').trim()||comboIds.has(combo.id))throw Error('ID repetido de combo.');
+  comboIds.add(combo.id);
+  if(!String(combo.name||'').trim()||!String(combo.sku||'').trim())throw Error('Nombre o SKU inválido de combo.');
+  const sku=String(combo.sku).toUpperCase();
+  if(comboSkus.has(sku)||skus.has(sku))throw Error('SKU duplicado: '+sku);
+  comboSkus.add(sku);
+  if(!Number.isFinite(combo.price)||combo.price<0||!Number.isFinite(combo.old)||combo.old<0||!Number.isInteger(combo.stock)||combo.stock<0)throw Error('Precio o stock inválido en '+combo.name);
+  if(!Array.isArray(combo.imgs)||combo.imgs.length>3)throw Error('Máximo tres imágenes por combo.');
+ }
  for(const promo of data.promotions){
   if(!Number.isFinite(Number(promo.percent))||Number(promo.percent)<0||Number(promo.percent)>100)throw new Error('Descuento fuera de 0–100% en '+(promo.name||promo.id));
   if(promo.start&&promo.end&&promo.end<promo.start)throw new Error('La fecha final es anterior al inicio en '+(promo.name||promo.id));
@@ -213,7 +224,7 @@ async function saveStore(){
 }
 function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
-function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
+function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='combos')renderCombosAdmin(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderJSON();}
 function pImage(p){return /^https?:/i.test(p.img||'')?p.img:''}
 function combinedDescription(p){
  const parts=[String(p.desc||'').trim()];
@@ -289,6 +300,64 @@ function renderCategories(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Categorías</h2><p class="muted">Organización principal del catálogo.</p></div><button class="btn primary" id="addCat">+ NUEVA</button></div><div class="list">'+
  (DB.categories||[]).map((c,i)=>'<div class="item"><div class="grid3">'+'<div class="field"><label>ID estable</label><input readonly value="'+esc(c.id)+'"></div>'+field('Nombre','c_name_'+i,c.name)+field('Descripción','c_desc_'+i,c.desc)+'</div><div style="margin-top:12px"><button class="btn danger" data-delete-category="'+i+'">Eliminar categoría</button></div></div>').join('')+'</div>';
  $('#addCat').onclick=()=>{collect();DB.categories.push({id:'cat-'+crypto.randomUUID(),name:'Nueva categoría',desc:'',img:''});mark();renderCategories()}
+}
+function newComboSku(){
+ let sku;
+ do{sku='COM-'+crypto.randomUUID().replace(/-/g,'').slice(0,9).toUpperCase()}while(DB.combos.some(c=>c.sku===sku)||DB.products.some(p=>p.sku===sku));
+ return sku;
+}
+function renderCombosAdmin(){
+ const root=$('#content');$('#saveAll').hidden=comboEditingId!==null;
+ if(comboEditingId!==null){
+  const c=DB.combos.find(x=>x.id===comboEditingId);
+  if(!c){comboEditingId=null;renderCombosAdmin();return}
+  const imgs=Array.isArray(c.imgs)?c.imgs:[];
+  root.innerHTML='<div class="catalog-breadcrumb"><button class="btn ghost" type="button" data-combo-back>← Combos</button></div>'+
+   '<div class="section-head"><h2>Editar combo</h2><p class="muted">Edita los datos y guarda al finalizar.</p></div>'+
+   '<div class="item"><div class="grid3">'+
+   field('Nombre','combo_name',c.name)+field('SKU','combo_sku',c.sku)+
+   '<div class="field"><label>Estado</label><select id="combo_active"><option value="1" '+(c.active!==false?'selected':'')+'>Activo</option><option value="0" '+(c.active===false?'selected':'')+'>Oculto</option></select></div>'+
+   field('Precio del combo (Gs.)','combo_price',c.price,'number')+
+   field('Precio de referencia (Gs.)','combo_old',c.old??c.price,'number')+
+   field('Stock','combo_stock',c.stock,'number')+'</div>'+
+   textAreaField('Descripción','combo_desc',c.desc)+
+   textAreaField('Contenido del combo (uno por línea)','combo_items',(c.items||[]).join('\n'))+
+   '<div class="field" style="margin-top:16px"><label>Imágenes (hasta 3)</label><div class="product-image-grid">'+
+   Array.from({length:3},(_,slot)=>'<div class="product-image-slot"><div class="image-slot-title">Foto '+(slot+1)+'</div>'+
+   (imgs[slot]?'<img class="image-slot-preview" alt="Foto '+(slot+1)+'" src="'+esc(/^https?:\/\//i.test(imgs[slot])?imgs[slot]:'')+'">':'<div class="image-slot-empty">Sin imagen nueva</div>')+
+   '<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="combo" data-combo-id="'+esc(c.id)+'" data-slot="'+slot+'">'+
+   (imgs[slot]?'<button class="btn ghost" type="button" data-combo-remove-image="'+slot+'">Eliminar foto</button>':'')+'</div>').join('')+
+   '</div><div id="combo_upload_status" role="status"></div></div>'+
+   '<div class="row" style="justify-content:flex-end;margin-top:18px;flex-wrap:wrap"><button class="btn ghost" type="button" data-combo-back>Volver</button><button class="btn primary" type="button" id="saveComboBottom">GUARDAR COMBO</button></div></div>';
+  return;
+ }
+ root.innerHTML='<div class="catalog-list-head"><div><h2>Combos</h2><p class="muted">Crea, edita, duplica y elimina combos.</p></div><button class="btn primary" type="button" id="addCombo">+ NUEVO COMBO</button></div>'+
+ '<div class="catalog-list">'+((DB.combos||[]).map(c=>'<div class="catalog-row">'+
+ '<div class="catalog-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px">📦</div>'+
+ '<div class="catalog-product"><strong>'+esc(c.name)+'</strong><small>'+esc(c.sku||'Sin SKU')+'</small></div>'+
+ '<div class="catalog-price">'+money(c.price)+'</div><div class="catalog-stock">'+Number(c.stock||0)+' un.</div>'+
+ '<span class="badge '+(c.active===false?'off':'')+'">'+(c.active===false?'Oculto':'Activo')+'</span>'+
+ '<div class="catalog-actions"><button class="btn ghost" type="button" data-combo-edit="'+esc(c.id)+'">Editar</button><button class="btn ghost" type="button" data-combo-copy="'+esc(c.id)+'">Duplicar</button><button class="btn catalog-delete" type="button" data-combo-delete="'+esc(c.id)+'">Excluir</button></div></div>').join('')||'<div class="catalog-empty">Todavía no hay combos.</div>')+'</div>';
+}
+function collectCombo(){
+ if(tab!=='combos'||comboEditingId===null||!$('#combo_name'))return;
+ const c=DB.combos.find(x=>x.id===comboEditingId);if(!c)return;
+ c.name=$('#combo_name').value.trim();c.sku=$('#combo_sku').value.trim();
+ c.active=$('#combo_active').value==='1';c.price=Number($('#combo_price').value);
+ c.old=Number($('#combo_old').value);c.stock=Number($('#combo_stock').value);
+ c.desc=$('#combo_desc').value;
+ c.items=$('#combo_items').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+}
+async function saveCombo(){
+ if(uploading>0){alert('Espera a que terminen las imágenes.');return}
+ const b=$('#saveComboBottom');if(b)b.disabled=true;
+ try{
+  collectCombo();
+  if(dirty)await saveStore();
+  if(dirty)throw Error('No se pudo guardar el combo.');
+  comboEditingId=null;renderCombosAdmin();$('#content').scrollIntoView({block:'start',behavior:'smooth'});
+ }catch(err){alert('No se pudo guardar el combo: '+err.message)}
+ finally{if(b)b.disabled=false}
 }
 function renderPromotions(){
  $('#content').innerHTML='<div class="section-head row between"><div><h2>Promociones</h2><p class="muted">Descuentos temporales aplicados a productos seleccionados.</p></div><button class="btn primary" id="addPromo">+ NUEVA</button></div><div class="list">'+
@@ -403,6 +472,7 @@ function renderJSON(){
  $('#applyJson').onclick=()=>{try{const imported=JSON.parse($('#jsonBox').value);validateStore(imported);if(!confirm('¿Reemplazar el catálogo en memoria con este respaldo válido? Los datos se guardarán sólo después de pulsar GUARDAR CAMBIOS.'))return;DB=imported;mark();render()}catch(e){alert('Respaldo inválido: '+e.message)}}
 }
 function collect(){
+ collectCombo();
  (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=[];p.includes=[];p.active=g('p_active_'+i).value==='1'});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
  (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.start=$('#pr_start_'+i).value;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
@@ -420,6 +490,40 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){collect();tab=t.dataset.tab;render();return}
+ if(e.target.closest('#saveComboBottom')){await saveCombo();return}
+ if(e.target.closest('[data-combo-back]')){collect();comboEditingId=null;renderCombosAdmin();return}
+ const comboEdit=e.target.closest('[data-combo-edit]');
+ if(comboEdit){comboEditingId=comboEdit.dataset.comboEdit;renderCombosAdmin();return}
+ if(e.target.closest('#addCombo')){
+  collect();const c={id:'combo-'+crypto.randomUUID(),sku:newComboSku(),name:'Nuevo combo',desc:'',price:0,old:0,stock:0,active:false,imgs:[],items:[]};
+  DB.combos.push(c);comboEditingId=c.id;mark();renderCombosAdmin();return;
+ }
+ const comboCopy=e.target.closest('[data-combo-copy]');
+ if(comboCopy){
+  if(dirty){alert('Guarda los cambios pendientes antes de duplicar.');return}
+  const src=DB.combos.find(c=>c.id===comboCopy.dataset.comboCopy);if(!src)return;
+  const c=JSON.parse(JSON.stringify(src));c.id='combo-'+crypto.randomUUID();c.sku=newComboSku();c.name='Copia de '+c.name;c.stock=0;c.active=false;
+  DB.combos.push(c);comboEditingId=c.id;mark();renderCombosAdmin();return;
+ }
+ const comboDelete=e.target.closest('[data-combo-delete]');
+ if(comboDelete){
+  if(dirty||saving||uploading){alert('Guarda los cambios pendientes antes de eliminar.');return}
+  const c=DB.combos.find(x=>x.id===comboDelete.dataset.comboDelete);if(!c)return;
+  if(!confirm('¿Eliminar definitivamente el combo "'+c.name+'"? Esta operación no se puede deshacer.'))return;
+  const backup=JSON.stringify(DB);comboDelete.disabled=true;
+  try{
+   DB.combos=DB.combos.filter(x=>x.id!==c.id);mark();await saveStore();
+   if(dirty)throw Error('El combo no se pudo eliminar.');
+   renderCombosAdmin();$('#syncStatus').textContent='Combo eliminado y guardado';
+  }catch(err){DB=JSON.parse(backup);dirty=false;renderCombosAdmin();alert('No se pudo eliminar: '+err.message)}
+  return;
+ }
+ const removeComboImage=e.target.closest('[data-combo-remove-image]');
+ if(removeComboImage){
+  if(uploading){alert('Espera a que terminen las imágenes.');return}
+  collectCombo();const c=DB.combos.find(x=>x.id===comboEditingId);if(!c)return;
+  c.imgs.splice(Number(removeComboImage.dataset.comboRemoveImage),1);mark();renderCombosAdmin();return;
+ }
  if(e.target.closest('#saveProductBottom')){
   if(uploading>0){alert('Espera a que termine la carga de imágenes.');return}
   const button=e.target.closest('#saveProductBottom');
@@ -537,7 +641,23 @@ document.addEventListener('change',async e=>{
  const inp=e.target.closest('[data-upload]');if(!inp||!inp.files?.[0])return;
  const f=inp.files[0],kind=inp.dataset.upload;
  try{
-   if(kind==='product'){
+   if(kind==='combo'){
+     const id=inp.dataset.comboId,slot=Number(inp.dataset.slot),combo=DB.combos.find(x=>x.id===id);
+     if(!combo||slot<0||slot>2)return;
+     collectCombo();
+     const photos=Array.isArray(combo.imgs)?combo.imgs:[];
+     if(slot>photos.length){alert('Agrega las fotos en orden.');return}
+     uploading++;$('#saveAll').disabled=true;inp.disabled=true;
+     const status=$('#combo_upload_status');if(status)status.textContent='Optimizando y enviando imagen…';
+     try{
+      const result=await uploadMedia(f,'combos',1600,1600);
+      const target=DB.combos.find(x=>x.id===id);if(!target)return;
+      const newPhotos=Array.isArray(target.imgs)?target.imgs:[];
+      newPhotos[slot]=result.url;target.imgs=newPhotos.slice(0,3);
+      mark();renderCombosAdmin();
+      const current=$('#combo_upload_status');if(current)current.textContent='Imagen enviada. Pulsa GUARDAR COMBO para publicar.';
+     }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false}
+    }else if(kind==='product'){
     const i=Number(inp.dataset.index),slot=Number(inp.dataset.slot),p=DB.products[i],box=$('#upload_status_'+i);
     if(!p||!Number.isInteger(slot)||slot<0||slot>4)return;
     if(slot>imageSlots(p).length){alert('Sube las fotos en orden, sin dejar espacios vacíos.');return}
