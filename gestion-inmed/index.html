@@ -103,7 +103,7 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 (()=>{'use strict';
 const CFG=window.INMED_SUPABASE||{}, $=(s,r=document)=>r.querySelector(s);
 let token=null,user=null,DB=null,tab='products',dirty=false,lastSyncedAt=null,refreshToken=null,expiry=0,refreshing=null,saving=false;
-let productCategory=null,productEditingId=null,productQuery='',productPage=0,uploading=0,comboEditingId=null;
+let productCategory=null,productEditingId=null,productQuery='',productPage=0,uploading=0,comboEditingId=null,editRevision=0;
 const PRODUCT_PAGE_SIZE=20;
 const tabs=[['products','Productos'],['categories','Categorías'],['combos','Combos'],['promotions','Promociones'],['banners','Banners'],['settings','Configuración'],['account','Mi cuenta']];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -213,17 +213,19 @@ async function saveStore(){
  if(!DB||!dirty||saving)return;
  if(uploading>0)throw new Error('Espera a que termine la carga de imágenes antes de guardar.');
  validateStore();
+ const sentRevision=editRevision;
  saving=true;$('#saveAll').disabled=true;$('#syncStatus').textContent='Guardando…';
  try{
   const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
   const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
   if(!Array.isArray(rows)||rows.length!==1)throw new Error('Otra sesión modificó el catálogo. No se sobrescribieron sus cambios. Exporta el respaldo JSON antes de recargar.');
-  lastSyncedAt=rows[0].updated_at;dirty=false;
-  $('#syncStatus').textContent='Guardado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+  lastSyncedAt=rows[0].updated_at;
+  dirty=editRevision!==sentRevision;
+  $('#syncStatus').textContent=dirty?'Cambios nuevos pendientes · guarda nuevamente':'Guardado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
  }catch(err){$('#syncStatus').textContent='Error al guardar · cambios pendientes';throw err}
  finally{saving=false;$('#saveAll').disabled=false}
 }
-function mark(){dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
+function mark(){editRevision++;dirty=true;$('#syncStatus').textContent='Cambios pendientes';}
 function renderTabs(){ $('#tabs').innerHTML=tabs.map(([id,n])=>'<button class="tab '+(tab===id?'active':'')+'" data-tab="'+id+'">'+n+'</button>').join(''); }
 function render(){renderTabs();$('#saveAll').hidden=false; if(tab==='products')renderProducts(); else if(tab==='categories')renderCategories(); else if(tab==='combos')renderCombosAdmin(); else if(tab==='promotions')renderPromotions(); else if(tab==='banners')renderBanners(); else if(tab==='settings')renderSettings(); else if(tab==='account')renderAccount(); else renderProducts();}
 function imageSrc(value){
@@ -598,9 +600,8 @@ document.addEventListener('click',async e=>{
   copy.stock=0;
   copy.active=false;
   copy.featured=false;
-  if(Array.isArray(copy.variants)){
-   copy.variants=copy.variants.map(v=>({...v,stock:0,sku:newSku(original.cat)}));
-  }
+  // A duplicated color/model is a separate product, never a legacy variant set.
+  copy.variants=[];
   // Reuse images and descriptions initially; images can be replaced in the editor.
   DB.products.push(copy);
   productCategory=original.cat;
