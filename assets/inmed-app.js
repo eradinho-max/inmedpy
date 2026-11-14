@@ -360,6 +360,10 @@ function filteredProducts(){
   else if(S.filter!=='all') list=list.filter(p=>p.cat===S.filter);
   return list;
 }
+function productSeoPath(p){
+ const slug=String(p.name||'producto').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,92)||'producto';
+ return '/producto/'+slug+'--'+encodeURIComponent(String(p.id));
+}
 function productCard(p){
   const variants=saleVariants(p),pr=priceOf(p),st=variants.length?variants.reduce((sum,v)=>sum+Math.max(0,Number(v.stock)||0),0):Math.max(0,Number(p.stock)||0),out=st<=0,low=st>0&&st<=3;
   const tagList=(p.tags||[]).filter(t=>t!=='OFERTA'&&t!=='MÁS VENDIDO');if(pr.off)tagList.push('OFERTA');
@@ -373,7 +377,7 @@ function productCard(p){
     </div>
     <div class="prod-body">
       <div class="prod-cat">${esc(publicCategoryName(p.cat))}</div>
-      <div class="prod-title" data-act="open-pdp" data-id="${p.id}">${esc(p.name)}</div>
+      <a class="prod-title" href="${esc(productSeoPath(p))}" title="Ver ficha completa: ${esc(p.name)}">${esc(p.name)}</a>
       <div class="prod-desc">${esc(p.short)}</div>
       <div style="font-size:11px;color:var(--gray);margin:6px 0">Código: ${esc(p.sku||'Consultar')}</div>
       <div class="price-row">${pr.old?`<div class="price-old">${gs(pr.old)}</div>`:''}<span class="price"><span class="cur">Gs.</span> ${Math.round(pr.cur).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}</span>${pr.off?`<span class="price-off">-${pr.off}%</span>`:''}</div>
@@ -1156,6 +1160,16 @@ async function boot(){
   if(DB.banners){DB.banners.showOffer=false;DB.banners.showHeroBadge=false;}
  }
  route();
+ if(ok){
+  // A product landing page returns here with a stable product ID.
+  const params=new URLSearchParams(location.search);
+  const productId=params.get('producto');
+  if(productId&&productId.length<100){
+   params.delete('producto');
+   history.replaceState(null,'',location.pathname+(params.toString()?'?'+params.toString():'')+location.hash);
+   openPDP(productId);
+  }
+ }
  if(!ok){
   const notice=document.createElement('div');
   notice.setAttribute('role','alert');
