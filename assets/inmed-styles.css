@@ -597,3 +597,8 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .footer-brand .brand-signature,.admin-side-brand .brand-signature{color:#fff}
 .brand-store,.footer-brand{align-items:flex-start;gap:8px}
 @media(max-width:520px){.brand-store .brand-image{width:155px}.brand-store .brand-signature{font-size:7px;letter-spacing:.11em}}
+
+/* SEO: product name is a real crawlable link; preserve original card appearance. */
+.prod-card a.prod-title{display:block;color:inherit;text-decoration:none}
+.prod-card a.prod-title:hover{color:var(--red)}
+.prod-card a.prod-title:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:2px}
