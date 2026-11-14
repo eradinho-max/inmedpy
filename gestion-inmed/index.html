@@ -8,7 +8,7 @@
 <script src="/supabase-config.js"></script>
 <script src="/assets/inmed-images.js"></script>
 <style>
-:root{--red:#D90429;--dark:#1E293B;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--green:#2A9D8F}
+:root{--red:#B5001B;--dark:#1E293B;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--green:#2A9D8F}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--dark)}
 .wrap{max-width:1180px;margin:auto;padding:28px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(15,23,42,.05)}
 h1,h2,h3{font-family:Montserrat,Inter,sans-serif;margin:0 0 14px}h1{font-size:28px}.muted{color:var(--muted)}
@@ -52,12 +52,15 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 .product-image-slot input{font-size:11px;padding:5px;max-width:100%}.product-image-slot .btn{font-size:12px;margin-top:8px;padding:7px}
 .hidden{display:none!important}.status{font-size:13px;color:var(--muted)}.login{max-width:460px;margin:8vh auto}.login .card{padding:28px}.section-head{margin:8px 0 14px}
 @media(max-width:760px){.wrap{padding:14px}.grid,.grid3{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row.mobilecol{align-items:stretch;flex-direction:column}}
+.inmed-admin-mark{display:block;width:190px;height:auto;max-width:100%;margin:0 0 12px;object-fit:contain}
+.inmed-admin-topmark{display:block;width:155px;height:auto;max-width:100%;object-fit:contain;margin:0 0 7px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <section id="loginView" class="login">
     <div class="card">
+      <img src="/assets/inmed-logo-vermelho.svg" class="inmed-admin-mark" alt="INMED" width="190" height="48">
       <h1>Gestión InMed</h1>
       <p class="muted">Acceso administrativo separado de la tienda pública.</p>
       <form id="loginForm">
@@ -92,7 +95,7 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 
   <section id="adminView" class="hidden">
     <div class="top">
-      <div><h1>InMed · Panel de Gestión</h1><div id="syncStatus" class="status">Conectando…</div></div>
+      <div><img src="/assets/inmed-logo-vermelho.svg" class="inmed-admin-topmark" alt="INMED" width="155" height="39"><h1>Panel de Gestión</h1><div id="syncStatus" class="status">Conectando…</div></div>
       <div class="row"><button id="saveAll" class="btn primary">GUARDAR CAMBIOS</button><button id="logout" class="btn ghost">SALIR</button></div>
     </div>
     <div class="tabs" id="tabs"></div>
