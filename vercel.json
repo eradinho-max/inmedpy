@@ -78,5 +78,15 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/producto/:slug",
+      "destination": "/api/product?slug=:slug"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    }
   ]
 }
