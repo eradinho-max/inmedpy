@@ -43,7 +43,7 @@ export default async function handler(req,res){
 <html lang="es-PY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${e(seoTitle)}</title>
 <meta name="description" content="${e(synopsis)}"><meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="${e(canonical)}"><link rel="icon" href="/assets/medfy-icon.svg" type="image/svg+xml"><meta name="theme-color" content="#C8102E">
+<link rel="canonical" href="${e(canonical)}"><link rel="icon" href="/assets/suprimed-icon.svg" type="image/svg+xml"><meta name="theme-color" content="#C8102E">
 <meta property="og:type" content="product"><meta property="og:locale" content="es_PY"><meta property="og:site_name" content="SupriMed Soluciones Médicas"><meta property="og:title" content="${e(seoTitle)}">
 <meta property="og:description" content="${e(synopsis)}"><meta property="og:url" content="${e(canonical)}">
 ${photo?'<meta property="og:image" content="'+e(photo)+'"><meta property="og:image:alt" content="'+e(name)+'"><meta name="twitter:image" content="'+e(photo)+'">':''}
@@ -66,7 +66,7 @@ h1{font-size:clamp(29px,3.5vw,43px);line-height:1.13;letter-spacing:-.025em;marg
 footer{background:#161B26;color:#fff;padding:35px 24px;text-align:center;font-size:13px}
 @media(max-width:780px){.product{grid-template-columns:1fr;gap:24px}.photo{min-height:280px}.head{padding:15px 18px}main{padding:25px 18px 65px}.price{font-size:32px}}
 @media(max-width:480px){.head{padding:12px 14px;gap:8px}.logo{width:145px;max-width:44vw}.home{font-size:12px;line-height:1.4;text-align:right}.actions{display:grid;grid-template-columns:1fr}.btn{min-height:46px;width:100%;padding:12px;text-align:center}.photo{min-height:220px}.price{font-size:clamp(27px,8vw,34px)}h1{overflow-wrap:anywhere}main{padding-inline:14px}}</style></head><body>
-<header><div class="head"><a href="/" aria-label="SupriMed inicio"><img class="logo" src="/assets/medfy-logo.svg" alt="SupriMed"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
+<header><div class="head"><a href="/" aria-label="SupriMed inicio"><img class="logo" src="/assets/suprimed-lockup.svg" alt="SupriMed"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
 <main><nav class="crumb" aria-label="Ubicación"><a href="/">Inicio</a> › <a href="${e(catPath)}">${e(cat)}</a> › ${e(name)}</nav>
 <div class="product"><div><div class="photo">${imageHtml}</div>${thumbnails}</div>
 <div><span class="tag">${e(cat)}</span><h1>${e(name)}</h1>${sku?'<p class="muted">SKU: '+e(sku)+'</p>':''}${brand?'<p class="muted">Marca: '+e(brand)+'</p>':''}${manufacturer?'<p class="muted">Fabricante: '+e(manufacturer)+'</p>':''}
