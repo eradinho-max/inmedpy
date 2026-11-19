@@ -125,9 +125,9 @@ const DEFAULT = () => ({
 const FAQ=[
   {q:'¿Hacen envíos a todo Paraguay?',a:'Sí. Despachamos a todo el país. Coordinamos la entrega por WhatsApp y te confirmamos plazo y costo antes de cerrar el pedido.'},
   {q:'¿Cómo finalizo una compra?',a:'Agregá los productos al carrito, revisá el total y presioná “Finalizar por WhatsApp”. Se abre un mensaje ya armado con tu pedido para que lo confirmemos juntos.'},
-  {q:'¿Los productos tienen garantía?',a:'Todos los productos son originales y cuentan con garantía del fabricante. El plazo específico figura en la ficha de cada producto.'},
-  {q:'¿Puedo pedir una variante de color específica?',a:'Sí. En el BIC Eternity podés elegir el color dentro de la ficha del producto; el stock se muestra por variante.'},
-  {q:'¿El envío tiene costo?',a:'Muchos productos tienen envío gratis y, además, pedidos desde el mínimo configurado acceden a envío sin cargo. Consultá siempre al coordinar.'}
+  {q:'¿Los productos tienen garantía?',a:'La garantía comercial depende del producto. Consultá el plazo y las condiciones de cada ficha o por WhatsApp. Los derechos legales del consumidor se mantienen.'},
+  {q:'¿Puedo pedir una variante de color específica?',a:'Sí. Consultá las fichas de los estetoscopios BIC Eternity III por color y la disponibilidad de cada producto.'},
+  {q:'¿El envío tiene costo?',a:'El carrito calcula envío gratis cuando todos los artículos tienen ese beneficio o el subtotal alcanza el mínimo vigente. Para los demás pedidos muestra una estimación; MEDfy confirma el costo y el plazo antes de cerrar la compra.'}
 ];
 
 /* ---------- estado ---------- */
@@ -138,7 +138,7 @@ function loadDB(){
 let DB = loadDB();
 Object.assign(IMG, DB.customImages||{});   // fotos subidas desde el admin
 const saveDB = () => ST.set('inmed_db_v1', JSON.stringify(DB));
-const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const todayStr = () => new Intl.DateTimeFormat('en-CA',{timeZone:'America/Asuncion',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const nowStr   = () => { const d=new Date(); return todayStr()+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':00'; };
 function loadCart(){ try{const c=JSON.parse(ST.get('inmed_cart_v1')||'[]'); return Array.isArray(c)?c:[];}catch(e){return [];} }
 let cart=loadCart();
@@ -169,7 +169,7 @@ async function syncRemoteStore(){
 /* ---------- utilidades de negocio ---------- */
 function activePromoFor(p){
   const today=todayStr();
-  return (DB.promotions||[]).find(pr=>pr.active && pr.productIds.indexOf(p.id)>-1 && (!pr.start||pr.start<=today) && (!pr.end||pr.end>=today)) || null;
+  return (DB.promotions||[]).filter(pr=>pr.active&&Array.isArray(pr.productIds)&&pr.productIds.includes(p.id)&&Number(pr.percent)>0&&Number(pr.percent)<=100&&(!pr.start||pr.start<=today)&&(!pr.end||pr.end>=today)).sort((a,b)=>Number(b.percent)-Number(a.percent))[0]||null;
 }
 function priceOf(p,v){
   const regular=Number(p.price), base=v?Number(v.price):regular;
@@ -303,7 +303,7 @@ function renderStore(){
   $('#footerMail').textContent=C.email||'';
   $('#footerMail').closest('li').hidden=!String(C.email||'').trim();
   $('#footerCopy').textContent=String(C.copy||'© 2026 MEDfy Soluciones Médicas · Asunción, Paraguay').replace(/\bInMed\b/gi,'MEDfy');
-  $('#footerCats').innerHTML=DB.categories.map(c=>`<li><a href="#productos" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
+  $('#footerCats').innerHTML=DB.categories.filter(c=>activeProducts().some(p=>p.cat===c.id)).map(c=>`<li><a href="${esc(categorySeoPath(c))}" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
   document.title='MEDfy'+' Paraguay | Kits de Sutura y Equipamiento Médico';
   // Render each merchandising section independently so a broken optional widget
   // cannot erase categories, combos or the editorial grid.
@@ -350,7 +350,7 @@ function renderHeroGallery(){
  gallery.hidden=!unique.length;
 }
 function renderCategories(){
-  $('#catGrid').innerHTML=DB.categories.map(c=>{
+  $('#catGrid').innerHTML=DB.categories.filter(c=>activeProducts().some(p=>p.cat===c.id)).map(c=>{
     const originalCover=['Oxímetros','Glucómetros'].includes(c.id);
     const chosen=originalCover?null:activeProducts().find(p=>p.cat===c.id&&p.img);
     const cover=chosen?.img||c.img;
@@ -362,7 +362,7 @@ function renderCategories(){
   }).join('');
 }
 function renderFilters(){
-  const chips=[{id:'all',name:'Todos'},{id:'ofertas',name:'Ofertas'},...DB.categories.map(c=>({id:c.id,name:c.name}))];
+  const chips=[{id:'all',name:'Todos'},{id:'ofertas',name:'Ofertas'},...DB.categories.filter(c=>activeProducts().some(p=>p.cat===c.id)).map(c=>({id:c.id,name:c.name}))];
   const searchChip=S.filter==='search'?`<button class="chip active" data-act="filter" data-val="all">“${esc(S.query)}” ✕ Limpiar</button>`:'';
   $('#filterBar').innerHTML=chips.map(c=>`<button class="chip ${S.filter===c.id?'active':''}" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</button>`).join('')+searchChip+
     `<span class="filter-count" id="filterCount"></span>`;
@@ -499,7 +499,7 @@ function renderCountdown(){
     $('.offer-wrap').hidden=true;
     return;
   }
-  const end=campaign.end?new Date(campaign.end+'T23:59:59').getTime():NaN;
+  const end=campaign.end?new Date(campaign.end+'T23:59:59-03:00').getTime():NaN;
   const diff=end-Date.now();
   if(!Number.isFinite(end)){
     $('#countdown').innerHTML='';
@@ -1139,7 +1139,7 @@ $('#heroWhats').addEventListener('click',()=>openWA('Hola MEDfy 👋, quiero ver
 $('#faqWhats').addEventListener('click',()=>openWA('Hola MEDfy 👋, tengo una consulta sobre los productos y los envíos. ¿Podés ayudarme?'));
 $('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola MEDfy 👋, quiero hacer una consulta sobre el catálogo.');});
 $('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola MEDfy 👋, quiero hacer una consulta.');});
-$('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto MEDfy','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Lunes a viernes de 08:00 a 18:00.</p><p>Envíos a todo el país.</p>');});
+$('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto MEDfy','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Atención por WhatsApp.</p><p>Envíos a todo el país.</p>');});
 $('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre MEDfy','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
 $('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola MEDfy, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar disponibilidad y entrega?');});
 $('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola MEDfy, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});

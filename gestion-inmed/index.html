@@ -666,7 +666,7 @@ document.addEventListener('click',async e=>{
   copy.active=false;
   copy.featured=false;
   // A duplicated color/model is a separate product, never a legacy variant set.
-  copy.variants=[];copy.gtin='';if(copy.specs){delete copy.specs.GTIN;delete copy.specs.MPN;}
+  copy.variants=[];delete copy.rating;delete copy.reviews;copy.gtin='';if(copy.specs){delete copy.specs.GTIN;delete copy.specs.MPN;}
   // Reuse images and descriptions initially; images can be replaced in the editor.
   DB.products.push(copy);
   productCategory=original.cat;

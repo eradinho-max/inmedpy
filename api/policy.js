@@ -3,7 +3,7 @@ const definitions=[["envios","Envíos y entregas"],["devoluciones","Cambios y de
 const send=(res,code,body,cache='no-store')=>{res.statusCode=code;res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control',cache);res.end(body)};
 const escapeText=s=>e(String(s??'').trim());
 const policyLinks=definitions.map(([id,title])=>'<a href="/politicas/'+id+'">'+title+'</a>').join(' · ');
-const laws='<p>Marco normativo: <a href="https://www.bacn.gov.py/leyes-paraguayas/961/comercio-electronico">Ley N.º 4868/2013 de Comercio Electrónico</a> y <a href="https://www.bacn.gov.py/leyes-paraguayas/897/ley">Ley N.º 1334/1998 de Defensa del Consumidor y del Usuario</a>. Para orientación y reclamos: <a href="https://sedeco.gov.py/reclama-tus-derechos/">SEDECO</a>.</p>';
+const laws='<p>Marco normativo: <a href="https://www.bacn.gov.py/leyes-paraguayas/961/ley-n-4868-comercio-electronico">Ley N.º 4868/2013 de Comercio Electrónico</a> y <a href="https://www.bacn.gov.py/leyes-paraguayas/897/ley">Ley N.º 1334/1998 de Defensa del Consumidor y del Usuario</a>. Para orientación y reclamos: <a href="https://sedeco.gov.py/reclama-tus-derechos/">SEDECO</a>.</p>';
 export default async function handler(req,res){
  if(req.method!=='GET'&&req.method!=='HEAD'){res.setHeader('Allow','GET, HEAD');return send(res,405,'Método no permitido')}
  const slug=String(req.query?.slug||''),entry=definitions.find(x=>x[0]===slug);
