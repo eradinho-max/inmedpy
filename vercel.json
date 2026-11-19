@@ -105,6 +105,14 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    },
+    {
+      "source": "/categorias",
+      "destination": "/api/category"
+    },
+    {
+      "source": "/categoria/:slug",
+      "destination": "/api/category?slug=:slug"
     }
   ],
   "redirects": [

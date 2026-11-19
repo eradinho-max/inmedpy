@@ -311,7 +311,7 @@ function renderNavigation(){
   const categories=(DB.categories||[]).filter(cat=>activeProducts().some(p=>p.cat===cat.id));
   $('#navLinks').innerHTML=
     '<a href="#inicio" data-cat="all">Inicio</a>'+
-    categories.map(cat=>'<a href="#productos" data-cat="'+esc(cat.id)+'">'+esc(cat.name)+'</a>').join('')+
+    categories.map(cat=>'<a href="'+esc(categorySeoPath(cat))+'" data-cat="'+esc(cat.id)+'">'+esc(cat.name)+'</a>').join('')+
     ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
     '<a href="#ofertas" class="nav-offer" data-cat="ofertas">Ofertas</a>'+
     '<a href="#blog">Blog</a><span class="nav-spacer"></span>'+
@@ -360,6 +360,7 @@ function filteredProducts(){
   else if(S.filter!=='all') list=list.filter(p=>p.cat===S.filter);
   return list;
 }
+function categorySeoPath(c){return '/categoria/'+(String(c.id||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,92)||'producto');}
 function productSeoPath(p){
  const slug=String(p.name||'producto').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,92)||'producto';
  return '/producto/'+slug+'--'+encodeURIComponent(String(p.id));
@@ -1129,7 +1130,7 @@ $('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allP
 $('#offerBtn').addEventListener('click',e=>{e.preventDefault();setFilter('ofertas',true);});
 $$('[data-scroll]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();scrollTo(a.dataset.scroll);}));
 $('#navLinks').addEventListener('click',e=>{
-  const a=e.target.closest('a[data-cat]');if(!a)return;
+  const a=e.target.closest('a[data-cat]');if(!a||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||!S.catalogReady)return;
   e.preventDefault();
   if(a.dataset.cat==='all'){setFilter('all',false);window.scrollTo({top:0,behavior:'smooth'});}
   else setFilter(a.dataset.cat,true);

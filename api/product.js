@@ -1,4 +1,4 @@
-import {ORIGIN,loadCatalog,activeProducts,htmlEscape as e,productPath,priceOf,description,validProductImage,money,categoryName,jsonLd} from '../lib/inmed-seo.js';
+import {ORIGIN,loadCatalog,activeProducts,htmlEscape as e,productPath,priceOf,description,validProductImage,money,categoryName,jsonLd,activeCategories,categoryPath,brandOf,manufacturerOf,verifiedGtin,breadcrumb} from '../lib/inmed-seo.js';
 
 const send=(res,code,html,cache='no-store')=>{
  res.statusCode=code;
@@ -30,10 +30,12 @@ export default async function handler(req,res){
  const photo=validProductImage(p),images=[p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(x=>{try{return new URL(x).protocol==='https:'}catch{return false}}).slice(0,5);
  const seoTitle=(name+' | MEDfy Paraguay').slice(0,120);
  const sku=String(p.sku||'').trim();
+ const brand=brandOf(p),manufacturer=manufacturerOf(p),gtin=verifiedGtin(p);
+ const category=activeCategories(data).find(c=>c.id===p.cat),catPath=category?categoryPath(category):'/categorias';
  const whatsapp=String(data.settings?.whatsapp||'').replace(/\D/g,'');
  const waUrl=/^\d{8,15}$/.test(whatsapp)?'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola MEDfy, quisiera consultar disponibilidad y compra de '+name+(sku?' (SKU: '+sku+')':'')+'. Precio publicado: Gs. '+money(price??0)+'.'):null;
  const cartUrl='/?producto='+encodeURIComponent(id)+'#productos';
- const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'MEDfy Soluciones Médicas',url:ORIGIN}}};
+ const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),...(brand?{brand:{'@type':'Brand',name:brand}}:{}),...(manufacturer?{manufacturer:{'@type':'Organization',name:manufacturer}}:{}),...(gtin?{['gtin'+gtin.length]:gtin}:{}),...(price!==null?{offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'MEDfy Soluciones Médicas',url:ORIGIN}}}:{})};
  const paragraphs=String(p.desc||p.short||'').trim()||synopsis;
  const imageHtml=photo?'<img src="'+e(photo)+'" width="680" height="680" alt="'+e(name)+'" fetchpriority="high">':'<div class="placeholder">MEDfy</div>';
  const thumbnails=images.length>1?'<div class="thumbnails">'+images.map((x,i)=>'<img src="'+e(x)+'" alt="'+e(name)+' - Vista '+(i+1)+'" loading="lazy">').join('')+'</div>':'';
@@ -44,9 +46,10 @@ export default async function handler(req,res){
 <link rel="canonical" href="${e(canonical)}"><link rel="icon" href="/assets/medfy-icon.svg" type="image/svg+xml"><meta name="theme-color" content="#E6102D">
 <meta property="og:type" content="product"><meta property="og:locale" content="es_PY"><meta property="og:site_name" content="MEDfy Soluciones Médicas"><meta property="og:title" content="${e(seoTitle)}">
 <meta property="og:description" content="${e(synopsis)}"><meta property="og:url" content="${e(canonical)}">
-${photo?'<meta property="og:image" content="'+e(photo)+'">':''}
+${photo?'<meta property="og:image" content="'+e(photo)+'"><meta property="og:image:alt" content="'+e(name)+'"><meta name="twitter:image" content="'+e(photo)+'">':''}
 <meta name="twitter:card" content="${photo?'summary_large_image':'summary'}">
-<script type="application/ld+json">${jsonLd(ld)}</script>
+<meta name="twitter:title" content="${e(seoTitle)}"><meta name="twitter:description" content="${e(synopsis)}">
+<script type="application/ld+json">${jsonLd([ld,breadcrumb([{name:"Inicio",path:"/"},{name:"Categorías",path:"/categorias"},{name:cat,path:catPath},{name,path:productPath(p)}].filter((x,i,a)=>i===0||x.path!==a[i-1].path))])}</script>
 <style>
 :root{--red:#E6102D;--wine:#8B0B1E;--ink:#161B26;--line:#E3E7EE;--muted:#64748B}*{box-sizing:border-box}
 body{margin:0;background:#fff;color:var(--ink);font:16px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif}a{color:inherit;text-decoration:none}
@@ -63,9 +66,9 @@ footer{background:#161B26;color:#fff;padding:35px 24px;text-align:center;font-si
 @media(max-width:780px){.product{grid-template-columns:1fr;gap:24px}.photo{min-height:280px}.head{padding:15px 18px}main{padding:25px 18px 65px}.price{font-size:32px}}
 @media(max-width:480px){.head{padding:12px 14px;gap:8px}.logo{width:145px;max-width:44vw}.home{font-size:12px;line-height:1.4;text-align:right}.actions{display:grid;grid-template-columns:1fr}.btn{min-height:46px;width:100%;padding:12px;text-align:center}.photo{min-height:220px}.price{font-size:clamp(27px,8vw,34px)}h1{overflow-wrap:anywhere}main{padding-inline:14px}}</style></head><body>
 <header><div class="head"><a href="/" aria-label="MEDfy inicio"><img class="logo" src="/assets/medfy-logo.svg" alt="MEDfy"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
-<main><nav class="crumb" aria-label="Ubicación"><a href="/">Inicio</a> › <a href="/#productos">${e(cat)}</a> › ${e(name)}</nav>
+<main><nav class="crumb" aria-label="Ubicación"><a href="/">Inicio</a> › <a href="${e(catPath)}">${e(cat)}</a> › ${e(name)}</nav>
 <div class="product"><div><div class="photo">${imageHtml}</div>${thumbnails}</div>
-<div><span class="tag">${e(cat)}</span><h1>${e(name)}</h1>${sku?'<p class="muted">SKU: '+e(sku)+'</p>':''}
+<div><span class="tag">${e(cat)}</span><h1>${e(name)}</h1>${sku?'<p class="muted">SKU: '+e(sku)+'</p>':''}${brand?'<p class="muted">Marca: '+e(brand)+'</p>':''}${manufacturer?'<p class="muted">Fabricante: '+e(manufacturer)+'</p>':''}
 ${price!==null?'<div class="price"><small>Gs.</small> '+money(price)+'</div>':''}
 ${price!==null&&regular>price?'<div class="old">Antes: Gs. '+money(regular)+'</div>':''}
 <p class="availability ${stock>0?'':'out'}">${stock>0?'Disponible · '+stock+' unidades':'Agotado · consultar disponibilidad'}</p>
