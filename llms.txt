@@ -1,4 +1,4 @@
-# MEDfy Soluciones Médicas
+# SupriMed Soluciones Médicas
 
 > Tienda de equipamiento e insumos médicos en Paraguay. Catálogo en español y precios en guaraníes (PYG). Compras coordinadas por WhatsApp.
 
@@ -6,7 +6,7 @@ La información comercial vigente se obtiene de las fichas y políticas pública
 
 ## Referencias oficiales
 - [Inicio](https://medfypy.vercel.app/): tienda y catálogo.
-- [Sobre MEDfy](https://medfypy.vercel.app/sobre-medfy): descripción y preguntas frecuentes.
+- [Sobre SupriMed](https://medfypy.vercel.app/sobre-medfy): descripción y preguntas frecuentes.
 - [Categorías](https://medfypy.vercel.app/categorias): directorio dinámico de categorías con productos activos.
 - [Sitemap](https://medfypy.vercel.app/sitemap.xml): URLs canónicas vigentes, fichas de productos y páginas comerciales.
 - [Envíos](https://medfypy.vercel.app/politicas/envios): condiciones de entrega.

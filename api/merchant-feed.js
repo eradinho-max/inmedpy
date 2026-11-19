@@ -16,7 +16,7 @@ export default async function handler(req,res){
    const stock=(Number(p.stock)||0)>0;
    return ['<item>'+tag('id',p.id)+tag('title',String(p.name).trim().slice(0,150))+tag('description',desc.slice(0,5000))+tag('link',ORIGIN+productPath(p))+tag('image_link',image)+images.map(x=>tag('additional_image_link',x)).join('')+tag('availability',stock?'in_stock':'out_of_stock')+tag('price',String(price)+' PYG')+tag('product_type',categoryName(data,p.cat))+(brand?tag('brand',brand):'')+(gtin?tag('gtin',gtin):'')+(mpn?tag('mpn',mpn):'')+(['new','used','refurbished'].includes(condition)?tag('condition',condition):'')+'</item>'];
   });
-  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>MEDfy Paraguay - catálogo preliminar</title><link>'+ORIGIN+'/</link><description>Vista previa para revisión comercial; no constituye aprobación de Google.</description>'+items.join('\n')+'</channel></rss>';
+  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>SupriMed Paraguay - catálogo preliminar</title><link>'+ORIGIN+'/</link><description>Vista previa para revisión comercial; no constituye aprobación de Google.</description>'+items.join('\n')+'</channel></rss>';
   res.setHeader('Content-Type','application/xml; charset=utf-8');return res.status(200).end(xml);
  }catch(_){res.setHeader('Retry-After','60');return res.status(503).end('Catálogo temporalmente indisponible')}
 }

@@ -1,4 +1,4 @@
-# MEDfy public catalog and search discovery
+# SupriMed public catalog and search discovery
 User-agent: *
 Allow: /
 Disallow: /api/
