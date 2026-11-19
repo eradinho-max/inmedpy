@@ -19,8 +19,8 @@ const safeImageURL = value => {
 };
 const img = k => {
   const v=String(k||'');
-  const source=/^https?:\/\//i.test(v)||/^data:image\//i.test(v)?v:(IMG[v]||IMG['bic-rosa']||'');
-  return safeImageURL(source);
+  const source=/^https?:\/\//i.test(v)||/^data:image\//i.test(v)?v:(IMG[v]||'');
+  return safeImageURL(source)||'/assets/suprimed-image-placeholder.svg';
 };
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Permit only the intentional decorative tags in merchant-editable banners.
@@ -145,7 +145,7 @@ let cart=loadCart();
 const saveCart=()=>ST.set('inmed_cart_v1',JSON.stringify(cart));
 
 
-const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:[],catalogReady:false,checkoutBusy:false};
+const S={filter:'all',visible:8,query:'',bic:0,allPosts:false,pdp:null,adminTab:'dashboard',adminAuth:false,mode:null,favs:(()=>{try{const a=JSON.parse(ST.get('suprimed_favs_v1')||'[]');return Array.isArray(a)?a.filter(x=>typeof x==='string').slice(0,1000):[]}catch(_){return []}})(),catalogReady:false,checkoutBusy:false};
 
 /* ---------- catálogo remoto Supabase ---------- */
 async function syncRemoteStore(){
@@ -235,6 +235,7 @@ function reconcileCart(){
 }
 const activeProducts=()=>DB.products.filter(p=>p.active!==false);
 function waUrl(text){
+ if(!S.catalogReady)return null;
  const digits=String(DB.settings?.whatsapp||'').replace(/\D/g,'');
  if(!/^\d{8,15}$/.test(digits))return null;
  return 'https://wa.me/'+digits+'?text='+encodeURIComponent(text);
@@ -254,7 +255,7 @@ function commerceEvent(event,items,extra={}){
 
 function openWA(text,log){
  const url=waUrl(text);
- if(!url){toast('El WhatsApp de la tienda no está configurado.');return false;}
+ if(!url){toast(S.catalogReady?'El WhatsApp de la tienda no está configurado.':'No podemos confirmar el contacto de la tienda en este momento. Reintentá.');return false;}
  // This only opens WhatsApp. The buyer must press Send; opening is not a completed order.
  if(log)addLead('Apertura WhatsApp','Cliente web',log.text,log.total);
  const a=document.createElement('a');
@@ -280,7 +281,7 @@ function renderStore(){
   const B=DB.banners, C=DB.settings;
   // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
   const announcement=String(B.announcement||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed');
-  const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
+  const unsupportedCoupon=/\bINMED5\b|cup[oó]n/iu.test(announcement);
   $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?safeRich(announcement,['b']):'Envíos a todo Paraguay · Atención por WhatsApp';
   const previousHero=String(B.heroTitle||'');
   $('#heroTitle').innerHTML=/EQUIPÁ TU PRÁCTICA CON PRODUCTOS QUE/i.test(previousHero)||!previousHero?'Insumos y<br>equipamientos<br><em>médicos</em>':safeRich(previousHero.replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed'),['em','br']);
@@ -849,6 +850,7 @@ function postForm(p){
 /* ==========================================================================
    EVENTOS
    ========================================================================== */
+document.addEventListener('error',e=>{const el=e.target;if(el?.tagName==='IMG'&&el.closest('#store,#productModal,#cartDrawer')&&el.getAttribute('src')!=='/assets/suprimed-image-placeholder.svg')el.src='/assets/suprimed-image-placeholder.svg';},true);
 document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');
   const closeEl=e.target.closest('[data-close]');
@@ -862,7 +864,7 @@ document.addEventListener('click',async e=>{
     case 'open-pdp': openPDP(id); break;
     case 'add': addToCart(id,'',1,'product'); break;
     case 'consult': { const p=DB.products.find(x=>x.id===id&&x.active!==false);if(!p)break;openWA('Hola SupriMed 👋, quiero consultar disponibilidad de: '+p.name+' ('+p.sku+'). ¿Cuándo vuelve a estar disponible?'); break; }
-    case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); renderProducts(); break; }
+    case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); ST.set('suprimed_favs_v1',JSON.stringify(S.favs)); renderProducts(); break; }
     case 'bic': S.bic=Number(val); renderBIC(); break;
     case 'combo-add': addToCart(id,'',1,'combo'); break;
     case 'post': { const p=(DB.posts||[]).find(x=>x.id===id); if(p&&p.slug) window.location.href='/blog/'+p.slug; break; }
