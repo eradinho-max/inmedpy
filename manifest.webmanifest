@@ -1,12 +1,12 @@
 {
-  "name": "MEDfy — Soluciones Médicas",
-  "short_name": "MEDfy",
+  "name": "SupriMed — Soluciones Médicas",
+  "short_name": "SupriMed",
   "description": "Equipamiento médico, kits de sutura y accesorios para profesionales y estudiantes de salud en Paraguay.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#E6102D",
+  "theme_color": "#C8102E",
   "icons": [
     {
       "src": "/assets/medfy-icon.svg",

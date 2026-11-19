@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MEDfy · TIENDA + PANEL ADMIN (V1 funcional, datos locales)
+   SupriMed · TIENDA + PANEL ADMIN (V1 funcional, datos locales)
    ========================================================================== */
 (function(){
 'use strict';
@@ -46,16 +46,16 @@ const ST = {
 /* ---------- datos demo ---------- */
 const DEFAULT = () => ({
   settings:{
-    storeName:'MEDfy', whatsapp:'595981000000', email:'', phone:'+595 981 000-000',
+    storeName:'SupriMed', whatsapp:'595981000000', email:'', phone:'+595 981 000-000',
     freeShipMin:300000, footer:'Equipamiento médico para estudiantes, profesionales y cuidado en casa. Productos originales, asesoría real y envíos a todo Paraguay.',
-    copy:'© 2026 MEDfy Soluciones Médicas · Asunción, Paraguay'
+    copy:'© 2026 SupriMed Soluciones Médicas · Asunción, Paraguay'
   },
   banners:{
     showAnnouncement:true, announcement:'Más calidad. Más acceso. Más salud.',
     heroTitle:'EQUIPÁ TU PRÁCTICA CON PRODUCTOS QUE <em>HACEN LA DIFERENCIA.</em>',
     heroSub:'Equipamiento médico para estudiantes, profesionales y cuidado en casa.',
     showHeroBadge:true, heroBadge:'<span>15%</span>OFF',
-    showOffer:true, offerTitle:'SEMANA MEDfy · 15% OFF', offerText:'En estetoscopios, kits de sutura y diagnóstico. Precios especiales por tiempo limitado, sin editar una sola línea de código.',
+    showOffer:true, offerTitle:'SEMANA SupriMed · 15% OFF', offerText:'En estetoscopios, kits de sutura y diagnóstico. Precios especiales por tiempo limitado, sin editar una sola línea de código.',
     offerEnd:'2026-11-10T23:59:59',
     newsText:'Guías prácticas, novedades del catálogo y una selección de ofertas. Un correo por semana, sin ruido.'
   },
@@ -68,7 +68,7 @@ const DEFAULT = () => ({
     {id:'Glucómetros',      name:'Glucómetros',       img:'glucometro',  desc:'Control de glucosa'}
   ],
   products:[
-    {id:'p1',name:'Kit de Sutura MEDfy — 19 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-19',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
+    {id:'p1',name:'Kit de Sutura SupriMed — 19 piezas',cat:'Sutura',short:'Pad de silicona, instrumental y 12 hilos.',desc:'Kit completo para práctica de sutura: almohadilla de silicona con heridas predefinidas, portaagujas, pinza, tijera, bisturí y hilos de entrenamiento en estuche rígido con cierre.',price:279000,promo:249000,stock:24,sku:'KIT-SUT-19',img:'sutura',rating:4.9,reviews:38,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
       features:['19 piezas organizadas en estuche','Pad de silicona reutilizable de 3 capas','Instrumental de acero inoxidable','Hilos de nylon, seda y poliéster','Ideal para estudiantes y residentes'],includes:['1 almohadilla de sutura','1 portaagujas + 1 pinza','1 tijera quirúrgica + 1 bisturí','12 hilos con aguja','Estuche con cierre y manual'],specs:{Piezas:'19',Material:'Acero inoxidable / silicona',Nivel:'Estudiante y residente',SKU:'KIT-SUT-19'}},
     {id:'p2',name:'Estetoscopio BIC Eternity III',cat:'Estetoscopios',short:'Doble campana, acero inoxidable. 5 colores.',desc:'El clásico BIC Eternity III con doble campana de acero inoxidable, tubo de PVC flexible y olivas suaves. Disponible en cinco combinaciones de color con terminación Rainbow.',price:329000,promo:289000,stock:18,sku:'BIC-ET3',img:'bic-rosa',rating:4.9,reviews:52,active:true,freeShip:true,featured:true,tags:['MÁS VENDIDO'],
       features:['Doble campana adulto / pediátrico','Acero inoxidable pulido','Tubo flexible de doble lumen','Olivas suaves intercambiables','Incluye estuche y accesorios'],includes:['Estetoscopio BIC Eternity III','Par de olivas de repuesto','Diafragmas de repuesto','Estuche protector'],specs:{Modelo:'Eternity III',Campana:'Doble, acero inoxidable',Tubo:'PVC doble lumen',Garantía:'12 meses',SKU:'BIC-ET3'},
@@ -87,7 +87,7 @@ const DEFAULT = () => ({
       features:['Lectura en 30 segundos','Punta flexible','Memoria de última medición','Apagado automático'],includes:['Termómetro','Estuche protector','Manual'],specs:{Rango:'32–42,9 °C',Precisión:'±0,1 °C',Batería:'LR41',SKU:'TER-DG01'}},
     {id:'p6',name:'Glucómetro + 50 Tiras',cat:'Glucómetros',short:'Kit completo para control de glucosa.',desc:'Kit de glucometría con medidor digital, 50 tiras reactivas, lancetas y dispositivo de punción. Resultados en 5 segundos con memoria de 500 registros.',price:219000,promo:189000,stock:9,sku:'GLU-KT50',img:'glucometro',rating:4.7,reviews:16,active:true,freeShip:true,featured:true,tags:['OFERTA'],
       features:['Resultado en 5 segundos','Memoria de 500 mediciones','50 tiras y lancetas incluidas','Pantalla amplia retroiluminada'],includes:['Glucómetro','50 tiras reactivas','Lancetero + lancetas','Estuche'],specs:{Muestra:'0,5 µL',Memoria:'500 registros',Tiras:'50 unidades',SKU:'GLU-KT50'}},
-    {id:'p7',name:'Estetoscopio Cardiology MEDfy Pro',cat:'Estetoscopios',short:'Acabado gold / rainbow, alta sensibilidad.',desc:'Estetoscopio de línea premium con campana de acero inoxidable con terminación Rainbow, tubo negro de doble lumen y olivas de silicona. Para auscultación exigente.',price:359000,promo:null,stock:7,sku:'EST-PRO-GD',img:'bic-gold',rating:5.0,reviews:11,active:true,freeShip:true,featured:true,tags:['NUEVO'],
+    {id:'p7',name:'Estetoscopio Cardiology SupriMed Pro',cat:'Estetoscopios',short:'Acabado gold / rainbow, alta sensibilidad.',desc:'Estetoscopio de línea premium con campana de acero inoxidable con terminación Rainbow, tubo negro de doble lumen y olivas de silicona. Para auscultación exigente.',price:359000,promo:null,stock:7,sku:'EST-PRO-GD',img:'bic-gold',rating:5.0,reviews:11,active:true,freeShip:true,featured:true,tags:['NUEVO'],
       features:['Campana Rainbow de alta sensibilidad','Tubo doble lumen','Olivas de silicona hipoalergénicas','Incluye estuche rígido'],includes:['Estetoscopio','Olivas de repuesto','Estuche rígido'],specs:{Campana:'Acero inoxidable Rainbow',Tubo:'Doble lumen',Garantía:'24 meses',SKU:'EST-PRO-GD'}},
     {id:'p8',name:'Kit de Sutura Avanzado — 32 piezas',cat:'Sutura',short:'Más hilos, más instrumentos, más práctica.',desc:'Versión ampliada del kit de sutura con 32 piezas, pad de tres capas, instrumental adicional y mayor variedad de hilos para entrenamiento avanzado de nudos y técnicas.',price:349000,promo:null,stock:14,sku:'KIT-SUT-32',img:'sutura',rating:4.8,reviews:23,active:true,freeShip:true,featured:false,tags:[],
       features:['32 piezas','Pad de silicona de 3 capas','Mayor variedad de hilos','Instrumental adicional'],includes:['Estuche completo','Pad de sutura','Instrumental','Hilos y agujas'],specs:{Piezas:'32',Nivel:'Avanzado',SKU:'KIT-SUT-32'}},
@@ -106,7 +106,7 @@ const DEFAULT = () => ({
     {id:'c3',name:'Kit Sutura Completo',desc:'Kit avanzado de 32 piezas con hilos adicionales para práctica intensiva.',imgs:['sutura','sutura','sutura'],price:389000,old:449000,sku:'COM-SUT',items:['Kit de Sutura Avanzado — 32 piezas','Set adicional de hilos de entrenamiento'],stock:5}
   ],
   promotions:[
-    {id:'pr1',name:'Semana MEDfy',percent:15,start:'2026-11-01',end:'2026-11-10',productIds:['p1','p2','p3'],active:true}
+    {id:'pr1',name:'Semana SupriMed',percent:15,start:'2026-11-01',end:'2026-11-10',productIds:['p1','p2','p3'],active:true}
   ],
   posts:[
     {id:'b1',title:'Cómo elegir tu primer estetoscopio',cat:'Estetoscopios',img:'bic-rosa',summary:'Doble o simple campana, largo del tubo, olivas y sensibilidad: qué mirar antes de comprar.',date:'2026-10-28',active:true,slug:'como-elegir-estetoscopio'},
@@ -117,7 +117,7 @@ const DEFAULT = () => ({
     {id:'b6',title:'Tipos de termómetros clínicos',cat:'Termómetros',img:'termometro',summary:'Digital, infrarrojo y de contacto: ventajas y cuándo conviene cada uno.',date:'2026-09-23',active:true,slug:'tipos-de-termometros'}
   ],
   leads:[
-    {id:'l1',type:'Pedido WhatsApp',contact:'Cliente demo',items:'1x Kit de Sutura MEDfy — 19 piezas',total:249000,date:'2026-11-02T10:20:00',status:'Nuevo'},
+    {id:'l1',type:'Pedido WhatsApp',contact:'Cliente demo',items:'1x Kit de Sutura SupriMed — 19 piezas',total:249000,date:'2026-11-02T10:20:00',status:'Nuevo'},
     {id:'l2',type:'Newsletter',contact:'ana@correo.com',items:'Suscripción al newsletter',total:0,date:'2026-11-02T09:05:00',status:'Nuevo'}
   ]
 });
@@ -127,7 +127,7 @@ const FAQ=[
   {q:'¿Cómo finalizo una compra?',a:'Agregá los productos al carrito, revisá el total y presioná “Finalizar por WhatsApp”. Se abre un mensaje ya armado con tu pedido para que lo confirmemos juntos.'},
   {q:'¿Los productos tienen garantía?',a:'La garantía comercial depende del producto. Consultá el plazo y las condiciones de cada ficha o por WhatsApp. Los derechos legales del consumidor se mantienen.'},
   {q:'¿Puedo pedir una variante de color específica?',a:'Sí. Consultá las fichas de los estetoscopios BIC Eternity III por color y la disponibilidad de cada producto.'},
-  {q:'¿El envío tiene costo?',a:'El carrito calcula envío gratis cuando todos los artículos tienen ese beneficio o el subtotal alcanza el mínimo vigente. Para los demás pedidos muestra una estimación; MEDfy confirma el costo y el plazo antes de cerrar la compra.'}
+  {q:'¿El envío tiene costo?',a:'El carrito calcula envío gratis cuando todos los artículos tienen ese beneficio o el subtotal alcanza el mínimo vigente. Para los demás pedidos muestra una estimación; SupriMed confirma el costo y el plazo antes de cerrar la compra.'}
 ];
 
 /* ---------- estado ---------- */
@@ -240,7 +240,7 @@ function waUrl(text){
  return 'https://wa.me/'+digits+'?text='+encodeURIComponent(text);
 }
 
-function medfyTrack(event,params={}){try{window.InMedTracking?.track(event,params)}catch(_){}}
+function suprimedTrack(event,params={}){try{window.InMedTracking?.track(event,params)}catch(_){}}
 function analyticsItem(it,quantity=1){
  const info=lineInfo(it);if(!info)return null;
  const p=it.kind==='combo'?null:DB.products.find(x=>x.id===it.id);
@@ -249,7 +249,7 @@ function analyticsItem(it,quantity=1){
 }
 function commerceEvent(event,items,extra={}){
  const list=items.filter(Boolean);if(!list.length)return;
- medfyTrack(event,{currency:'PYG',value:list.reduce((a,p)=>a+p.price*p.quantity,0),items:list,...extra});
+ suprimedTrack(event,{currency:'PYG',value:list.reduce((a,p)=>a+p.price*p.quantity,0),items:list,...extra});
 }
 
 function openWA(text,log){
@@ -260,7 +260,7 @@ function openWA(text,log){
  const a=document.createElement('a');
  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
  document.body.appendChild(a);a.click();a.remove();
- medfyTrack('whatsapp_click',{cta_source:'store_contact'});
+ suprimedTrack('whatsapp_click',{cta_source:'store_contact'});
  return true;
 }
 function addLead(type,contact,items,total){
@@ -279,10 +279,10 @@ function stars(r){ return `<div class="stars"><i>★★★★★</i> ${Number(r)
 function renderStore(){
   const B=DB.banners, C=DB.settings;
   // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
-  const announcement=String(B.announcement||'').replace(/\bInMed\b/gi,'MEDfy');
+  const announcement=String(B.announcement||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed');
   const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
   $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?safeRich(announcement,['b']):'Envíos a todo Paraguay · Atención por WhatsApp';
-  $('#heroTitle').innerHTML=safeRich(String(B.heroTitle||'').replace(/\bInMed\b/gi,'MEDfy'),['em']);
+  $('#heroTitle').innerHTML=safeRich(String(B.heroTitle||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed'),['em']);
   $('#heroSub').textContent=B.heroSub;
   const heroCampaign=B.showOffer?activeCampaign():null;
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
@@ -298,13 +298,13 @@ function renderStore(){
   $('#offerEyebrow').textContent=campaign?'Promoción vigente en productos seleccionados':'';
   $('.offer-wrap').hidden=!campaign;
   $('#newsText').textContent='Si querés recibir consejos clínicos y novedades, solicitá tu inscripción por WhatsApp.';
-  $('#footerAbout').textContent=String(C.footer||'').replace(/\bInMed\b/gi,'MEDfy');
+  $('#footerAbout').textContent=String(C.footer||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed');
   $('#footerPhone').textContent=C.phone;
   $('#footerMail').textContent=C.email||'';
   $('#footerMail').closest('li').hidden=!String(C.email||'').trim();
-  $('#footerCopy').textContent=String(C.copy||'© 2026 MEDfy Soluciones Médicas · Asunción, Paraguay').replace(/\bInMed\b/gi,'MEDfy');
+  $('#footerCopy').textContent=String(C.copy||'© 2026 SupriMed Soluciones Médicas · Asunción, Paraguay').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed');
   $('#footerCats').innerHTML=DB.categories.filter(c=>activeProducts().some(p=>p.cat===c.id)).map(c=>`<li><a href="${esc(categorySeoPath(c))}" data-act="filter" data-val="${esc(c.id)}">${esc(c.name)}</a></li>`).join('');
-  document.title='MEDfy'+' Paraguay | Kits de Sutura y Equipamiento Médico';
+  document.title='SupriMed'+' Paraguay | Kits de Sutura y Equipamiento Médico';
   // Render each merchandising section independently so a broken optional widget
   // cannot erase categories, combos or the editorial grid.
   const sections=[
@@ -314,7 +314,7 @@ function renderStore(){
   ];
   for(const [name,render] of sections){
     try{render()}catch(error){
-      console.error('[MEDfy] Error al mostrar '+name,error);
+      console.error('[SupriMed] Error al mostrar '+name,error);
       if(name==='destacado')$('#bic').hidden=true;
       if(name==='combos')$('#combos').hidden=true;
     }
@@ -486,7 +486,7 @@ function renderPosts(){
   $('#postGrid').innerHTML=shown.map(p=>`
     <article class="post" data-act="post" data-id="${p.id}">
       <div class="post-img"><img src="${img(p.img)}" alt="${esc(p.title)}"><span class="badge badge-red post-tag">${esc(p.cat)}</span></div>
-      <div class="post-body"><small>${p.date?new Date(p.date).toLocaleDateString('es-PY')+' · ':''}Blog MEDfy</small><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
+      <div class="post-body"><small>${p.date?new Date(p.date).toLocaleDateString('es-PY')+' · ':''}Blog SupriMed</small><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
     </article>`).join('');
   $('#blogAll').innerHTML=(S.allPosts?'Ver menos':'Ver todos los artículos')+' '+ic('arrow','width:16px;height:16px');
 }
@@ -557,7 +557,7 @@ function renderCart(){
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
     <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
     ${!free&&shippingMinimum>sub?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(shippingMinimum-sub)} para envío gratis</div>`:''}
-    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"gratis":gs(ship)}. MEDfy confirmará disponibilidad, costo y plazo de entrega por WhatsApp. <a href="/politicas/terminos" target="_blank" rel="noopener" style="text-decoration:underline">Términos</a> · <a href="/politicas/devoluciones" target="_blank" rel="noopener" style="text-decoration:underline">Devoluciones</a> · <a href="/politicas/envios" target="_blank" rel="noopener" style="text-decoration:underline">Envíos</a>.</p>
+    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"gratis":gs(ship)}. SupriMed confirmará disponibilidad, costo y plazo de entrega por WhatsApp. <a href="/politicas/terminos" target="_blank" rel="noopener" style="text-decoration:underline">Términos</a> · <a href="/politicas/devoluciones" target="_blank" rel="noopener" style="text-decoration:underline">Devoluciones</a> · <a href="/politicas/envios" target="_blank" rel="noopener" style="text-decoration:underline">Envíos</a>.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
 }
@@ -583,7 +583,7 @@ function cartMessage(){
   const lines=cart.map(it=>{const x=lineInfo(it);return '• '+it.qty+'x '+(x?x.name:'Producto')+' — '+gs(x?x.price*it.qty:0)});
   const sub=cart.reduce((a,it)=>{const x=lineInfo(it);return a+(x?x.price*it.qty:0)},0);
   const {free,ship}=shippingQuote(sub);
-  return 'Hola MEDfy 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
+  return 'Hola SupriMed 👋, quiero solicitar estos productos:\n\n'+lines.join('\n')+'\n\nSubtotal: '+gs(sub)+'\nEnvío estimado: '+(free?'Gratis':gs(ship))+'\nTotal estimado: '+gs(sub+ship)+'\n\n¿Podés confirmar disponibilidad, costo definitivo de envío, total y plazo de entrega? ¡Gracias!';
 }
 function openCart(){ closeInfo(); $('#overlay').classList.add('show'); $('#cartDrawer').classList.add('show'); $('#productModal').classList.remove('show'); }
 function closeAll(){ $('#overlay').classList.remove('show'); $('#cartDrawer').classList.remove('show'); $('#productModal').classList.remove('show'); $('#searchDrop').hidden=true; closeInfo(); }
@@ -803,7 +803,7 @@ function productForm(p){
   return `<div class="card-head"><h2>${p.id?'Editar producto':'Nuevo producto'}</h2><button class="close-btn" data-act="close-info">${ic('x')}</button></div>
   <p>${p.id?'Los cambios se aplican de inmediato en la tienda.':'Completá los datos. El producto aparecerá en el catálogo al guardar.'}</p>
   <form data-form="product" data-id="${esc(p.id||'')}"><div class="form-grid">
-    <div class="field full"><label>Nombre <span>*</span></label><input name="name" required value="${esc(p.name||'')}" placeholder="Kit de Sutura MEDfy"></div>
+    <div class="field full"><label>Nombre <span>*</span></label><input name="name" required value="${esc(p.name||'')}" placeholder="Kit de Sutura SupriMed"></div>
     <div class="field"><label>Categoría</label><select name="cat">${DB.categories.map(c=>`<option ${p.cat===c.id?'selected':''}>${esc(c.id)}</option>`).join('')}</select></div>
     <div class="field"><label>SKU</label><input name="sku" value="${esc(p.sku||'')}" placeholder="KIT-SUT-25"></div>
     <div class="field full"><label>Descripción corta</label><input name="short" value="${esc(p.short||'')}" placeholder="25 piezas · Pad de silicona"></div>
@@ -838,7 +838,7 @@ function promoForm(pr){
   return `<div class="card-head"><h2>${pr.id?'Editar promoción':'Nueva promoción'}</h2><button class="close-btn" data-act="close-info">${ic('x')}</button></div>
   <p>El descuento se aplica automáticamente a los productos seleccionados mientras la promoción esté vigente.</p>
   <form data-form="promotion" data-id="${esc(pr.id||'')}"><div class="form-grid">
-    <div class="field"><label>Nombre</label><input name="name" required value="${esc(pr.name||'')}" placeholder="Semana MEDfy"></div>
+    <div class="field"><label>Nombre</label><input name="name" required value="${esc(pr.name||'')}" placeholder="Semana SupriMed"></div>
     <div class="field"><label>Descuento (%)</label><input type="number" name="percent" min="1" max="90" required value="${esc(pr.percent||'15')}"></div>
     <div class="field"><label>Inicio</label><input type="date" name="start" value="${esc(pr.start||'2026-11-01')}"></div>
     <div class="field"><label>Fin</label><input type="date" name="end" value="${esc(pr.end||'2026-11-10')}"></div>
@@ -873,7 +873,7 @@ document.addEventListener('click',async e=>{
     case 'filter': setFilter(val,true); break;
     case 'open-pdp': openPDP(id); break;
     case 'add': addToCart(id,'',1,'product'); break;
-    case 'consult': { const p=DB.products.find(x=>x.id===id&&x.active!==false);if(!p)break;openWA('Hola MEDfy 👋, quiero consultar disponibilidad de: '+p.name+' ('+p.sku+'). ¿Cuándo vuelve a estar disponible?'); break; }
+    case 'consult': { const p=DB.products.find(x=>x.id===id&&x.active!==false);if(!p)break;openWA('Hola SupriMed 👋, quiero consultar disponibilidad de: '+p.name+' ('+p.sku+'). ¿Cuándo vuelve a estar disponible?'); break; }
     case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); renderProducts(); break; }
     case 'bic': S.bic=Number(val); renderBIC(); break;
     case 'combo-add': addToCart(id,'',1,'combo'); break;
@@ -894,7 +894,7 @@ document.addEventListener('click',async e=>{
       commerceEvent('begin_checkout',cart.map(it=>analyticsItem(it,it.qty)));
       // Open a tab inside the click, before awaiting the stock check, to avoid popup blockers.
       const pending=window.open('about:blank','_blank');
-      if(pending){pending.opener=null;try{pending.document.body.textContent='MEDfy: verificando disponibilidad y precios…';}catch(e){}}
+      if(pending){pending.opener=null;try{pending.document.body.textContent='SupriMed: verificando disponibilidad y precios…';}catch(e){}}
       const summary=()=>JSON.stringify(cart.map(it=>{
         const x=lineInfo(it);
         return {id:it.id,variant:it.variant,qty:it.qty,name:x?.name,price:x?.price,stock:cartAvailability(it).max};
@@ -1024,8 +1024,8 @@ document.addEventListener('submit',async e=>{
     e.preventDefault();
     const email=$('#newsEmail').value.trim();
     if(!email)return;
-    const request='Hola MEDfy, quiero solicitar la suscripción a las novedades y consejos clínicos por correo electrónico. Mi email es: '+email+'. ¿Podés confirmar la inscripción y cómo solicitar la baja?';
-    if(openWA(request)){medfyTrack('newsletter_request',{cta_source:'newsletter'});f.reset();toast('Se abrió WhatsApp. Enviá el mensaje para solicitar tu inscripción.');}
+    const request='Hola SupriMed, quiero solicitar la suscripción a las novedades y consejos clínicos por correo electrónico. Mi email es: '+email+'. ¿Podés confirmar la inscripción y cómo solicitar la baja?';
+    if(openWA(request)){suprimedTrack('newsletter_request',{cta_source:'newsletter'});f.reset();toast('Se abrió WhatsApp. Enviá el mensaje para solicitar tu inscripción.');}
     return;
   }
   const kind=f.dataset.form; if(!kind) return;
@@ -1037,7 +1037,7 @@ document.addEventListener('submit',async e=>{
     const upload=f.querySelector('[name=upload]').files[0];
     const base={name:g('name'),cat:g('cat'),sku:g('sku'),short:g('short'),desc:g('desc'),price:Number(g('price'))||0,promo:g('promo')?Number(g('promo')):null,stock:Number(g('stock'))||0,active:d.get('active')==='1',freeShip:!!d.get('freeShip'),img:g('img'),variants:rows,seo:{title:g('seoTitle'),slug:g('slug'),desc:g('seoDesc')}};
     const apply=()=>{
-      if(ex) Object.assign(ex,base); else DB.products.push(Object.assign({id:uid(),rating:5,reviews:0,tags:[],featured:false,features:base.desc?[base.short||'Producto MEDfy']:[],includes:[],specs:{SKU:base.sku}},base));
+      if(ex) Object.assign(ex,base); else DB.products.push(Object.assign({id:uid(),rating:5,reviews:0,tags:[],featured:false,features:base.desc?[base.short||'Producto SupriMed']:[],includes:[],specs:{SKU:base.sku}},base));
       if(rows.length&&ex){ex.stock=rows.reduce((a,v)=>a+v.stock,0);}
       saveDB();closeAll();renderAdminContent();renderStore();toast(ex?'Producto actualizado':'Producto creado');
     };
@@ -1135,14 +1135,14 @@ document.addEventListener('click',e=>{
 
 /* --- enlaces y navegación --- */
 $('#btnCart').addEventListener('click',openCart);
-$('#heroWhats').addEventListener('click',()=>openWA('Hola MEDfy 👋, quiero ver el catálogo y recibir asesoría para elegir mi equipamiento médico.'));
-$('#faqWhats').addEventListener('click',()=>openWA('Hola MEDfy 👋, tengo una consulta sobre los productos y los envíos. ¿Podés ayudarme?'));
-$('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola MEDfy 👋, quiero hacer una consulta sobre el catálogo.');});
-$('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola MEDfy 👋, quiero hacer una consulta.');});
-$('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto MEDfy','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Atención por WhatsApp.</p><p>Envíos a todo el país.</p>');});
-$('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre MEDfy','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
-$('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola MEDfy, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar disponibilidad y entrega?');});
-$('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola MEDfy, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});
+$('#heroWhats').addEventListener('click',()=>openWA('Hola SupriMed 👋, quiero ver el catálogo y recibir asesoría para elegir mi equipamiento médico.'));
+$('#faqWhats').addEventListener('click',()=>openWA('Hola SupriMed 👋, tengo una consulta sobre los productos y los envíos. ¿Podés ayudarme?'));
+$('#waFloat').addEventListener('click',e=>{e.preventDefault();openWA('Hola SupriMed 👋, quiero hacer una consulta sobre el catálogo.');});
+$('#footerWa').addEventListener('click',e=>{e.preventDefault();openWA('Hola SupriMed 👋, quiero hacer una consulta.');});
+$('#footerContacto').addEventListener('click',e=>{e.preventDefault();openInfo('Contacto SupriMed','<p>WhatsApp: <b>'+esc(DB.settings.phone)+'</b></p><p>Correo: <b>'+esc(DB.settings.email)+'</b></p><p>Asunción, Paraguay · Atención por WhatsApp.</p><p>Envíos a todo el país.</p>');});
+$('#footerNosotros').addEventListener('click',e=>{e.preventDefault();openInfo('Sobre SupriMed','<p>'+esc(DB.settings.footer)+'</p><p>Trabajamos con equipamiento original para estudiantes, profesionales y cuidado en casa. Nuestra propuesta combina catálogo curado, contenido educativo y atención cercana por WhatsApp.</p>');});
+$('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola SupriMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar disponibilidad y entrega?');});
+$('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola SupriMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});
 $('#loadMore').addEventListener('click',()=>{S.visible+=4;renderProducts();});
 $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',true);});
 $('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allPosts;renderPosts();});
