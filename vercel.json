@@ -77,6 +77,24 @@
           "value": "noindex, nofollow, noarchive"
         }
       ]
+    },
+    {
+      "source": "/gestion",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/gestion/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -87,6 +105,24 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/gestion-inmed/:path*",
+      "destination": "https://medfypy.vercel.app/gestion/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "inmedpy.vercel.app"
+        }
+      ],
+      "destination": "https://medfypy.vercel.app/:path*",
+      "permanent": true
     }
   ]
 }

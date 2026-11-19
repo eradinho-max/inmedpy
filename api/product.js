@@ -7,7 +7,7 @@ const send=(res,code,html,cache='no-store')=>{
  res.setHeader('X-Content-Type-Options','nosniff');
  res.end(html);
 };
-const simple=(title,message)=>'<!doctype html><html lang="es-PY"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+e(title)+' | INMED</title></head><body style="font:16px system-ui;max-width:720px;margin:10vh auto;padding:20px;color:#161B26"><h1>'+e(title)+'</h1><p>'+e(message)+'</p><a href="/">Volver al catálogo</a></body></html>';
+const simple=(title,message)=>'<!doctype html><html lang="es-PY"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+e(title)+' | MEDfy</title></head><body style="font:16px system-ui;max-width:720px;margin:10vh auto;padding:20px;color:#161B26"><h1>'+e(title)+'</h1><p>'+e(message)+'</p><a href="/">Volver al catálogo</a></body></html>';
 export default async function handler(req,res){
  if(req.method!=='GET'&&req.method!=='HEAD'){res.setHeader('Allow','GET, HEAD');return send(res,405,'Método no permitido')}
  const input=String(req.query?.slug||'');
@@ -25,30 +25,30 @@ export default async function handler(req,res){
   res.writeHead(308,{Location:canonical,'Cache-Control':'no-store'});return res.end();
  }
  const name=String(p.name),cat=categoryName(data,p.cat),desc=description(p);
- const synopsis=String(p.short||desc).replace(/\s+/g,' ').slice(0,158)||'Equipamiento médico en Paraguay. Comprá con INMED por WhatsApp.';
+ const synopsis=String(p.short||desc).replace(/\s+/g,' ').slice(0,158)||'Equipamiento médico en Paraguay. Comprá con MEDfy por WhatsApp.';
  const price=priceOf(data,p),regular=Number(p.price),stock=Math.max(0,Math.floor(Number(p.stock)||0));
  const photo=validProductImage(p),images=[p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(x=>{try{return new URL(x).protocol==='https:'}catch{return false}}).slice(0,5);
- const seoTitle=(name+' | INMED Paraguay').slice(0,120);
+ const seoTitle=(name+' | MEDfy Paraguay').slice(0,120);
  const sku=String(p.sku||'').trim();
  const whatsapp=String(data.settings?.whatsapp||'').replace(/\D/g,'');
- const waUrl=/^\d{8,15}$/.test(whatsapp)?'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola INMED, quisiera consultar disponibilidad y compra de '+name+(sku?' (SKU: '+sku+')':'')+'. Precio publicado: Gs. '+money(price??0)+'.'):null;
+ const waUrl=/^\d{8,15}$/.test(whatsapp)?'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola MEDfy, quisiera consultar disponibilidad y compra de '+name+(sku?' (SKU: '+sku+')':'')+'. Precio publicado: Gs. '+money(price??0)+'.'):null;
  const cartUrl='/?producto='+encodeURIComponent(id)+'#productos';
- const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'INMED Soluciones Médicas',url:ORIGIN}}};
+ const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'MEDfy Soluciones Médicas',url:ORIGIN}}};
  const paragraphs=String(p.desc||p.short||'').trim()||synopsis;
- const imageHtml=photo?'<img src="'+e(photo)+'" width="680" height="680" alt="'+e(name)+'" fetchpriority="high">':'<div class="placeholder">INMED</div>';
+ const imageHtml=photo?'<img src="'+e(photo)+'" width="680" height="680" alt="'+e(name)+'" fetchpriority="high">':'<div class="placeholder">MEDfy</div>';
  const thumbnails=images.length>1?'<div class="thumbnails">'+images.map((x,i)=>'<img src="'+e(x)+'" alt="'+e(name)+' - Vista '+(i+1)+'" loading="lazy">').join('')+'</div>':'';
  const html=`<!doctype html>
 <html lang="es-PY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${e(seoTitle)}</title>
 <meta name="description" content="${e(synopsis)}"><meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="${e(canonical)}"><link rel="icon" href="/assets/inmed-icon.svg" type="image/svg+xml"><meta name="theme-color" content="#B5001B">
-<meta property="og:type" content="product"><meta property="og:locale" content="es_PY"><meta property="og:site_name" content="INMED Soluciones Médicas"><meta property="og:title" content="${e(seoTitle)}">
+<link rel="canonical" href="${e(canonical)}"><link rel="icon" href="/assets/medfy-icon.svg" type="image/svg+xml"><meta name="theme-color" content="#E6102D">
+<meta property="og:type" content="product"><meta property="og:locale" content="es_PY"><meta property="og:site_name" content="MEDfy Soluciones Médicas"><meta property="og:title" content="${e(seoTitle)}">
 <meta property="og:description" content="${e(synopsis)}"><meta property="og:url" content="${e(canonical)}">
 ${photo?'<meta property="og:image" content="'+e(photo)+'">':''}
 <meta name="twitter:card" content="${photo?'summary_large_image':'summary'}">
 <script type="application/ld+json">${jsonLd(ld)}</script>
 <style>
-:root{--red:#B5001B;--wine:#7D010E;--ink:#161B26;--line:#E3E7EE;--muted:#64748B}*{box-sizing:border-box}
+:root{--red:#E6102D;--wine:#8B0B1E;--ink:#161B26;--line:#E3E7EE;--muted:#64748B}*{box-sizing:border-box}
 body{margin:0;background:#fff;color:var(--ink);font:16px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif}a{color:inherit;text-decoration:none}
 header{border-bottom:1px solid var(--line);background:#fff}.head{max-width:1180px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}.logo{width:192px;height:auto;max-width:45vw}.home{font-size:14px;font-weight:650;color:var(--red)}
 main{max-width:1180px;margin:0 auto;padding:30px 24px 90px}.crumb{font-size:13px;color:var(--muted);margin-bottom:28px}.crumb a:hover{text-decoration:underline}
@@ -62,7 +62,7 @@ h1{font-size:clamp(29px,3.5vw,43px);line-height:1.13;letter-spacing:-.025em;marg
 footer{background:#161B26;color:#fff;padding:35px 24px;text-align:center;font-size:13px}
 @media(max-width:780px){.product{grid-template-columns:1fr;gap:24px}.photo{min-height:280px}.head{padding:15px 18px}main{padding:25px 18px 65px}.price{font-size:32px}}
 </style></head><body>
-<header><div class="head"><a href="/" aria-label="INMED inicio"><img class="logo" src="/assets/inmed-logo-vermelho.svg" alt="INMED"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
+<header><div class="head"><a href="/" aria-label="MEDfy inicio"><img class="logo" src="/assets/medfy-logo.svg" alt="MEDfy"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
 <main><nav class="crumb" aria-label="Ubicación"><a href="/">Inicio</a> › <a href="/#productos">${e(cat)}</a> › ${e(name)}</nav>
 <div class="product"><div><div class="photo">${imageHtml}</div>${thumbnails}</div>
 <div><span class="tag">${e(cat)}</span><h1>${e(name)}</h1>${sku?'<p class="muted">SKU: '+e(sku)+'</p>':''}
@@ -72,6 +72,6 @@ ${price!==null&&regular>price?'<div class="old">Antes: Gs. '+money(regular)+'</d
 <div class="actions"><a class="btn primary" href="${e(cartUrl)}">Ver en la tienda</a>${waUrl?'<a class="btn secondary" target="_blank" rel="noopener noreferrer" href="'+e(waUrl)+'">Consultar por WhatsApp</a>':''}</div>
 <p class="shipping">Envíos a todo Paraguay. Confirmamos costos y plazos antes de cerrar el pedido.</p>
 </div></div><section class="details"><h2>Características del producto</h2><p class="description">${e(paragraphs)}</p></section>
-</main><footer>INMED · Soluciones Médicas · Paraguay</footer></body></html>`;
+</main><footer>MEDfy · Soluciones Médicas · Paraguay</footer></body></html>`;
  return send(res,200,html,'public, max-age=0, s-maxage=120, stale-while-revalidate=300');
 }

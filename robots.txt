@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://inmedpy.vercel.app/sitemap.xml
+Sitemap: https://medfypy.vercel.app/sitemap.xml

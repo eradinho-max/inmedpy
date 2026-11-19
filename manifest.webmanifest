@@ -1,15 +1,15 @@
 {
-  "name": "INMED — Soluciones Médicas",
-  "short_name": "INMED",
+  "name": "MEDfy — Soluciones Médicas",
+  "short_name": "MEDfy",
   "description": "Equipamiento médico, kits de sutura y accesorios para profesionales y estudiantes de salud en Paraguay.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#B5001B",
+  "theme_color": "#E6102D",
   "icons": [
     {
-      "src": "/assets/inmed-icon.svg",
+      "src": "/assets/medfy-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

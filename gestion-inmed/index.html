@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>Gestión InMed</title>
+<title>Gestión MEDfy</title>
+<link rel="icon" href="/assets/medfy-icon.svg" type="image/svg+xml">
 <script src="/supabase-config.js"></script>
 <script src="/assets/inmed-images.js"></script>
 <style>
-:root{--red:#B5001B;--dark:#1E293B;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--green:#2A9D8F}
+:root{--red:#E6102D;--dark:#1E293B;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--green:#2A9D8F}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--dark)}
 .wrap{max-width:1180px;margin:auto;padding:28px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(15,23,42,.05)}
 h1,h2,h3{font-family:Montserrat,Inter,sans-serif;margin:0 0 14px}h1{font-size:28px}.muted{color:var(--muted)}
@@ -60,8 +61,8 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 <div class="wrap">
   <section id="loginView" class="login">
     <div class="card">
-      <img src="/assets/inmed-logo-vermelho.svg" class="inmed-admin-mark" alt="INMED" width="190" height="48">
-      <h1>Gestión InMed</h1>
+      <img src="/assets/medfy-logo.svg" class="inmed-admin-mark" alt="MEDfy" width="190" height="48">
+      <h1>Gestión MEDfy</h1>
       <p class="muted">Acceso administrativo separado de la tienda pública.</p>
       <form id="loginForm">
         <div class="field"><label>Correo</label><input id="email" type="email" autocomplete="username" required></div>
@@ -95,7 +96,7 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 
   <section id="adminView" class="hidden">
     <div class="top">
-      <div><img src="/assets/inmed-logo-vermelho.svg" class="inmed-admin-topmark" alt="INMED" width="155" height="39"><h1>Panel de Gestión</h1><div id="syncStatus" class="status">Conectando…</div></div>
+      <div><img src="/assets/medfy-logo.svg" class="inmed-admin-topmark" alt="MEDfy" width="155" height="39"><h1>Panel de Gestión</h1><div id="syncStatus" class="status">Conectando…</div></div>
       <div class="row"><button id="saveAll" class="btn primary">GUARDAR CAMBIOS</button><button id="logout" class="btn ghost">SALIR</button></div>
     </div>
     <div class="tabs" id="tabs"></div>
@@ -115,7 +116,7 @@ function imageSlots(p){return [p.img||'',...(Array.isArray(p.imgs)?p.imgs:[])].f
 function setImageSlots(p,images){const a=images.filter(Boolean).slice(0,5);p.img=a[0]||'';p.imgs=a.slice(1)}
 function newSku(categoryId){
  const cat=(DB.categories||[]).find(c=>c.id===categoryId);
- const prefix=String(cat?.name||'INMED').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)||'INMED';
+ const prefix=String(cat?.name||'MEDfy').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)||'MEDfy';
  let sku;
  do{sku=prefix+'-'+crypto.randomUUID().replace(/-/g,'').slice(0,10).toUpperCase()}while(DB.products.some(p=>String(p.sku||'').toUpperCase()===sku));
  return sku;
@@ -166,7 +167,7 @@ async function login(email,password){
  if(!r.ok) throw new Error('Correo o contraseña inválidos.');
  const j=await r.json();setSession(j);user=j.user;
  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
- if(!rows.length){clearSession();throw new Error('La cuenta existe, pero no está autorizada como administradora de InMed.');}
+ if(!rows.length){clearSession();throw new Error('La cuenta existe, pero no está autorizada como administradora de MEDfy.');}
 }
 async function loadStore(){
  const rows=await req('/rest/v1/store_state?id=eq.main&select=data,updated_at');
@@ -174,7 +175,7 @@ async function loadStore(){
  DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
 }
 function validateStore(data=DB){
- if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions)||!Array.isArray(data.combos)||!Array.isArray(data.posts)||!data.settings||typeof data.settings!=='object'||!data.banners||typeof data.banners!=='object')throw new Error('El respaldo no tiene una estructura completa de InMed.');
+ if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions)||!Array.isArray(data.combos)||!Array.isArray(data.posts)||!data.settings||typeof data.settings!=='object'||!data.banners||typeof data.banners!=='object')throw new Error('El respaldo no tiene una estructura completa de MEDfy.');
  const ids=new Set(), categories=new Set(), skus=new Set();
  for(const c of data.categories){
   if(typeof c.id!=='string'||!c.id.trim()||categories.has(c.id))throw new Error('Categoría sin ID o ID duplicado.');
