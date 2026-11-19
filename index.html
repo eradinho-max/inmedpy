@@ -33,8 +33,9 @@
 <meta name="theme-color" content="#C8102E">
 <link rel="icon" href="/assets/medfy-icon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="stylesheet" href="/assets/inmed-styles.css?v=20261119-suprimed2">
+<link rel="stylesheet" href="/assets/inmed-styles.css?v=20261119-design1">
 <script src="/supabase-config.js"></script>
+<link rel="stylesheet" href="/assets/suprimed-interface.css?v=20261119-design1">
 </head>
 <body>
 
@@ -85,38 +86,19 @@
   </div>
 
   <header class="header">
-    <div class="container header-main">
-      <a class="logo brand-lockup brand-store" href="#/" aria-label="SupriMed Soluciones Médicas — inicio">
-        <img class="brand-image" src="data:," data-brand-logo alt="SupriMed Soluciones Médicas">
-        <span class="brand-signature">SOLUCIONES MÉDICAS</span>
+    <div class="container header-main suprimed-header">
+      <a class="logo brand-lockup brand-store" href="#inicio" aria-label="SupriMed Soluciones Médicas — inicio">
+        <img class="brand-image" src="/assets/suprimed-lockup.svg?v=20261119" alt="SupriMed Soluciones Médicas" width="230" height="64">
       </a>
+      <nav class="nav suprimed-navigation" aria-label="Navegación principal"><div class="nav-inner" id="navLinks">
+        <a href="#categorias">Categorías</a><a href="#productos" data-cat="ofertas">Ofertas</a><a href="#blog">Novedades</a><a href="#contacto">Contacto</a>
+      </div></nav>
       <div class="search-wrap">
-        <input id="searchInput" type="search" placeholder="Buscar productos, marcas, categorías..." autocomplete="off" aria-label="Buscar productos">
-        <svg class="ic s-icon"><use href="#i-search"/></svg>
-        <div class="search-drop" id="searchDrop" hidden></div>
+        <input id="searchInput" type="search" placeholder="Buscar productos..." autocomplete="off" aria-label="Buscar productos">
+        <svg class="ic s-icon"><use href="#i-search"/></svg><div class="search-drop" id="searchDrop" hidden></div>
       </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="btnCart" title="Carrito" aria-label="Abrir carrito">
-          <svg class="ic"><use href="#i-cart"/></svg><span class="cart-count" id="cartCount">0</span>
-        </button>
-      </div>
+      <div class="header-actions"><button class="icon-btn" id="btnCart" title="Carrito" aria-label="Abrir carrito"><svg class="ic"><use href="#i-cart"/></svg><span class="cart-count" id="cartCount">0</span></button></div>
     </div>
-    <nav class="nav">
-      <div class="container nav-inner" id="navLinks">
-        <a href="#inicio" class="active" data-cat="all">Inicio</a>
-        <a href="#productos" data-cat="Sutura">Sutura</a>
-        <a href="#productos" data-cat="Estetoscopios">Estetoscopios</a>
-        <a href="#productos" data-cat="Presión arterial">Presión arterial</a>
-        <a href="#productos" data-cat="Oxímetros">Oxímetros</a>
-        <a href="#productos" data-cat="Termómetros">Termómetros</a>
-        <a href="#productos" data-cat="Glucómetros">Glucómetros</a>
-        <a href="#combos">Combos</a>
-        <a href="#ofertas" class="nav-offer" data-cat="ofertas">Ofertas</a>
-        <a href="#blog">Blog</a>
-        <span class="nav-spacer"></span>
-        <span class="nav-note"><b>●</b> Envíos a todo Paraguay</span>
-      </div>
-    </nav>
   </header>
 
   <main>
@@ -125,11 +107,11 @@
       <div class="container hero-grid">
         <div class="hero-copy">
           <div class="eyebrow">Equipamiento médico SupriMed</div>
-          <h1 id="heroTitle">Equipamiento médico para estudiantes y profesionales en Paraguay</h1>
-          <p class="lead" id="heroSub"></p>
+          <h1 id="heroTitle">Insumos y<br>equipamientos<br><em>médicos</em></h1>
+          <p class="lead" id="heroSub">Para estudiantes y profesionales de la salud.</p>
           <p class="suprimed-slogan">Más calidad. Más acceso. Más salud.</p>
           <div class="hero-ctas">
-            <a href="#productos" class="btn btn-primary" data-scroll="productos">VER PRODUCTOS <svg class="ic" style="width:16px;height:16px"><use href="#i-arrow"/></svg></a>
+            <a href="#productos" class="btn btn-primary" data-scroll="productos">VER CATÁLOGO <svg class="ic" style="width:16px;height:16px"><use href="#i-arrow"/></svg></a>
             <button class="btn btn-outline" id="heroWhats"><svg class="ic" style="width:17px;height:17px;color:#25D366"><use href="#i-wa"/></svg> COMPRAR POR WHATSAPP</button>
           </div>
           <div class="hero-trust">
@@ -282,7 +264,7 @@
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer" id="contacto">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-about">
@@ -372,7 +354,7 @@
 
 <a class="wa-float" id="waFloat" href="#/" aria-label="WhatsApp"><svg style="width:29px;height:29px"><use href="#i-wa"/></svg></a>
 
-<script src="/assets/inmed-images.js?v=20261119-suprimed2"></script>
-<script src="/assets/inmed-app.js?v=20261119-suprimed2"></script>
+<script src="/assets/inmed-images.js?v=20261119-design1"></script>
+<script src="/assets/inmed-app.js?v=20261119-design1"></script>
 </body>
 </html>

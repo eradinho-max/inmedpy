@@ -1,0 +1,76 @@
+/* SupriMed — storefront layout derived from approved visual reference. */
+#store{--red:#C8102E;--red-dark:#881629;--graphite:#161B26;--red-soft:#FFF1F3}
+#store .topbar{background:#881629;font-size:11px}
+#store .topbar-inner{height:30px}
+#store .header{background:#fff;backdrop-filter:none;border-bottom:0}
+#store .suprimed-header{display:grid;grid-template-columns:minmax(180px,235px) minmax(0,1fr) minmax(150px,245px) 52px;align-items:center;gap:20px;min-height:88px;height:auto;padding-block:14px}
+#store .brand-store{display:block;align-self:center}
+#store .brand-store .brand-image{width:100%;max-width:230px;border-radius:0;display:block;height:auto}
+#store .suprimed-navigation{border:0;min-width:0}
+#store .suprimed-navigation .nav-inner{padding:0;height:auto;display:flex;justify-content:center;gap:8px;overflow-x:auto}
+#store .suprimed-navigation a{font-size:13px;font-weight:650;padding:10px 8px;min-height:44px;border-bottom:0;color:#161B26;white-space:nowrap;gap:5px}
+#store .suprimed-navigation a:hover{color:#C8102E}
+#store .search-wrap{width:100%;max-width:none;min-width:0}
+#store .search-wrap input{border-radius:9px;background:#fff;border:1px solid #dce0e5;font-size:13px;height:42px;padding-left:12px}
+#store .header-actions{margin:0;justify-content:flex-end}
+#store .hero{background:#881629;position:relative;isolation:isolate;overflow:hidden}
+#store .hero::before,#store .hero::after{content:none}
+#store .hero-grid{position:relative;width:100%;max-width:none;margin:0;padding:0;min-height:440px;display:grid;grid-template-columns:minmax(0,56%) minmax(0,44%);gap:0;align-items:stretch}
+#store .hero-copy{position:relative;z-index:3;padding:clamp(38px,6vw,82px) 22px clamp(40px,6vw,76px) max(28px,calc((100vw - 1200px)/2));color:#fff;background:linear-gradient(125deg,#881629 0%,#C8102E 78%);isolation:isolate}
+#store .hero-copy::after{content:"";position:absolute;z-index:-1;width:200px;top:0;bottom:0;right:-126px;transform:skewX(-28deg);background:linear-gradient(90deg,#C8102E 0%,#C8102E 45%,#a30b25 46%,#a30b25 72%,#df2340 73%,#df2340 100%)}
+#store .hero-copy .eyebrow{color:#fff;opacity:.87;font-size:12px;letter-spacing:.11em;margin-bottom:14px}
+#store .hero h1{font-family:var(--f-title),Arial,sans-serif;font-style:italic;font-size:clamp(36px,4.6vw,64px);line-height:1.03;letter-spacing:-.045em;font-weight:650;color:#fff;text-transform:none;margin:0 0 18px;max-width:720px}
+#store .hero h1 em{font-style:italic;font-weight:850;color:#fff}
+#store .hero .lead{color:#fff;font-size:clamp(15px,1.45vw,19px);line-height:1.5;max-width:480px;margin:0 0 24px}
+#store .suprimed-slogan{display:none}
+#store .hero-ctas{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+#store .hero-ctas .btn-primary{background:#fff;color:#881629;border:1px solid #fff;box-shadow:none;border-radius:9px;font-size:13px;font-weight:800}
+#store .hero-ctas .btn-outline{border:1px solid rgba(255,255,255,.7);background:transparent;color:#fff;box-shadow:none;border-radius:9px;font-size:12px}
+#store .hero-trust{display:none}
+#store .hero-visual{position:relative;z-index:1;margin:0;overflow:hidden;background:linear-gradient(135deg,#e6eff4,#bed3dd);min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px 35px 28px 74px}
+#store .hero-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 68% 24%,rgba(255,255,255,.8),transparent 65%);pointer-events:none}
+#store .hero-visual #heroImg{position:relative;display:block;width:100%;height:100%;max-height:450px;object-fit:contain;mix-blend-mode:multiply;box-shadow:none;border-radius:0}
+#store .hero-visual #heroImg[hidden],#store #heroProductGallery[hidden],#store .hero-badge[hidden]{display:none!important}
+#store .hero-visual #heroProductGallery{display:none}
+#store .hero-visual .float-b{right:16px;bottom:20px;left:auto;top:auto;z-index:2;border-radius:10px;box-shadow:0 8px 24px #161b2620;font-size:12px}
+#store .hero-badge{z-index:3;top:22px;right:22px;transform:none}
+#store .benefits{background:#fff}
+#store .benefit-icon{background:#fff1f3;color:#C8102E}
+#store .section-head .eyebrow{color:#881629}
+#store .cat-card,#store .prod-card,#store .combo-card,#store .post{border-radius:12px;box-shadow:none;border:1px solid #e5e7eb}
+#store .cat-card:hover,#store .prod-card:hover{border-color:#C8102E}
+#store .prod-media{background:#f8f9fa;border-radius:12px 12px 0 0}
+#store .bic{background:linear-gradient(125deg,#161B26,#282d36)}
+#store .footer{background:#161B26}
+@media(max-width:1100px){
+#store .suprimed-header{grid-template-columns:minmax(155px,190px) minmax(0,1fr) 48px;gap:10px}
+#store .suprimed-navigation{grid-row:2;grid-column:1/-1;width:100%}
+#store .suprimed-header .search-wrap{grid-column:2;grid-row:1}
+#store .suprimed-header .header-actions{grid-column:3;grid-row:1}
+#store .suprimed-navigation .nav-inner{justify-content:flex-start}
+#store .hero-grid{min-height:370px}
+#store .hero-copy{padding:44px 18px 34px 24px}
+#store .hero-visual{padding:20px 22px 20px 55px}
+}
+@media(max-width:700px){
+#store .topbar-inner{justify-content:center;height:26px}
+#store .topbar .top-left,#store .topbar .top-mid{display:none}
+#store .suprimed-header{grid-template-columns:minmax(0,1fr) 48px;gap:8px;padding:10px 14px;min-height:0}
+#store .brand-store .brand-image{max-width:180px;width:100%}
+#store .suprimed-header .header-actions{grid-row:1;grid-column:2}
+#store .suprimed-header .search-wrap{grid-row:2;grid-column:1/-1}
+#store .suprimed-navigation{grid-row:3;grid-column:1/-1}
+#store .suprimed-navigation .nav-inner{gap:2px;justify-content:flex-start}
+#store .suprimed-navigation a{font-size:12px;padding:8px 10px}
+#store .hero-grid{display:flex;flex-direction:column;min-height:0}
+#store .hero-copy{padding:28px 20px 35px;overflow:hidden}
+#store .hero-copy::after{width:110px;right:0;top:0;bottom:0;transform:skewX(-32deg) translateX(60px);opacity:.48}
+#store .hero h1{font-size:clamp(33px,8vw,47px);margin-bottom:12px}
+#store .hero .lead{font-size:15px;margin-bottom:20px}
+#store .hero-ctas{display:flex;flex-wrap:wrap;margin-bottom:0}
+#store .hero-ctas .btn{min-height:44px;white-space:normal;padding:10px 12px;font-size:12px}
+#store .hero-visual{min-height:218px;height:clamp(218px,58vw,330px);padding:16px 20px;margin:0}
+#store .hero-visual #heroImg{max-height:100%}
+#store .hero-visual .float-b{bottom:9px;right:9px}
+#store .hero-badge{top:10px;right:10px}
+}

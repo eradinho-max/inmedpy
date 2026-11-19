@@ -282,8 +282,9 @@ function renderStore(){
   const announcement=String(B.announcement||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed');
   const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
   $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?safeRich(announcement,['b']):'Envíos a todo Paraguay · Atención por WhatsApp';
-  $('#heroTitle').innerHTML=safeRich(String(B.heroTitle||'').replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed'),['em']);
-  $('#heroSub').textContent=B.heroSub;
+  const previousHero=String(B.heroTitle||'');
+  $('#heroTitle').innerHTML=/EQUIPÁ TU PRÁCTICA CON PRODUCTOS QUE/i.test(previousHero)||!previousHero?'Insumos y<br>equipamientos<br><em>médicos</em>':safeRich(previousHero.replace(/\b(?:InMed|MEDfy)\b/gi,'SupriMed'),['em','br']);
+  $('#heroSub').textContent=B.heroSub==='Equipamiento médico para estudiantes, profesionales y cuidado en casa.'?'Para estudiantes y profesionales de la salud.':(B.heroSub||'Para estudiantes y profesionales de la salud.');
   const heroCampaign=B.showOffer?activeCampaign():null;
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
   $('#heroBadge').hidden=!B.showHeroBadge||!heroCampaign;
@@ -321,33 +322,20 @@ function renderStore(){
   }
 }
 function renderNavigation(){
-  // Categories come from the active catalog: no permanently hardcoded demo navigation.
-  const categories=(DB.categories||[]).filter(cat=>activeProducts().some(p=>p.cat===cat.id));
-  $('#navLinks').innerHTML=
-    '<a href="#inicio" data-cat="all">Inicio</a>'+
-    categories.map(cat=>'<a href="'+esc(categorySeoPath(cat))+'" data-cat="'+esc(cat.id)+'">'+esc(cat.name)+'</a>').join('')+
-    ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
-    '<a href="#ofertas" class="nav-offer" data-cat="ofertas">Ofertas</a>'+
-    '<a href="#blog">Blog</a><span class="nav-spacer"></span>'+
-    '<span class="nav-note"><b>●</b> Envíos a todo Paraguay</span>';
-  $('#navLinks a[data-cat]').forEach(a=>a.classList.toggle('active',a.dataset.cat===S.filter));
+ const links=$('#navLinks');
+ links.innerHTML='<a href="#categorias" data-scroll="categorias">Categorías <span aria-hidden="true">⌄</span></a>'+
+ '<a href="#productos" class="nav-offer" data-cat="ofertas">Ofertas</a>'+
+ ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
+ '<a href="#blog">Novedades</a><a href="#contacto">Contacto</a>';
 }
 function renderHeroGallery(){
- const custom=DB.customImages?.hero;
- const photo=$('#heroImg'),gallery=$('#heroProductGallery');
- if(custom){
-   photo.src=img(custom);photo.hidden=false;gallery.hidden=true;
-   return;
- }
- photo.hidden=true;gallery.hidden=false;
- const pick=(category)=>activeProducts().find(p=>p.cat===category&&p.img);
- const selection=[pick('Sutura'),pick('Estetoscopios'),pick('Termómetros')].filter(Boolean);
- const unique=selection.filter((p,i,a)=>a.findIndex(x=>x.id===p.id)===i);
- gallery.innerHTML=unique.map((p,i)=>`<div class="hero-product-card hero-product-${i+1}">
-  <img src="${img(p.img)}" alt="${esc(p.name)}" loading="${i===0?'eager':'lazy'}">
-  <span>${esc(publicCategoryName(p.cat))}</span>
- </div>`).join('');
- gallery.hidden=!unique.length;
+ const custom=DB.customImages?.hero,photo=$('#heroImg'),gallery=$('#heroProductGallery');
+ const active=activeProducts();
+ const product=active.find(p=>p.cat==='Estetoscopios'&&p.img&&Number(p.stock)>0)||active.find(p=>p.img);
+ const source=custom||product?.img;
+ gallery.replaceChildren();gallery.hidden=true;
+ if(source){photo.src=img(source);photo.alt=custom?'Equipamiento médico SupriMed':product.name;photo.hidden=false;}
+ else{photo.removeAttribute('src');photo.hidden=true;}
 }
 function renderCategories(){
   $('#catGrid').innerHTML=DB.categories.filter(c=>activeProducts().some(p=>p.cat===c.id)).map(c=>{
