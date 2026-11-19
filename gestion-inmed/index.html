@@ -248,6 +248,7 @@ function validateStore(data=DB){
   const skuKey=String(p.sku).trim().toUpperCase();
   if(skus.has(skuKey))throw new Error('SKU duplicado: '+p.sku);
   skus.add(skuKey);
+  if(p.gtin){const v=String(p.gtin);if(!/^(?:\d{8}|\d{12}|\d{13}|\d{14})$/.test(v))throw Error('GTIN inválido en '+p.name);let sum=0;for(let j=v.length-2,w=3;j>=0;j--,w=4-w)sum+=Number(v[j])*w;if((10-sum%10)%10!==Number(v.at(-1)))throw Error('Dígito de control GTIN inválido en '+p.name);}
   if(Array.isArray(p.imgs)&&p.imgs.length>4)throw new Error('Máximo cinco fotos por producto: '+p.name);
  }
  const comboIds=new Set(),comboSkus=new Set();
@@ -337,6 +338,7 @@ function renderProducts(){
   field('Descripción corta','p_short_'+i,p.short)+
   '<div class="field"><label>Estado</label><select id="p_active_'+i+'"><option value="1" '+(p.active!==false?'selected':'')+'>Activo</option><option value="0" '+(p.active===false?'selected':'')+'>Oculto</option></select></div></div>'+
   textAreaField('Descripción del producto','p_desc_'+i,combinedDescription(p))+
+  '<h3 style="margin:16px 0 8px">Identificación comercial del producto</h3><p class="muted">Usá solamente datos confirmados en el embalaje o documentación del fabricante. El SKU interno no sustituye al GTIN ni al MPN.</p><div class="grid">'+field('Marca','p_brand_'+i,p.brand||p.specs?.Marca||(/\\bBIC\\s+Eternity\\s+III\\b/i.test(p.name)?'BIC':''))+field('Fabricante','p_manufacturer_'+i,p.manufacturer||p.specs?.Fabricante||'')+field('GTIN / código de barras','p_gtin_'+i,p.gtin||p.specs?.GTIN||'')+field('MPN del fabricante','p_mpn_'+i,p.specs?.MPN||'')+'<div class="field"><label>Condición real</label><select id="p_condition_'+i+'">'+[['','Sin confirmar'],['new','Nuevo'],['used','Usado'],['refurbished','Reacondicionado']].map(([v,n])=>'<option value="'+v+'" '+((p.specs?.Condicion||'')===v?'selected':'')+'>'+n+'</option>').join('')+'</select></div></div>'+
   imageEditor(p,i)+
   '<div class="row between" style="margin-top:16px;flex-wrap:wrap"><button type="button" class="btn danger" data-delete-product="'+i+'">Eliminar producto</button><div class="row" style="flex-wrap:wrap"><button type="button" class="btn ghost" data-duplicate-product="'+esc(p.id)+'">Duplicar producto</button><button type="button" class="btn ghost" data-back-products="1">Volver</button><button type="button" class="btn primary" id="saveProductBottom">GUARDAR PRODUCTO</button></div></div>'+
   '</div></div></div>';
@@ -452,7 +454,7 @@ function renderSettings(){
  '<div class="field" style="margin-top:18px"><label for="s_featured">Producto destacado de la página inicial</label>'+
  '<select id="s_featured"><option value="" '+(!s.featuredProductId?'selected':'')+'>Automático: primer estetoscopio activo</option>'+
  '<option value="__none__" '+(s.featuredProductId==='__none__'?'selected':'')+'>Ocultar la sección de destaque</option>'+opts+'</select>'+
- '<small>Precio, fotos y stock se leen del catálogo actual. Al cambiar el producto, la vitrina se actualiza al guardar.</small></div><div class="notice"><strong>IndexNow</strong><p>Notifica los cambios públicos después de guardar. También puedes enviar el catálogo completo manualmente.</p><button type="button" id="indexnowSend" class="btn ghost">ENVIAR URLs A INDEXNOW</button><p id="indexnowStatus" class="status" role="status"></p></div></div>';
+ '<small>Precio, fotos y stock se leen del catálogo actual. Al cambiar el producto, la vitrina se actualiza al guardar.</small></div><div class="notice"><strong>IndexNow</strong><p>Notifica los cambios públicos después de guardar. También puedes enviar el catálogo completo manualmente.</p><button type="button" id="indexnowSend" class="btn ghost">ENVIAR URLs A INDEXNOW</button><p id="indexnowStatus" class="status" role="status"></p></div><div class="notice"><strong>Google Merchant Center · Preparación</strong><p>Vista previa XML de productos activos. No enviar hasta comprobar compra en línea, identidad comercial, tarifas y plazos de entrega y requisitos sanitarios. No es una aprobación de Google.</p><a href="/merchant-feed.xml" target="_blank" rel="noopener noreferrer" class="btn ghost">ABRIR FEED PRELIMINAR</a></div></div>';
  const ix=$('#indexnowSend');if(ix)ix.addEventListener('click',async()=>{ix.disabled=true;const status=$('#indexnowStatus');status.textContent='Enviando…';try{const r=await notifyIndexNow([],true);status.textContent=r.message+' · '+r.count+' URLs';}catch(err){status.textContent='No confirmado: '+err.message;}finally{ix.disabled=false;}});
 }
 function showLogin(message='',kind='notice ok'){
@@ -546,7 +548,7 @@ function renderAccount(){
 }
 function collect(){
  collectCombo();
- (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=[];p.includes=[];p.active=g('p_active_'+i).value==='1'});
+ (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=[];p.includes=[];p.active=g('p_active_'+i).value==='1';if(g('p_brand_'+i)){p.brand=g('p_brand_'+i).value.trim();p.manufacturer=g('p_manufacturer_'+i).value.trim();p.gtin=g('p_gtin_'+i).value.trim();p.specs={...(p.specs||{})};for(const [k,v] of [['Marca',p.brand],['Fabricante',p.manufacturer],['GTIN',p.gtin],['MPN',g('p_mpn_'+i).value.trim()],['Condicion',g('p_condition_'+i).value]]){if(v)p.specs[k]=v;else delete p.specs[k]}}});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
  (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.start=$('#pr_start_'+i).value;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
  if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value}
@@ -664,7 +666,7 @@ document.addEventListener('click',async e=>{
   copy.active=false;
   copy.featured=false;
   // A duplicated color/model is a separate product, never a legacy variant set.
-  copy.variants=[];
+  copy.variants=[];copy.gtin='';if(copy.specs){delete copy.specs.GTIN;delete copy.specs.MPN;}
   // Reuse images and descriptions initially; images can be replaced in the editor.
   DB.products.push(copy);
   productCategory=original.cat;

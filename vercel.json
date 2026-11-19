@@ -157,6 +157,10 @@
     {
       "source": "/sobre-medfy",
       "destination": "/sobre-medfy.html"
+    },
+    {
+      "source": "/merchant-feed.xml",
+      "destination": "/api/merchant-feed"
     }
   ],
   "redirects": [
