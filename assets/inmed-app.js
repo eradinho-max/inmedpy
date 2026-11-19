@@ -542,7 +542,7 @@ function renderCart(){
   $('#cartFoot').innerHTML=`<div class="cart-total-row"><span>Subtotal</span><b>${gs(sub)}</b></div>
     <div class="cart-total-row"><span>Envío estimado</span><b style="color:${free?'#17786d':'inherit'}">${free?'Gratis':gs(ship)}</b></div>
     ${!free&&shippingMinimum>sub?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">Te faltan ${gs(shippingMinimum-sub)} para envío gratis</div>`:''}
-    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"gratis":gs(ship)}. MEDfy confirmará disponibilidad, costo y plazo de entrega por WhatsApp.</p>
+    <div class="cart-total-row grand"><span>Total estimado</span><span>${gs(total)}</span></div><p style="font-size:11px;color:var(--gray);line-height:1.4">Envío estimado: ${free?"gratis":gs(ship)}. MEDfy confirmará disponibilidad, costo y plazo de entrega por WhatsApp. <a href="/politicas/terminos" target="_blank" rel="noopener" style="text-decoration:underline">Términos</a> · <a href="/politicas/devoluciones" target="_blank" rel="noopener" style="text-decoration:underline">Devoluciones</a> · <a href="/politicas/envios" target="_blank" rel="noopener" style="text-decoration:underline">Envíos</a>.</p>
     <button class="btn btn-primary btn-block" style="margin-top:14px" data-act="checkout">FINALIZAR POR WHATSAPP ${ic('arrow','width:16px;height:16px')}</button>
     <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px" data-close>SEGUIR COMPRANDO</button>`;
 }

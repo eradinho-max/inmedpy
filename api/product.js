@@ -35,7 +35,7 @@ export default async function handler(req,res){
  const whatsapp=String(data.settings?.whatsapp||'').replace(/\D/g,'');
  const waUrl=/^\d{8,15}$/.test(whatsapp)?'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola MEDfy, quisiera consultar disponibilidad y compra de '+name+(sku?' (SKU: '+sku+')':'')+'. Precio publicado: Gs. '+money(price??0)+'.'):null;
  const cartUrl='/?producto='+encodeURIComponent(id)+'#productos';
- const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),...(brand?{brand:{'@type':'Brand',name:brand}}:{}),...(manufacturer?{manufacturer:{'@type':'Organization',name:manufacturer}}:{}),...(gtin?{['gtin'+gtin.length]:gtin}:{}),...(price!==null?{offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'MEDfy Soluciones Médicas',url:ORIGIN}}}:{})};
+ const ld={'@context':'https://schema.org','@type':'Product',name,description:desc||synopsis,url:canonical,...(photo?{image:images}:{}),...(sku?{sku}:{}),...(brand?{brand:{'@type':'Brand',name:brand}}:{}),...(manufacturer?{manufacturer:{'@type':'Organization',name:manufacturer}}:{}),...(gtin?{['gtin'+gtin.length]:gtin}:{}),...(price!==null?{offers:{'@type':'Offer',url:canonical,priceCurrency:'PYG',price:price??regular,availability:stock>0?'https://schema.org/InStock':'https://schema.org/OutOfStock',seller:{'@type':'Organization',name:'MEDfy Soluciones Médicas',url:ORIGIN,hasMerchantReturnPolicy:{'@type':'MerchantReturnPolicy',merchantReturnLink:ORIGIN+'/politicas/devoluciones'}}}}:{})};
  const paragraphs=String(p.desc||p.short||'').trim()||synopsis;
  const imageHtml=photo?'<img src="'+e(photo)+'" width="680" height="680" alt="'+e(name)+'" fetchpriority="high">':'<div class="placeholder">MEDfy</div>';
  const thumbnails=images.length>1?'<div class="thumbnails">'+images.map((x,i)=>'<img src="'+e(x)+'" alt="'+e(name)+' - Vista '+(i+1)+'" loading="lazy">').join('')+'</div>':'';
@@ -73,8 +73,8 @@ ${price!==null?'<div class="price"><small>Gs.</small> '+money(price)+'</div>':''
 ${price!==null&&regular>price?'<div class="old">Antes: Gs. '+money(regular)+'</div>':''}
 <p class="availability ${stock>0?'':'out'}">${stock>0?'Disponible · '+stock+' unidades':'Agotado · consultar disponibilidad'}</p>
 <div class="actions"><a class="btn primary" href="${e(cartUrl)}">Ver en la tienda</a>${waUrl?'<a class="btn secondary" target="_blank" rel="noopener noreferrer" href="'+e(waUrl)+'">Consultar por WhatsApp</a>':''}</div>
-<p class="shipping">Envíos a todo Paraguay. Confirmamos costos y plazos antes de cerrar el pedido.</p>
-</div></div><section class="details"><h2>Características del producto</h2><p class="description">${e(paragraphs)}</p></section>
-</main><footer>MEDfy · Soluciones Médicas · Paraguay</footer></body></html>`;
+<p class="shipping">Envíos a todo Paraguay. Confirmamos costos y plazos antes de cerrar el pedido. <a style="color:var(--red);text-decoration:underline" href="/politicas/envios">Condiciones de envío</a> · <a style="color:var(--red);text-decoration:underline" href="/politicas/devoluciones">Cambios y devoluciones</a> · <a style="color:var(--red);text-decoration:underline" href="/politicas/garantia">Garantía</a></p>
+</div></div><section class="details"><h2>Características del producto</h2><p class="description">${e(paragraphs)}</p>${p.specs?.["Garantía"]?'<p><strong>Garantía informada:</strong> '+e(p.specs["Garantía"])+' · <a href="/politicas/garantia">Condiciones</a></p>':''}</section>
+</main><footer><nav aria-label="Políticas comerciales"><a href="/politicas/envios">Envíos y entregas</a> · <a href="/politicas/devoluciones">Cambios y devoluciones</a> · <a href="/politicas/privacidad">Privacidad y cookies</a> · <a href="/politicas/terminos">Términos y condiciones</a> · <a href="/politicas/garantia">Garantías</a></nav><p>MEDfy · Soluciones Médicas · Paraguay</p></footer></body></html>`;
  return send(res,200,html,'public, max-age=0, s-maxage=120, stale-while-revalidate=300');
 }

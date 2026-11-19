@@ -113,6 +113,10 @@
     {
       "source": "/categoria/:slug",
       "destination": "/api/category?slug=:slug"
+    },
+    {
+      "source": "/politicas/:slug",
+      "destination": "/api/policy?slug=:slug"
     }
   ],
   "redirects": [
