@@ -51,24 +51,6 @@
       ]
     },
     {
-      "source": "/blog/(.*)",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, follow"
-        }
-      ]
-    },
-    {
-      "source": "/blog",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, follow"
-        }
-      ]
-    },
-    {
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -164,6 +146,91 @@
     }
   ],
   "redirects": [
+    {
+      "source": "/blog/tipos-de-sutura",
+      "destination": "https://suprimedpy.vercel.app/blog/tipos-de-sutura.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/instrumental-quirurgico-basico",
+      "destination": "https://suprimedpy.vercel.app/blog/instrumental-quirurgico-basico.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/practica-de-sutura-para-estudiantes",
+      "destination": "https://suprimedpy.vercel.app/blog/practica-de-sutura-para-estudiantes.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/errores-frecuentes-al-suturar",
+      "destination": "https://suprimedpy.vercel.app/blog/errores-frecuentes-al-suturar.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/piel-simuladora",
+      "destination": "https://suprimedpy.vercel.app/blog/piel-simuladora.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/porta-agujas",
+      "destination": "https://suprimedpy.vercel.app/blog/porta-agujas.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/nudos-quirurgicos",
+      "destination": "https://suprimedpy.vercel.app/blog/nudos-quirurgicos.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/punto-colchonero",
+      "destination": "https://suprimedpy.vercel.app/blog/punto-colchonero.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/sutura-intradermica",
+      "destination": "https://suprimedpy.vercel.app/blog/sutura-intradermica.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/sutura-continua",
+      "destination": "https://suprimedpy.vercel.app/blog/sutura-continua.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/punto-simple",
+      "destination": "https://suprimedpy.vercel.app/blog/punto-simple.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/kit-de-sutura-para-medicina",
+      "destination": "https://suprimedpy.vercel.app/blog/kit-de-sutura-para-medicina.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/materiales-de-sutura",
+      "destination": "https://suprimedpy.vercel.app/blog/materiales-de-sutura.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/como-aprender-sutura",
+      "destination": "https://suprimedpy.vercel.app/blog/como-aprender-sutura.html",
+      "permanent": true
+    },
+    {
+      "source": "/blog/hilo-de-sutura",
+      "destination": "https://suprimedpy.vercel.app/blog/hilo-de-sutura.html",
+      "permanent": true
+    },
+    {
+      "source": "/kit-de-sutura-paraguay",
+      "destination": "https://suprimedpy.vercel.app/categoria/sutura",
+      "permanent": true
+    },
+    {
+      "source": "/kit-de-sutura-paraguay/blog/:path*",
+      "destination": "https://suprimedpy.vercel.app/blog/:path*",
+      "permanent": true
+    },
     {
       "source": "/sobre-medfy.html",
       "destination": "https://suprimedpy.vercel.app/sobre-suprimed",

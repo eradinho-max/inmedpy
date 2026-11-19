@@ -1,3 +1,4 @@
+import {blogPaths} from '../lib/suture-blog.js';
 import {ORIGIN,loadCatalog,activeProducts,activeCategories,productPath,categoryPath} from '../lib/inmed-seo.js';
 // IndexNow verification key is deliberately public. Write access requires a valid admin session.
 const key='7a94636df26baa450d8541fe984a2dbb';
@@ -16,7 +17,7 @@ export default async function handler(req,res){
   if(!member.ok||!(await member.json()).some(x=>x.user_id===user.id))return send(res,403,{error:'Acceso restringido'});
   const body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};
   const row=await loadCatalog(),data=row.data;
-  const current=['/','/sobre-suprimed','/categorias','/politicas/envios','/politicas/devoluciones','/politicas/privacidad','/politicas/terminos','/politicas/garantia',...activeCategories(data).map(categoryPath),...activeProducts(data).map(productPath)];
+  const current=['/','/sobre-suprimed','/categorias','/politicas/envios','/politicas/devoluciones','/politicas/privacidad','/politicas/terminos','/politicas/garantia',...activeCategories(data).map(categoryPath),...activeProducts(data).map(productPath),...blogPaths];
   const requested=Array.isArray(body.paths)?body.paths:[];
   // Accept only same-host canonical paths (including removed/renamed products/categories).
   const safe=p=>typeof p==='string'&&p.length<=250&&(current.includes(p)||/^\/categoria\/[a-z0-9-]+$/.test(p)||/^\/producto\/[a-z0-9-]+--[a-zA-Z0-9_%.-]+$/.test(p));

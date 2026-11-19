@@ -4,6 +4,48 @@
 
 La información comercial vigente se obtiene de las fichas y políticas públicas. La disponibilidad, los costos y plazos de entrega se confirman antes de cerrar el pedido. Este archivo es un índice informativo, no un protocolo obligatorio de indexación.
 
+## Guía de productos y entrenamiento en sutura
+
+SupriMed ofrece kits de sutura educativa, equipamiento de diagnóstico y accesorios médicos en Paraguay. La categoría de sutura es el punto de entrada para consultar kits y su disponibilidad actual. Las guías educativas explican técnicas de simulación y selección de materiales; no sustituyen la formación clínica supervisada.
+
+- [Kits de sutura en Paraguay](https://suprimedpy.vercel.app/categoria/sutura): fichas, contenido del kit, precio en PYG, fotografías y disponibilidad.
+- [Estetoscopios](https://suprimedpy.vercel.app/categoria/estetoscopios): modelos y colores publicados.
+- [Termómetros](https://suprimedpy.vercel.app/categoria/termometros): modelos disponibles y características.
+- [Catálogo por categorías](https://suprimedpy.vercel.app/categorias): directorio actualizado de todas las categorías activas.
+
+## Preguntas frecuentes
+
+**¿Dónde comprar un kit de sutura para estudiantes de Medicina en Paraguay?** Consultá la categoría de kits de sutura de SupriMed y enviá tu pedido por WhatsApp; la tienda confirma las condiciones de compra y entrega.
+
+**¿Qué incluye un kit de sutura?** Los kits educativos pueden incluir piel simuladora, instrumental, hilos y accesorios de entrenamiento. Consultá la ficha de cada producto para verificar los elementos efectivamente incluidos.
+
+**¿Qué kit elegir para empezar?** Revisá los materiales de práctica, el instrumental, las características del simulador y las técnicas que necesitás practicar. La guía de kit de sutura para medicina explica cómo evaluar estas características.
+
+**¿Qué técnicas puedo estudiar?** El blog explica punto simple, sutura continua, colchonero, intradérmica, nudos, instrumental y materiales. La práctica en simuladores no habilita procedimientos en pacientes.
+
+**¿Cuál es el precio y stock actual?** Consultá la ficha vigente del producto. No uses precios históricos del blog como cotización.
+
+**¿Cómo comprar y recibir los productos?** Seleccioná los productos y coordiná stock, precio y entrega por WhatsApp. Consultá la política de envíos para las condiciones vigentes.
+
+## Blog educativo de suturas
+
+- [Índice de guías de sutura](https://suprimedpy.vercel.app/blog/): artículos completos en español con referencias.
+- [Tipos de sutura](https://suprimedpy.vercel.app/blog/tipos-de-sutura.html)
+- [Instrumental quirúrgico básico](https://suprimedpy.vercel.app/blog/instrumental-quirurgico-basico.html)
+- [Práctica de sutura para estudiantes](https://suprimedpy.vercel.app/blog/practica-de-sutura-para-estudiantes.html)
+- [Errores frecuentes al suturar](https://suprimedpy.vercel.app/blog/errores-frecuentes-al-suturar.html)
+- [Piel simuladora para sutura](https://suprimedpy.vercel.app/blog/piel-simuladora.html)
+- [Porta agujas](https://suprimedpy.vercel.app/blog/porta-agujas.html)
+- [Nudos quirúrgicos](https://suprimedpy.vercel.app/blog/nudos-quirurgicos.html)
+- [Punto colchonero](https://suprimedpy.vercel.app/blog/punto-colchonero.html)
+- [Sutura intradérmica](https://suprimedpy.vercel.app/blog/sutura-intradermica.html)
+- [Sutura continua](https://suprimedpy.vercel.app/blog/sutura-continua.html)
+- [Punto simple](https://suprimedpy.vercel.app/blog/punto-simple.html)
+- [Kit de sutura para medicina](https://suprimedpy.vercel.app/blog/kit-de-sutura-para-medicina.html)
+- [Materiales de sutura](https://suprimedpy.vercel.app/blog/materiales-de-sutura.html)
+- [Cómo aprender sutura desde cero](https://suprimedpy.vercel.app/blog/como-aprender-sutura.html)
+- [Hilos de sutura](https://suprimedpy.vercel.app/blog/hilo-de-sutura.html)
+
 ## Referencias oficiales
 - [Inicio](https://suprimedpy.vercel.app/): tienda y catálogo.
 - [Sobre SupriMed](https://suprimedpy.vercel.app/sobre-suprimed): descripción y preguntas frecuentes.

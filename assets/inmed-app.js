@@ -475,9 +475,9 @@ function renderPosts(){
   $('#postGrid').innerHTML=shown.map(p=>`
     <article class="post" data-act="post" data-id="${p.id}">
       <div class="post-img"><img src="${img(p.img)}" alt="${esc(p.title)}"><span class="badge badge-red post-tag">${esc(p.cat)}</span></div>
-      <div class="post-body"><small>${p.date?new Date(p.date).toLocaleDateString('es-PY')+' · ':''}Blog SupriMed</small><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
+      <div class="post-body"><small>${p.date?new Date(p.date).toLocaleDateString('es-PY')+' · ':''}Blog SupriMed</small><h3><a href="/blog/${esc(String(p.slug||'').replace(/[^a-z0-9.-]/gi,''))}">${esc(p.title)}</a></h3><p>${esc(p.summary)}</p></div>
     </article>`).join('');
-  $('#blogAll').innerHTML=(S.allPosts?'Ver menos':'Ver todos los artículos')+' '+ic('arrow','width:16px;height:16px');
+  $('#blogAll').innerHTML='Ver todos los artículos '+ic('arrow','width:16px;height:16px');
 }
 function renderFAQ(){
   $('#faqList').innerHTML=FAQ.map((f,i)=>`<div class="faq-item ${i===0?'open':''}"><button class="faq-q" data-act="faq"><span>${esc(f.q)}</span><span class="plus">+</span></button><div class="faq-a">${esc(f.a)}</div></div>`).join('');
@@ -867,7 +867,7 @@ document.addEventListener('click',async e=>{
     case 'fav': { const k=S.favs.indexOf(id); if(k>-1)S.favs.splice(k,1);else S.favs.push(id); ST.set('suprimed_favs_v1',JSON.stringify(S.favs)); renderProducts(); break; }
     case 'bic': S.bic=Number(val); renderBIC(); break;
     case 'combo-add': addToCart(id,'',1,'combo'); break;
-    case 'post': { const p=(DB.posts||[]).find(x=>x.id===id); if(p&&p.slug) window.location.href='/blog/'+p.slug; break; }
+    case 'post': { if(e.target.closest('a[href]'))break;const p=(DB.posts||[]).find(x=>x.id===id); if(p&&/^[a-z0-9-]+\.html$/.test(p.slug)) window.location.href='/blog/'+p.slug; break; }
     case 'faq': el.parentElement.classList.toggle('open'); break;
     case 'close-info': closeAll(); break;
     case 'qty': { const it=cart[i];if(!it)break;const available=cartAvailability(it);
@@ -1135,7 +1135,7 @@ $('#bicAdd').addEventListener('click',()=>{const p=featuredProduct();if(!p)retur
 $('#bicWhats').addEventListener('click',()=>{const p=featuredProduct();if(!p)return;openWA('Hola SupriMed, quiero consultar por '+p.name+' (SKU '+(p.sku||'')+') a '+gs(priceOf(p).cur)+'. ¿Podés confirmar precio y disponibilidad?',{text:p.name,total:priceOf(p).cur});});
 $('#loadMore').addEventListener('click',()=>{S.visible+=4;renderProducts();});
 $('#seeAll').addEventListener('click',e=>{e.preventDefault();setFilter('all',true);});
-$('#blogAll').addEventListener('click',e=>{e.preventDefault();S.allPosts=!S.allPosts;renderPosts();});
+// The complete blog index is a crawlable HTML page.
 $('#offerBtn').addEventListener('click',e=>{e.preventDefault();setFilter('ofertas',true);});
 $$('[data-scroll]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();scrollTo(a.dataset.scroll);}));
 $('#navLinks').addEventListener('click',e=>{

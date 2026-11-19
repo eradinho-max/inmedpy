@@ -1,3 +1,4 @@
+import {blogPaths} from '../lib/suture-blog.js';
 import {ORIGIN,loadCatalog,activeProducts,activeCategories,categoryPath,productPath,xmlEscape} from '../lib/inmed-seo.js';
 export default async function handler(req,res){
  if(req.method!=='GET'&&req.method!=='HEAD'){res.setHeader('Allow','GET, HEAD');res.status(405).end('Method not allowed');return}
@@ -6,9 +7,10 @@ export default async function handler(req,res){
   const date=new Date(row.updated_at||Date.now());
   const lastmod=Number.isFinite(date.getTime())?date.toISOString().slice(0,10):null;
   const cats=activeCategories(row.data);const pages=[ORIGIN+'/',ORIGIN+'/sobre-suprimed',...(cats.length?[ORIGIN+'/categorias',...cats.map(c=>ORIGIN+categoryPath(c))]:[]),...activeProducts(row.data).map(p=>ORIGIN+productPath(p)),...["/politicas/envios","/politicas/devoluciones","/politicas/privacidad","/politicas/terminos","/politicas/garantia"].map(p=>ORIGIN+p)];
+  const urls=[...new Set([...pages,...blogPaths.map(p=>ORIGIN+p)])];
   const xml='<?xml version="1.0" encoding="UTF-8"?>\n'+
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
-    pages.map(url=>'  <url><loc>'+xmlEscape(url)+'</loc>'+(lastmod?'<lastmod>'+lastmod+'</lastmod>':'')+'</url>').join('\n')+
+    urls.map(url=>'  <url><loc>'+xmlEscape(url)+'</loc>'+(lastmod&&!url.startsWith(ORIGIN+'/blog/')?'<lastmod>'+lastmod+'</lastmod>':'')+'</url>').join('\n')+
     '\n</urlset>\n';
   res.setHeader('Content-Type','application/xml; charset=utf-8');
   res.setHeader('Cache-Control','public, max-age=0, s-maxage=120, stale-while-revalidate=300');
