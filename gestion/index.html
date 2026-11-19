@@ -441,15 +441,13 @@ function renderPromotions(){
  $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr-'+crypto.randomUUID(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
 function renderBanners(){
- const b=DB.banners||{};
- const preview=(value,id,alt)=>value?'<img id="'+id+'" class="heroPreview" style="width:100%;max-width:560px;aspect-ratio:auto;object-fit:contain" src="'+esc(imageSrc(value))+'" alt="'+alt+'">':'<p class="muted">Sin imagen cargada.</p>';
- $('#content').innerHTML='<div class="card"><h2>Banner principal de la tienda</h2><p class="muted">Alterna entre el diseño institucional original y una campaña de ancho completo. Las imágenes de la campaña se conservan al volver al original.</p>'+
- '<div class="field"><label for="heroMode">Banner visible</label><select id="heroMode"><option value="original" '+(b.heroMode!=='campaign'?'selected':'')+'>Original institucional</option><option value="campaign" '+(b.heroMode==='campaign'?'selected':'')+'>Promoción / campaña</option></select></div>'+
- '<div class="grid"><div class="field"><label>Arte de escritorio · 1920 × 720 px (8:3)</label>'+preview(b.campaignDesktop,'campaignDesktopPreview','Vista previa de escritorio')+'<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="campaignDesktop"><small>Formato JPG, PNG o WebP. Se optimiza a WebP sin deformar. La campaña ocupa todo el ancho.</small></div>'+
- '<div class="field"><label>Arte móvil opcional · 1080 × 1080 px (1:1)</label>'+preview(b.campaignMobile,'campaignMobilePreview','Vista previa móvil')+'<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="campaignMobile"><small>Si no se carga, se usa el arte de escritorio completo, sin recortar.</small>'+(b.campaignMobile?'<button type="button" class="btn ghost" id="removeCampaignMobile">Usar arte de escritorio en móvil</button>':'')+'</div></div>'+
- field('Descripción accesible de la campaña','campaignAlt',b.campaignAlt||'')+'<small>Al pulsar la campaña se abre el catálogo. Los descuentos reales se configuran en Promociones.</small>'+
- '<div id="hero_status" role="status" aria-live="polite"></div><div class="row" style="margin-top:14px;flex-wrap:wrap"><button type="button" class="btn primary" id="saveBannerBottom">GUARDAR BANNER</button><button type="button" class="btn ghost" id="restoreHero">VOLVER AL ORIGINAL</button></div></div>'+
- '<div class="card"><h2>Contenido del banner institucional</h2><div class="grid">'+field('Aviso superior','b_announcement',b.announcement)+field('Título hero','b_title',b.heroTitle)+field('Subtítulo hero','b_sub',b.heroSub)+'</div><div class="field" style="margin-top:14px"><label>Imagen lateral del original (opcional)</label>'+preview(DB.customImages?.hero,'heroPreview','Vista previa institucional')+'<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="hero"><small>Recomendado: 1200 × 900 px (4:3). Si no hay imagen personalizada, se muestra un producto del catálogo.</small></div></div>';
+ const b=DB.banners||{}, campaign=b.campaignDesktop;
+ $('#content').innerHTML='<div class="card"><h2>Banner principal</h2><p class="muted">Sustituye toda la portada de la tienda, no solo una imagen lateral.</p>'+
+ '<div class="notice"><strong>Actualmente: '+(b.heroMode==='campaign'?'Campaña promocional':'Original institucional')+'</strong></div>'+
+ '<div class="field"><label>Imagen de la campaña · 1920 × 720 px (8:3)</label>'+
+ (campaign?'<img class="heroPreview" style="width:100%;max-width:760px;aspect-ratio:auto;object-fit:contain" src="'+esc(imageSrc(campaign))+'" alt="Vista previa de la campaña">':'<p class="muted">Sin campaña cargada.</p>')+
+ '<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="campaignDesktop"><small>Una sola imagen para computadora y celular. Se muestra completa, sin recortes ni deformaciones.</small></div>'+
+ '<div id="hero_status" role="status" aria-live="polite"></div><div class="row" style="margin-top:14px;flex-wrap:wrap"><button type="button" class="btn primary" id="saveBannerBottom" '+(!campaign?'disabled':'')+'>PUBLICAR PROMOCIÓN</button><button type="button" class="btn ghost" id="restoreHero">VOLVER AL ORIGINAL</button></div><p class="muted">La campaña se conserva al regresar al original.</p></div>';
 }
 function renderSettings(){
  const s=DB.settings||{};
@@ -557,7 +555,7 @@ function collect(){
  (DB.products||[]).forEach((p,i)=>{const g=id=>$('#'+id);if(!g('p_name_'+i))return;p.name=g('p_name_'+i).value;p.sku=g('p_sku_'+i).value;p.cat=g('p_cat_'+i).value;p.price=Number(g('p_price_'+i).value)||0;p.promo=g('p_promo_'+i).value?Number(g('p_promo_'+i).value):null;p.stock=Number(g('p_stock_'+i).value)||0;p.short=g('p_short_'+i).value;p.desc=g('p_desc_'+i).value;p.features=[];p.includes=[];p.active=g('p_active_'+i).value==='1';if(g('p_brand_'+i)){p.brand=g('p_brand_'+i).value.trim();p.manufacturer=g('p_manufacturer_'+i).value.trim();p.gtin=g('p_gtin_'+i).value.trim();p.specs={...(p.specs||{})};for(const [k,v] of [['Marca',p.brand],['Fabricante',p.manufacturer],['GTIN',p.gtin],['MPN',g('p_mpn_'+i).value.trim()],['Condicion',g('p_condition_'+i).value]]){if(v)p.specs[k]=v;else delete p.specs[k]}}});
  (DB.categories||[]).forEach((c,i)=>{const a=$('#c_name_'+i);if(a){c.name=a.value;c.desc=$('#c_desc_'+i).value}});
  (DB.promotions||[]).forEach((p,i)=>{const a=$('#pr_name_'+i);if(a){p.name=a.value;p.percent=Number($('#pr_percent_'+i).value)||0;p.start=$('#pr_start_'+i).value;p.end=$('#pr_end_'+i).value;p.productIds=Array.from(document.querySelectorAll('[data-promo-product="'+i+'"]:checked')).map(x=>x.value);p.active=$('#pr_active_'+i).value==='1'}});
- if(tab==='banners'){const b=DB.banners;b.announcement=$('#b_announcement').value;b.heroTitle=$('#b_title').value;b.heroSub=$('#b_sub').value;b.heroMode=$('#heroMode').value;b.campaignAlt=$('#campaignAlt').value.trim().slice(0,180)}
+ // Banner actions persist explicitly; no stale form fields to collect.
  if(tab==='settings'){const s=DB.settings;s.storeName=$('#s_name').value;s.whatsapp=$('#s_whatsapp').value;s.phone=$('#s_phone').value;s.email=$('#s_email').value;s.freeShipMin=Number($('#s_ship').value)||0;s.featuredProductId=$('#s_featured').value;for(const k of ['legalName','legalOwner','legalRuc','legalAddress','legalLicense'])s[k]=$('#s_'+k).value.trim()}
 }
 async function optimize(file,maxW,maxH,q=.88){const url=URL.createObjectURL(file);try{const im=await new Promise((res,rej)=>{const x=new Image;x.onload=()=>res(x);x.onerror=rej;x.src=url});const sc=Math.min(1,maxW/im.naturalWidth,maxH/im.naturalHeight);const w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('WebP no disponible')),'image/webp',q));return{blob,w,h,old:file.size}}finally{URL.revokeObjectURL(url)}}
@@ -571,9 +569,13 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){if(uploading){alert('Espera a que termine la carga.');return}collect();tab=t.dataset.tab;render();return}
- if(e.target.closest('#restoreHero')){if(uploading||saving)return;collect();DB.banners.heroMode='original';mark();renderBanners();return}
- if(e.target.closest('#removeCampaignMobile')){if(uploading||saving)return;collect();delete DB.banners.campaignMobile;mark();renderBanners();return}
- if(e.target.closest('#saveBannerBottom')){if(uploading||saving)return;try{collect();await saveStore();renderBanners();const box=$('#hero_status');if(box)box.textContent='Banner guardado.';}catch(err){alert('No se pudo guardar: '+err.message)}return}
+ if(e.target.closest('#restoreHero')||e.target.closest('#saveBannerBottom')){
+  if(uploading||saving)return;
+  const mode=e.target.closest('#restoreHero')?'original':'campaign';
+  if(mode==='campaign'&&!DB.banners.campaignDesktop)return;
+  const old=DB.banners.heroMode;DB.banners.heroMode=mode;mark();
+  try{await saveStore();if(dirty)throw Error('Cambios pendientes');renderBanners();$('#hero_status').textContent=mode==='campaign'?'Promoción publicada.':'Banner original restaurado.';}catch(err){DB.banners.heroMode=old;renderBanners();alert('No se pudo publicar: '+err.message)}return;
+ }
  if(e.target.closest('#saveComboBottom')){await saveCombo();return}
  if(e.target.closest('[data-combo-back]')){collect();comboEditingId=null;renderCombosAdmin();return}
  const comboEdit=e.target.closest('[data-combo-edit]');
@@ -757,17 +759,15 @@ document.addEventListener('change',async e=>{
      if(!slotEl?.querySelector('[data-remove-image]')&&slotEl){const remove=document.createElement('button');remove.type='button';remove.className='btn ghost';remove.dataset.removeImage=String(slot);remove.dataset.productIndex=String(i);remove.textContent='Eliminar foto';slotEl.appendChild(remove)}
     }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false}
    }
-   else if(['hero','campaignDesktop','campaignMobile'].includes(kind)){
-    collect();const box=$('#hero_status');box.textContent='Optimizando y enviando…';
+   else if(kind==='campaignDesktop'){
+    const box=$('#hero_status');box.textContent='Optimizando y enviando…';
     uploading++;$('#saveAll').disabled=true;inp.disabled=true;const bottom=$('#saveBannerBottom');if(bottom)bottom.disabled=true;
     try{
-     const size=kind==='hero'?[1200,900]:kind==='campaignMobile'?[1080,1080]:[1920,720];
-     const r=await uploadMedia(f,'banners',...size);
-     if(kind==='hero'){DB.customImages=DB.customImages||{};DB.customImages.hero=r.url;}
-     else DB.banners[kind]=r.url;
+     const r=await uploadMedia(f,'banners',1920,720);
+     DB.banners.campaignDesktop=r.url;delete DB.banners.campaignMobile;
      mark();renderBanners();
-     const status=$('#hero_status');if(status)status.textContent='Imagen subida: WebP '+r.w+' × '+r.h+' px · '+Math.round(r.bytes/1024)+' KB. '+(Math.abs(r.w/r.h-size[0]/size[1])>.06?'Proporción distinta de la recomendada; se conserva sin deformar. ':'')+'Pulsa GUARDAR BANNER para publicar.';
-    }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false;const button=$('#saveBannerBottom');if(button)button.disabled=uploading>0}
+     $('#hero_status').textContent='Imagen lista: '+r.w+' × '+r.h+' px. Pulsa PUBLICAR PROMOCIÓN.';
+    }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false;const button=$('#saveBannerBottom');if(button)button.disabled=uploading>0||!DB.banners.campaignDesktop}
    }
  }catch(err){alert('Error de imagen: '+err.message)}
 });
