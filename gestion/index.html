@@ -206,10 +206,28 @@ async function login(email,password){
  const rows=await req('/rest/v1/store_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
  if(!rows.length){clearSession();throw new Error('La cuenta existe, pero no está autorizada como administradora de MEDfy.');}
 }
+
+let seoSnapshot={};
+function seoPublicSnapshot(data){
+ const slug=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,92)||'producto';
+ const products=(data.products||[]).filter(p=>p.active!==false);
+ const map={'/':JSON.stringify([data.settings,data.banners,data.combos,data.promotions,products.map(p=>[p.id,p.name,p.price,p.promo,p.stock])]),'/categorias':JSON.stringify(data.categories)};
+ for(const p of products){const promos=(data.promotions||[]).filter(x=>x.active&&x.productIds?.includes(p.id));map['/producto/'+slug(p.name)+'--'+encodeURIComponent(p.id)]=JSON.stringify([p,promos]);}
+ for(const c of (data.categories||[])){const list=products.filter(p=>p.cat===c.id);if(list.length)map['/categoria/'+slug(c.id)]=JSON.stringify([c,list,data.promotions]);}
+ const settings=JSON.stringify(data.settings||{});for(const p of ['envios','devoluciones','privacidad','terminos','garantia'])map['/politicas/'+p]=settings;
+ return map;
+}
+async function notifyIndexNow(paths,all=false){
+ if(!all&&!paths.length)return {status:0,count:0,message:'Sin cambios públicos'};
+ await ensureToken();
+ const r=await fetch('/api/indexnow',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({paths,all})});
+ const data=await r.json();if(!r.ok)throw Error(data.message||data.error||'No confirmado');return data;
+}
+
 async function loadStore(){
  const rows=await req('/rest/v1/store_state?id=eq.main&select=data,updated_at');
  if(!rows.length)throw new Error('No existe store_state/main');
- DB=rows[0].data;lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
+ DB=rows[0].data;seoSnapshot=seoPublicSnapshot(DB);lastSyncedAt=rows[0].updated_at; $('#syncStatus').textContent='Sincronizado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
 }
 function validateStore(data=DB){
  if(!data||!Array.isArray(data.products)||!Array.isArray(data.categories)||!Array.isArray(data.promotions)||!Array.isArray(data.combos)||!Array.isArray(data.posts)||!data.settings||typeof data.settings!=='object'||!data.banners||typeof data.banners!=='object')throw new Error('El respaldo no tiene una estructura completa de MEDfy.');
@@ -255,13 +273,16 @@ async function saveStore(){
  if(uploading>0)throw new Error('Espera a que termine la carga de imágenes antes de guardar.');
  validateStore();
  const sentRevision=editRevision;
+ const sentData=JSON.stringify(DB),nextSeo=seoPublicSnapshot(JSON.parse(sentData)),changedSeo=[...new Set([...Object.keys(seoSnapshot),...Object.keys(nextSeo)])].filter(p=>seoSnapshot[p]!==nextSeo[p]);
  saving=true;$('#saveAll').disabled=true;$('#syncStatus').textContent='Guardando…';
  try{
   const q='/rest/v1/store_state?id=eq.main&updated_at=eq.'+encodeURIComponent(lastSyncedAt)+'&select=updated_at';
-  const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:DB,updated_at:new Date().toISOString()})});
+  const rows=await req(q,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({data:JSON.parse(sentData),updated_at:new Date().toISOString()})});
   if(!Array.isArray(rows)||rows.length!==1)throw new Error('Otra sesión modificó el catálogo. No se sobrescribieron sus cambios. Exporta el respaldo JSON antes de recargar.');
   lastSyncedAt=rows[0].updated_at;
   dirty=editRevision!==sentRevision;
+  seoSnapshot=nextSeo;
+  if(changedSeo.length)notifyIndexNow(changedSeo).then(x=>{const el=$('#indexnowStatus');if(el)el.textContent='IndexNow: '+x.message+' · '+x.count+' URLs';}).catch(()=>{const el=$('#indexnowStatus');if(el)el.textContent='IndexNow: envío no confirmado; puedes reintentar desde Configuración.';});
   $('#syncStatus').textContent=dirty?'Cambios nuevos pendientes · guarda nuevamente':'Guardado · '+new Date(lastSyncedAt).toLocaleString('es-PY');
  }catch(err){$('#syncStatus').textContent='Error al guardar · cambios pendientes';throw err}
  finally{saving=false;$('#saveAll').disabled=false}
@@ -431,7 +452,8 @@ function renderSettings(){
  '<div class="field" style="margin-top:18px"><label for="s_featured">Producto destacado de la página inicial</label>'+
  '<select id="s_featured"><option value="" '+(!s.featuredProductId?'selected':'')+'>Automático: primer estetoscopio activo</option>'+
  '<option value="__none__" '+(s.featuredProductId==='__none__'?'selected':'')+'>Ocultar la sección de destaque</option>'+opts+'</select>'+
- '<small>Precio, fotos y stock se leen del catálogo actual. Al cambiar el producto, la vitrina se actualiza al guardar.</small></div></div>';
+ '<small>Precio, fotos y stock se leen del catálogo actual. Al cambiar el producto, la vitrina se actualiza al guardar.</small></div><div class="notice"><strong>IndexNow</strong><p>Notifica los cambios públicos después de guardar. También puedes enviar el catálogo completo manualmente.</p><button type="button" id="indexnowSend" class="btn ghost">ENVIAR URLs A INDEXNOW</button><p id="indexnowStatus" class="status" role="status"></p></div></div>';
+ const ix=$('#indexnowSend');if(ix)ix.addEventListener('click',async()=>{ix.disabled=true;const status=$('#indexnowStatus');status.textContent='Enviando…';try{const r=await notifyIndexNow([],true);status.textContent=r.message+' · '+r.count+' URLs';}catch(err){status.textContent='No confirmado: '+err.message;}finally{ix.disabled=false;}});
 }
 function showLogin(message='',kind='notice ok'){
  $('#loginForm').classList.remove('hidden');

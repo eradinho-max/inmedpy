@@ -3,7 +3,7 @@
 (function(){
   'use strict';
   const ATTR_KEY='inmed_attribution_v1';
-  const KEYS=['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid','ttclid'];
+  const KEYS=['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
   window.dataLayer=window.dataLayer||[];
 
   function readAttribution(){
@@ -11,9 +11,9 @@
   }
   function captureAttribution(){
     const q=new URLSearchParams(location.search); const current=readAttribution(); let changed=false;
-    KEYS.forEach(k=>{if(q.get(k)){current[k]=q.get(k);changed=true}});
+    KEYS.forEach(k=>{if(q.get(k)){const v=q.get(k).slice(0,100);if(/^[a-zA-Z0-9_. -]+$/.test(v)){current[k]=v;changed=true}}});
     if(!current.landing_page){current.landing_page=location.pathname;changed=true}
-    if(!current.referrer && document.referrer){current.referrer=document.referrer;changed=true}
+    if(!current.referrer && document.referrer){try{current.referrer=new URL(document.referrer).origin;changed=true}catch(_){}}
     if(changed){try{sessionStorage.setItem(ATTR_KEY,JSON.stringify(current))}catch(_){}}
     return current;
   }
@@ -31,8 +31,7 @@
       original_referrer:attr.referrer||''
     },params||{});
     const payload=Object.assign({event:event},enriched);
-    window.dataLayer.push(payload);
-    if(typeof window.gtag==='function') window.gtag('event',event,enriched);
+    if(typeof window.gtag==='function') window.gtag('event',event,enriched);else window.dataLayer.push(payload);
     document.dispatchEvent(new CustomEvent('inmed:track',{detail:payload}));
   }
   function enrichWhatsApp(link){
@@ -52,17 +51,13 @@
   document.addEventListener('click',function(e){
     const link=e.target.closest('a,button'); if(!link) return;
     const label=link.dataset.track;
-    if(link.matches('[data-wa="true"]')){
+    if(link.dataset.waDirect==='true'){
+      track('whatsapp_click',{cta_source:'product_page'});
+    } else if(link.matches('[data-wa="true"]')){
       enrichWhatsApp(link);
       track('whatsapp_click',{cta_source:link.dataset.waSource||label||'unknown',link_text:(link.textContent||'').trim().slice(0,80)});
     } else if(label){ track('cta_click',{cta:label,link_text:(link.textContent||'').trim().slice(0,80)}); }
   },true);
-
-  document.querySelectorAll('form').forEach(function(form){
-    form.addEventListener('submit',function(){
-      track('generate_lead',{form_id:form.id||'lead_form',lead_type:'whatsapp'});
-    });
-  });
 
   const marks=new Set();
   addEventListener('scroll',function(){

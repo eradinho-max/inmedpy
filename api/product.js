@@ -49,6 +49,7 @@ export default async function handler(req,res){
 ${photo?'<meta property="og:image" content="'+e(photo)+'"><meta property="og:image:alt" content="'+e(name)+'"><meta name="twitter:image" content="'+e(photo)+'">':''}
 <meta name="twitter:card" content="${photo?'summary_large_image':'summary'}">
 <meta name="twitter:title" content="${e(seoTitle)}"><meta name="twitter:description" content="${e(synopsis)}">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3YWWXYW6LT"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-3YWWXYW6LT");</script><script defer src="/site-analytics.js?v=20261118-commerce1"></script>
 <script type="application/ld+json">${jsonLd([ld,breadcrumb([{name:"Inicio",path:"/"},{name:"Categorías",path:"/categorias"},{name:cat,path:catPath},{name,path:productPath(p)}].filter((x,i,a)=>i===0||x.path!==a[i-1].path))])}</script>
 <style>
 :root{--red:#E6102D;--wine:#8B0B1E;--ink:#161B26;--line:#E3E7EE;--muted:#64748B}*{box-sizing:border-box}
@@ -72,9 +73,9 @@ footer{background:#161B26;color:#fff;padding:35px 24px;text-align:center;font-si
 ${price!==null?'<div class="price"><small>Gs.</small> '+money(price)+'</div>':''}
 ${price!==null&&regular>price?'<div class="old">Antes: Gs. '+money(regular)+'</div>':''}
 <p class="availability ${stock>0?'':'out'}">${stock>0?'Disponible · '+stock+' unidades':'Agotado · consultar disponibilidad'}</p>
-<div class="actions"><a class="btn primary" href="${e(cartUrl)}">Ver en la tienda</a>${waUrl?'<a class="btn secondary" target="_blank" rel="noopener noreferrer" href="'+e(waUrl)+'">Consultar por WhatsApp</a>':''}</div>
+<div class="actions"><a class="btn primary" href="${e(cartUrl)}">Ver en la tienda</a>${waUrl?'<a class="btn secondary" data-wa-direct="true" target="_blank" rel="noopener noreferrer" href="'+e(waUrl)+'">Consultar por WhatsApp</a>':''}</div>
 <p class="shipping">Envíos a todo Paraguay. Confirmamos costos y plazos antes de cerrar el pedido. <a style="color:var(--red);text-decoration:underline" href="/politicas/envios">Condiciones de envío</a> · <a style="color:var(--red);text-decoration:underline" href="/politicas/devoluciones">Cambios y devoluciones</a> · <a style="color:var(--red);text-decoration:underline" href="/politicas/garantia">Garantía</a></p>
 </div></div><section class="details"><h2>Características del producto</h2><p class="description">${e(paragraphs)}</p>${p.specs?.["Garantía"]?'<p><strong>Garantía informada:</strong> '+e(p.specs["Garantía"])+' · <a href="/politicas/garantia">Condiciones</a></p>':''}</section>
-</main><footer><nav aria-label="Políticas comerciales"><a href="/politicas/envios">Envíos y entregas</a> · <a href="/politicas/devoluciones">Cambios y devoluciones</a> · <a href="/politicas/privacidad">Privacidad y cookies</a> · <a href="/politicas/terminos">Términos y condiciones</a> · <a href="/politicas/garantia">Garantías</a></nav><p>MEDfy · Soluciones Médicas · Paraguay</p></footer></body></html>`;
+</main><script>document.addEventListener("DOMContentLoaded",()=>{try{window.InMedTracking?.track("view_item",${jsonLd({currency:"PYG",value:price??0,items:[{item_id:id,item_name:name,item_category:cat,price:price??0,quantity:1}]})})}catch(_){}});</script><footer><nav aria-label="Políticas comerciales"><a href="/politicas/envios">Envíos y entregas</a> · <a href="/politicas/devoluciones">Cambios y devoluciones</a> · <a href="/politicas/privacidad">Privacidad y cookies</a> · <a href="/politicas/terminos">Términos y condiciones</a> · <a href="/politicas/garantia">Garantías</a></nav><p>MEDfy · Soluciones Médicas · Paraguay</p></footer></body></html>`;
  return send(res,200,html,'public, max-age=0, s-maxage=120, stale-while-revalidate=300');
 }

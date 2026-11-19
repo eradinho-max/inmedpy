@@ -239,6 +239,19 @@ function waUrl(text){
  if(!/^\d{8,15}$/.test(digits))return null;
  return 'https://wa.me/'+digits+'?text='+encodeURIComponent(text);
 }
+
+function medfyTrack(event,params={}){try{window.InMedTracking?.track(event,params)}catch(_){}}
+function analyticsItem(it,quantity=1){
+ const info=lineInfo(it);if(!info)return null;
+ const p=it.kind==='combo'?null:DB.products.find(x=>x.id===it.id);
+ const price=Number(info.price);if(!Number.isFinite(price)||price<0)return null;
+ return {item_id:String(it.id),item_name:String(info.name||'Producto'),item_category:p?publicCategoryName(p.cat):'Combos',...(it.variant?{item_variant:String(it.variant)}:{}),price,quantity:Math.max(1,Number(quantity)||1)};
+}
+function commerceEvent(event,items,extra={}){
+ const list=items.filter(Boolean);if(!list.length)return;
+ medfyTrack(event,{currency:'PYG',value:list.reduce((a,p)=>a+p.price*p.quantity,0),items:list,...extra});
+}
+
 function openWA(text,log){
  const url=waUrl(text);
  if(!url){toast('El WhatsApp de la tienda no está configurado.');return false;}
@@ -247,6 +260,7 @@ function openWA(text,log){
  const a=document.createElement('a');
  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
  document.body.appendChild(a);a.click();a.remove();
+ medfyTrack('whatsapp_click',{cta_source:'store_contact'});
  return true;
 }
 function addLead(type,contact,items,total){
@@ -398,6 +412,7 @@ function renderProducts(){
   $('#prodGrid').innerHTML=shown.length?shown.map(productCard).join(''):'<div class="empty-state">No encontramos productos con ese criterio. Probá con otra categoría o escribinos por WhatsApp.</div>';
   const fc=$('#filterCount'); if(fc) fc.textContent=list.length+' producto'+(list.length===1?'':'s');
   $('#loadMore').hidden=list.length<=S.visible;
+  const listKey=S.filter+':'+shown.map(p=>p.id).join(',');if(S.catalogReady&&S.analyticsList!==listKey){S.analyticsList=listKey;commerceEvent('view_item_list',shown.map((p,i)=>{const it=analyticsItem({id:p.id,kind:'product'});return it?{...it,index:i}:null}),{item_list_id:S.filter==='search'?'search':S.filter});}
   $('#seeAll').innerHTML='Ver todos los productos '+ic('arrow','width:16px;height:16px');
 }
 function setFilter(f,scroll){
@@ -560,6 +575,7 @@ function addToCart(id,variant,qty,kind){
  if(next<=previous){toast('Ya agregaste el máximo disponible de este producto.');return false;}
  if(found)found.qty=next;else cart.push({id,variant:item.variant,qty:next,kind:type});
  saveCart();renderCart();
+ commerceEvent('add_to_cart',[analyticsItem(item,next-previous)]);
  toast(next<previous+requested?'Cantidad ajustada al stock disponible.':'Producto agregado al pedido');
  return true;
 }
@@ -577,6 +593,7 @@ function openPDP(id,variant){
   const p=DB.products.find(x=>x.id===id&&x.active!==false); if(!p){toast('Este producto ya no está disponible.');return;}
   S.pdp={id,variant:variant||((saleVariants(p)[0]||{}).name||''),qty:1,tab:'features'};
   renderPDP(); closeAll(); $('#overlay').classList.add('show'); $('#productModal').classList.add('show');
+ commerceEvent('view_item',[analyticsItem({id,variant:S.pdp.variant,kind:'product'})]);
 }
 function renderPDP(){
   if(!S.pdp) return;
@@ -869,11 +886,12 @@ document.addEventListener('click',async e=>{
       else if(next>available.max)toast('Cantidad máxima disponible: '+available.max);
       else it.qty=next;}
       saveCart();renderCart();break;}
-    case 'remove': cart.splice(i,1); saveCart(); renderCart(); toast('Producto quitado'); break;
+    case 'remove': {const it=cart[i];if(it)commerceEvent('remove_from_cart',[analyticsItem(it,it.qty)]);cart.splice(i,1); saveCart(); renderCart(); toast('Producto quitado'); break;}
     case 'checkout': {
       if(S.checkoutBusy)break;
       if(!S.catalogReady||!cart.length){toast('El catálogo no está disponible para realizar pedidos.');break;}
       S.checkoutBusy=true;el.disabled=true;
+      commerceEvent('begin_checkout',cart.map(it=>analyticsItem(it,it.qty)));
       // Open a tab inside the click, before awaiting the stock check, to avoid popup blockers.
       const pending=window.open('about:blank','_blank');
       if(pending){pending.opener=null;try{pending.document.body.textContent='MEDfy: verificando disponibilidad y precios…';}catch(e){}}
@@ -912,6 +930,7 @@ document.addEventListener('click',async e=>{
           const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
           document.body.appendChild(link);link.click();link.remove();
         }
+        commerceEvent('whatsapp_checkout',cart.map(it=>analyticsItem(it,it.qty)),{cta_source:'cart'});
         toast('WhatsApp abierto. Revisá y enviá el mensaje para solicitar tu pedido.');
       }catch(err){
         if(pending)pending.close();
@@ -1006,7 +1025,7 @@ document.addEventListener('submit',async e=>{
     const email=$('#newsEmail').value.trim();
     if(!email)return;
     const request='Hola MEDfy, quiero solicitar la suscripción a las novedades y consejos clínicos por correo electrónico. Mi email es: '+email+'. ¿Podés confirmar la inscripción y cómo solicitar la baja?';
-    if(openWA(request)){f.reset();toast('Se abrió WhatsApp. Enviá el mensaje para solicitar tu inscripción.');}
+    if(openWA(request)){medfyTrack('newsletter_request',{cta_source:'newsletter'});f.reset();toast('Se abrió WhatsApp. Enviá el mensaje para solicitar tu inscripción.');}
     return;
   }
   const kind=f.dataset.form; if(!kind) return;
