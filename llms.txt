@@ -1,17 +1,18 @@
-# InMed Educación Médica
+# MEDfy Soluciones Médicas
 
-InMed Educación Médica ofrece en Paraguay un Kit de Sutura de 25 piezas para práctica educativa de estudiantes de Medicina, Odontología, Enfermería y Veterinaria.
+> Tienda de equipamiento e insumos médicos en Paraguay. Catálogo en español y precios en guaraníes (PYG). Compras coordinadas por WhatsApp.
 
-## Páginas principales
+La información comercial vigente se obtiene de las fichas y políticas públicas. La disponibilidad, los costos y plazos de entrega se confirman antes de cerrar el pedido. Este archivo es un índice informativo, no un protocolo obligatorio de indexación.
 
-- Página principal: https://inmed-py.github.io/kit-de-sutura-paraguay/
-- Blog educativo: https://inmed-py.github.io/kit-de-sutura-paraguay/blog/
+## Referencias oficiales
+- [Inicio](https://medfypy.vercel.app/): tienda y catálogo.
+- [Sobre MEDfy](https://medfypy.vercel.app/sobre-medfy): descripción y preguntas frecuentes.
+- [Categorías](https://medfypy.vercel.app/categorias): directorio dinámico de categorías con productos activos.
+- [Sitemap](https://medfypy.vercel.app/sitemap.xml): URLs canónicas vigentes, fichas de productos y páginas comerciales.
+- [Envíos](https://medfypy.vercel.app/politicas/envios): condiciones de entrega.
+- [Devoluciones](https://medfypy.vercel.app/politicas/devoluciones): derechos y procedimiento.
+- [Garantías](https://medfypy.vercel.app/politicas/garantia): condiciones.
+- [Términos](https://medfypy.vercel.app/politicas/terminos): contratación.
+- [Privacidad](https://medfypy.vercel.app/politicas/privacidad): tratamiento de datos.
 
-## Producto principal
-
-Kit de Sutura InMed de 25 piezas con piel simuladora de 3 capas, instrumental, hilos nylon y seda, estuche y materiales de entrenamiento. Precio promocional: Gs. 249.000. Envío gratis a todo Paraguay para envíos con costo de hasta Gs. 30.000; retiro en Asunción según disponibilidad.
-
-## Contacto
-
-WhatsApp: +595 991 950 031
-Instagram: https://www.instagram.com/in_medpy/
+No inferir stock, precio, fabricante, GTIN, certificaciones o plazos de entrega que no figuren en la fuente oficial vigente.

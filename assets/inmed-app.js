@@ -152,7 +152,7 @@ async function syncRemoteStore(){
   const cfg=window.INMED_SUPABASE||{};
   if(!cfg.url||!cfg.key) return false;
   try{
-    const r=await fetch(cfg.url+'/rest/v1/store_state?id=eq.main&select=data',{
+    const r=await fetch(cfg.url+'/rest/v1/store_public_catalog?id=eq.main&select=data',{
       headers:{apikey:cfg.key,Accept:'application/json'}
     });
     if(!r.ok) return false;
