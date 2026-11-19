@@ -16,14 +16,14 @@ export default async function handler(req,res){
   if(!member.ok||!(await member.json()).some(x=>x.user_id===user.id))return send(res,403,{error:'Acceso restringido'});
   const body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};
   const row=await loadCatalog(),data=row.data;
-  const current=['/','/sobre-medfy','/categorias','/politicas/envios','/politicas/devoluciones','/politicas/privacidad','/politicas/terminos','/politicas/garantia',...activeCategories(data).map(categoryPath),...activeProducts(data).map(productPath)];
+  const current=['/','/sobre-suprimed','/categorias','/politicas/envios','/politicas/devoluciones','/politicas/privacidad','/politicas/terminos','/politicas/garantia',...activeCategories(data).map(categoryPath),...activeProducts(data).map(productPath)];
   const requested=Array.isArray(body.paths)?body.paths:[];
   // Accept only same-host canonical paths (including removed/renamed products/categories).
   const safe=p=>typeof p==='string'&&p.length<=250&&(current.includes(p)||/^\/categoria\/[a-z0-9-]+$/.test(p)||/^\/producto\/[a-z0-9-]+--[a-zA-Z0-9_%.-]+$/.test(p));
   const selected=body.all===true?current:requested.filter(safe);
   const urls=[...new Set(selected)].slice(0,500).map(p=>ORIGIN+p);
   if(!urls.length)return send(res,200,{status:0,count:0,message:'Sin cambios públicos'});
-  const reply=await fetch('https://api.indexnow.org/indexnow',{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({host:'medfypy.vercel.app',key,keyLocation:ORIGIN+'/'+key+'.txt',urlList:urls}),signal:AbortSignal.timeout(10000)});
+  const reply=await fetch('https://api.indexnow.org/indexnow',{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({host:'suprimedpy.vercel.app',key,keyLocation:ORIGIN+'/'+key+'.txt',urlList:urls}),signal:AbortSignal.timeout(10000)});
   return send(res,reply.status===200||reply.status===202?200:502,{status:reply.status,count:urls.length,message:reply.status===200?'URLs recibidas':reply.status===202?'Recibidas; verificación pendiente':'IndexNow no confirmó la recepción'});
  }catch(err){return send(res,503,{error:'No se pudo notificar a IndexNow. El catálogo ya guardado no se modifica.'})}
 }

@@ -155,8 +155,8 @@
       "destination": "/api/policy?slug=:slug"
     },
     {
-      "source": "/sobre-medfy",
-      "destination": "/sobre-medfy.html"
+      "source": "/sobre-suprimed",
+      "destination": "/sobre-suprimed.html"
     },
     {
       "source": "/merchant-feed.xml",
@@ -165,8 +165,18 @@
   ],
   "redirects": [
     {
+      "source": "/sobre-medfy.html",
+      "destination": "https://suprimedpy.vercel.app/sobre-suprimed",
+      "permanent": true
+    },
+    {
+      "source": "/sobre-medfy",
+      "destination": "https://suprimedpy.vercel.app/sobre-suprimed",
+      "permanent": true
+    },
+    {
       "source": "/gestion-inmed/:path*",
-      "destination": "https://medfypy.vercel.app/gestion/",
+      "destination": "https://suprimedpy.vercel.app/gestion/",
       "permanent": true
     },
     {
@@ -177,7 +187,18 @@
           "value": "inmedpy.vercel.app"
         }
       ],
-      "destination": "https://medfypy.vercel.app/:path*",
+      "destination": "https://suprimedpy.vercel.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "medfypy.vercel.app"
+        }
+      ],
+      "destination": "https://suprimedpy.vercel.app/:path*",
       "permanent": true
     }
   ]

@@ -14,4 +14,4 @@ Allow: /
 Disallow: /api/
 Disallow: /supabase-config.js
 
-Sitemap: https://medfypy.vercel.app/sitemap.xml
+Sitemap: https://suprimedpy.vercel.app/sitemap.xml

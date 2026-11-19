@@ -5,14 +5,14 @@
 La información comercial vigente se obtiene de las fichas y políticas públicas. La disponibilidad, los costos y plazos de entrega se confirman antes de cerrar el pedido. Este archivo es un índice informativo, no un protocolo obligatorio de indexación.
 
 ## Referencias oficiales
-- [Inicio](https://medfypy.vercel.app/): tienda y catálogo.
-- [Sobre SupriMed](https://medfypy.vercel.app/sobre-medfy): descripción y preguntas frecuentes.
-- [Categorías](https://medfypy.vercel.app/categorias): directorio dinámico de categorías con productos activos.
-- [Sitemap](https://medfypy.vercel.app/sitemap.xml): URLs canónicas vigentes, fichas de productos y páginas comerciales.
-- [Envíos](https://medfypy.vercel.app/politicas/envios): condiciones de entrega.
-- [Devoluciones](https://medfypy.vercel.app/politicas/devoluciones): derechos y procedimiento.
-- [Garantías](https://medfypy.vercel.app/politicas/garantia): condiciones.
-- [Términos](https://medfypy.vercel.app/politicas/terminos): contratación.
-- [Privacidad](https://medfypy.vercel.app/politicas/privacidad): tratamiento de datos.
+- [Inicio](https://suprimedpy.vercel.app/): tienda y catálogo.
+- [Sobre SupriMed](https://suprimedpy.vercel.app/sobre-suprimed): descripción y preguntas frecuentes.
+- [Categorías](https://suprimedpy.vercel.app/categorias): directorio dinámico de categorías con productos activos.
+- [Sitemap](https://suprimedpy.vercel.app/sitemap.xml): URLs canónicas vigentes, fichas de productos y páginas comerciales.
+- [Envíos](https://suprimedpy.vercel.app/politicas/envios): condiciones de entrega.
+- [Devoluciones](https://suprimedpy.vercel.app/politicas/devoluciones): derechos y procedimiento.
+- [Garantías](https://suprimedpy.vercel.app/politicas/garantia): condiciones.
+- [Términos](https://suprimedpy.vercel.app/politicas/terminos): contratación.
+- [Privacidad](https://suprimedpy.vercel.app/politicas/privacidad): tratamiento de datos.
 
 No inferir stock, precio, fabricante, GTIN, certificaciones o plazos de entrega que no figuren en la fuente oficial vigente.

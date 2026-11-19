@@ -5,7 +5,7 @@ export default async function handler(req,res){
   const row=await loadCatalog();
   const date=new Date(row.updated_at||Date.now());
   const lastmod=Number.isFinite(date.getTime())?date.toISOString().slice(0,10):null;
-  const cats=activeCategories(row.data);const pages=[ORIGIN+'/',ORIGIN+'/sobre-medfy',...(cats.length?[ORIGIN+'/categorias',...cats.map(c=>ORIGIN+categoryPath(c))]:[]),...activeProducts(row.data).map(p=>ORIGIN+productPath(p)),...["/politicas/envios","/politicas/devoluciones","/politicas/privacidad","/politicas/terminos","/politicas/garantia"].map(p=>ORIGIN+p)];
+  const cats=activeCategories(row.data);const pages=[ORIGIN+'/',ORIGIN+'/sobre-suprimed',...(cats.length?[ORIGIN+'/categorias',...cats.map(c=>ORIGIN+categoryPath(c))]:[]),...activeProducts(row.data).map(p=>ORIGIN+productPath(p)),...["/politicas/envios","/politicas/devoluciones","/politicas/privacidad","/politicas/terminos","/politicas/garantia"].map(p=>ORIGIN+p)];
   const xml='<?xml version="1.0" encoding="UTF-8"?>\n'+
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
     pages.map(url=>'  <url><loc>'+xmlEscape(url)+'</loc>'+(lastmod?'<lastmod>'+lastmod+'</lastmod>':'')+'</url>').join('\n')+
