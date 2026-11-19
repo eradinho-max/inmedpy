@@ -55,6 +55,43 @@ textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(2,minma
 @media(max-width:760px){.wrap{padding:14px}.grid,.grid3{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row.mobilecol{align-items:stretch;flex-direction:column}}
 .inmed-admin-mark{display:block;width:190px;height:auto;max-width:100%;margin:0 0 12px;object-fit:contain}
 .inmed-admin-topmark{display:block;width:155px;height:auto;max-width:100%;object-fit:contain;margin:0 0 7px}
+
+/* MEDfy: mobile/tablet administration, stock and price stay visible. */
+:root{--dark:#161B26}
+.wrap,.card,.grid>*,.grid3>*,.row>*,.catalog-row>*{min-width:0}
+.btn,.tab{min-height:44px}
+input,select,textarea{min-height:44px}
+@media(max-width:1100px){.wrap{padding:20px}.catalog-row{gap:9px;padding:12px}.catalog-actions{max-width:260px}}
+@media(min-width:761px) and (max-width:1050px){.catalog-row{grid-template-columns:48px minmax(0,1fr) 88px 62px}.catalog-row>.badge{display:inline-block;grid-column:1/3;grid-row:2;justify-self:start}.catalog-row .catalog-actions{grid-column:3/5;grid-row:2;justify-self:stretch;max-width:none}.catalog-actions .btn{min-height:44px;font-size:11px;padding-inline:4px}}
+@media(max-width:760px){
+ .wrap{padding:12px}.card,.login .card{padding:16px;border-radius:13px}
+ h1{font-size:23px}h2{font-size:19px}
+ .login{margin:6vh auto}
+ input,select,textarea{font-size:16px}
+ .top{gap:10px}.top>.row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto}
+ .top>.row .btn{min-width:0;padding:11px 9px;font-size:13px}
+ .tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+ .tab{flex:0 0 auto;scroll-snap-align:start;font-size:14px}
+ .row{flex-wrap:wrap}.row.mobilecol{display:flex}
+ .catalog-category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .catalog-category{min-height:105px;padding:12px 24px 12px 12px}
+ .catalog-category strong{font-size:14px;overflow-wrap:anywhere}
+ .catalog-category .catalog-chevron{right:7px;font-size:24px}
+ .catalog-row{grid-template-columns:46px minmax(0,1fr) auto;gap:8px;padding:11px}
+ .catalog-row>.catalog-thumb{grid-row:1/3}
+ .catalog-row>.catalog-product{grid-column:2;grid-row:1}
+ .catalog-row>.catalog-price{display:block;grid-column:2;grid-row:2;font-weight:750;overflow-wrap:anywhere}
+ .catalog-row>.catalog-stock{display:block;grid-column:3;grid-row:2;font-size:12px;justify-self:end}
+ .catalog-row>.badge{grid-column:3;grid-row:1;font-size:11px;white-space:nowrap}
+ .catalog-row .catalog-actions{grid-column:1/-1;grid-row:3;gap:5px}
+ .catalog-actions .btn{white-space:normal;font-size:12px;padding:8px 4px;min-height:44px}
+ .product-image-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .product-image-slot{padding:8px}.product-image-slot input{font-size:12px;min-height:36px}
+ .heroPreview,.preview{max-width:100%}
+ .notice,.status,.item{overflow-wrap:anywhere}
+}
+@media(max-width:360px){.wrap{padding:9px}.card{padding:12px}.catalog-row{padding:8px;gap:6px}.catalog-actions .btn{font-size:11px}.product-image-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>

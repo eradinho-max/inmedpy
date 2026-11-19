@@ -51,7 +51,7 @@ const DEFAULT = () => ({
     copy:'© 2026 MEDfy Soluciones Médicas · Asunción, Paraguay'
   },
   banners:{
-    showAnnouncement:true, announcement:'<b>5% OFF</b> en tu primera compra con el cupón <b>INMED5</b>',
+    showAnnouncement:true, announcement:'Más calidad. Más acceso. Más salud.',
     heroTitle:'EQUIPÁ TU PRÁCTICA CON PRODUCTOS QUE <em>HACEN LA DIFERENCIA.</em>',
     heroSub:'Equipamiento médico para estudiantes, profesionales y cuidado en casa.',
     showHeroBadge:true, heroBadge:'<span>15%</span>OFF',
@@ -265,10 +265,10 @@ function stars(r){ return `<div class="stars"><i>★★★★★</i> ${Number(r)
 function renderStore(){
   const B=DB.banners, C=DB.settings;
   // Do not advertise a non-functional coupon; WhatsApp checkout has no coupon redemption.
-  const announcement=String(B.announcement||'');
+  const announcement=String(B.announcement||'').replace(/\bInMed\b/gi,'MEDfy');
   const unsupportedCoupon=/\\bINMED5\\b|cup[oó]n/iu.test(announcement);
   $('#topAnnounce').innerHTML=B.showAnnouncement&&!unsupportedCoupon?safeRich(announcement,['b']):'Envíos a todo Paraguay · Atención por WhatsApp';
-  $('#heroTitle').innerHTML=safeRich(B.heroTitle,['em']);
+  $('#heroTitle').innerHTML=safeRich(String(B.heroTitle||'').replace(/\bInMed\b/gi,'MEDfy'),['em']);
   $('#heroSub').textContent=B.heroSub;
   const heroCampaign=B.showOffer?activeCampaign():null;
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';

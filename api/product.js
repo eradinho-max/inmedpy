@@ -61,7 +61,7 @@ h1{font-size:clamp(29px,3.5vw,43px);line-height:1.13;letter-spacing:-.025em;marg
 .details{margin-top:40px;border-top:1px solid var(--line);padding-top:25px;max-width:1000px}.details h2{font-size:23px;margin:0 0 12px}.description{white-space:pre-line;overflow-wrap:anywhere}.shipping{margin-top:25px;color:var(--muted);font-size:14px}
 footer{background:#161B26;color:#fff;padding:35px 24px;text-align:center;font-size:13px}
 @media(max-width:780px){.product{grid-template-columns:1fr;gap:24px}.photo{min-height:280px}.head{padding:15px 18px}main{padding:25px 18px 65px}.price{font-size:32px}}
-</style></head><body>
+@media(max-width:480px){.head{padding:12px 14px;gap:8px}.logo{width:145px;max-width:44vw}.home{font-size:12px;line-height:1.4;text-align:right}.actions{display:grid;grid-template-columns:1fr}.btn{min-height:46px;width:100%;padding:12px;text-align:center}.photo{min-height:220px}.price{font-size:clamp(27px,8vw,34px)}h1{overflow-wrap:anywhere}main{padding-inline:14px}}</style></head><body>
 <header><div class="head"><a href="/" aria-label="MEDfy inicio"><img class="logo" src="/assets/medfy-logo.svg" alt="MEDfy"></a><a class="home" href="/#productos">Ver todos los productos</a></div></header>
 <main><nav class="crumb" aria-label="Ubicación"><a href="/">Inicio</a> › <a href="/#productos">${e(cat)}</a> › ${e(name)}</nav>
 <div class="product"><div><div class="photo">${imageHtml}</div>${thumbnails}</div>
