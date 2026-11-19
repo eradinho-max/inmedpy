@@ -74,3 +74,10 @@
 #store .hero-visual .float-b{bottom:9px;right:9px}
 #store .hero-badge{top:10px;right:10px}
 }
+
+/* Optional campaign artwork; the original hero remains untouched. */
+#store #inicio .hero-grid[hidden],#store #campaignHero[hidden]{display:none!important}
+#store #campaignHero{display:block;width:100%;background:#881629;line-height:0}
+#store #campaignHero picture{display:block;width:100%}
+#store #campaignHero img{display:block;width:100%;height:auto;object-fit:contain;aspect-ratio:auto}
+#store #campaignHero:focus-visible{outline:3px solid #fff;outline-offset:-5px}

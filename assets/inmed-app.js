@@ -290,6 +290,7 @@ function renderStore(){
   $('#heroBadge').textContent=heroCampaign?'HASTA '+Number(heroCampaign.percent)+'% OFF · PRODUCTOS SELECCIONADOS':'';
   $('#heroBadge').hidden=!B.showHeroBadge||!heroCampaign;
   renderHeroGallery();
+  renderCampaignHero();
   $('#floatBText').innerHTML='Envío gratis*<small>Desde '+gs(C.freeShipMin)+'</small>';
   const campaign=B.showOffer?activeCampaign():null;
   const cats=campaign?[...new Set((campaign.productIds||[]).map(id=>
@@ -328,6 +329,19 @@ function renderNavigation(){
  '<a href="#productos" class="nav-offer" data-cat="ofertas">Ofertas</a>'+
  ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
  '<a href="#blog">Novedades</a><a href="#contacto">Contacto</a>';
+}
+function renderCampaignHero(){
+ const b=DB.banners||{}, link=$('#campaignHero'), photo=$('#campaignHeroImage'), mobile=$('#campaignHeroMobile'), original=$('#inicio .hero-grid');
+ if(!link||!photo||!mobile||!original)return;
+ const safe=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}};
+ const desktop=safe(b.campaignDesktop), small=safe(b.campaignMobile);
+ const restore=()=>{link.hidden=true;original.hidden=false;};
+ if(b.heroMode!=='campaign'||!desktop){restore();mobile.removeAttribute('srcset');photo.removeAttribute('src');return}
+ photo.alt=String(b.campaignAlt||'Promoción SupriMed').slice(0,180);
+ photo.onerror=restore;
+ if(small)mobile.setAttribute('srcset',small);else mobile.removeAttribute('srcset');
+ if(photo.getAttribute('src')!==desktop)photo.src=desktop;
+ original.hidden=true;link.hidden=false;
 }
 function renderHeroGallery(){
  const custom=DB.customImages?.hero,photo=$('#heroImg'),gallery=$('#heroProductGallery');
