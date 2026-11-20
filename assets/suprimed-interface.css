@@ -96,3 +96,16 @@
  #store .benefit strong{font-size:11px;line-height:1.25;margin:0;overflow-wrap:break-word}
  #store .benefit small{display:block;font-size:10px;line-height:1.3;margin-top:3px;overflow-wrap:break-word}
 }
+
+/* Rotating promotional banner with manual navigation. */
+#store #campaignHero{position:relative;overflow:hidden;border-radius:10px}
+#store #campaignHeroLink{display:block;width:100%;line-height:0}
+#store #campaignHeroImage{display:block;width:100%;height:auto;object-fit:contain}
+#store .campaign-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:48px;border:0;border-radius:8px;background:rgba(22,27,38,.60);color:#fff;font-size:35px;line-height:1;cursor:pointer;z-index:4}
+#store .campaign-prev{left:10px}#store .campaign-next{right:10px}
+#store .campaign-arrow:hover,#store .campaign-arrow:focus-visible{background:rgba(22,27,38,.88)}
+#store .campaign-arrow[hidden],#store .campaign-dots[hidden]{display:none!important}
+#store .campaign-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;max-width:90%;padding:5px 9px;background:rgba(22,27,38,.5);border-radius:24px}
+#store .campaign-dot{width:9px;height:9px;padding:0;border:0;border-radius:50%;background:#fff9;cursor:pointer}
+#store .campaign-dot[aria-current="true"]{background:#fff;width:20px;border-radius:12px}
+@media(max-width:680px){#store .campaign-arrow{width:26px;height:36px;font-size:26px;border-radius:6px}#store .campaign-prev{left:4px}#store .campaign-next{right:4px}#store .campaign-dots{bottom:4px;gap:4px;padding:4px 6px}#store .campaign-dot{width:7px;height:7px}#store .campaign-dot[aria-current="true"]{width:13px}}

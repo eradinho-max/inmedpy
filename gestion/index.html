@@ -272,7 +272,7 @@ function validateStore(data=DB){
 async function saveStore(){
  if(!DB||!dirty||saving)return;
  if(uploading>0)throw new Error('Espera a que termine la carga de imágenes antes de guardar.');
- if(DB.banners?.heroMode==='campaign'&&!DB.banners.campaignDesktop)throw new Error('Carga el arte de escritorio antes de activar la campaña.');
+ if(DB.banners?.heroMode==='campaign'&&!bannerSlides().some(Boolean))throw new Error('Sube al menos un banner antes de activar el carrusel.');
  validateStore();
  const sentRevision=editRevision;
  const sentData=JSON.stringify(DB),nextSeo=seoPublicSnapshot(JSON.parse(sentData)),changedSeo=[...new Set([...Object.keys(seoSnapshot),...Object.keys(nextSeo)])].filter(p=>seoSnapshot[p]!==nextSeo[p]);
@@ -440,14 +440,21 @@ function renderPromotions(){
  '<button class="btn danger" style="margin-top:12px" data-delete-promo="'+i+'">Eliminar promoción</button></div>').join('')+'</div>';
  $('#addPromo').onclick=()=>{collect();DB.promotions.push({id:'pr-'+crypto.randomUUID(),name:'Nueva promoción',percent:10,start:new Date().toISOString().slice(0,10),end:new Date(Date.now()+7*864e5).toISOString().slice(0,10),productIds:[],active:false});mark();renderPromotions()}
 }
+function bannerSlides(){
+ const b=DB.banners||{};
+ const slides=Array.isArray(b.campaignSlides)?b.campaignSlides.slice(0,12):[b.campaignDesktop||''];
+ return slides.concat(Array(12).fill('')).slice(0,12);
+}
 function renderBanners(){
- const b=DB.banners||{}, campaign=b.campaignDesktop;
- $('#content').innerHTML='<div class="card"><h2>Banner principal</h2><p class="muted">Sustituye toda la portada de la tienda, no solo una imagen lateral.</p>'+
- '<div class="notice"><strong>Actualmente: '+(b.heroMode==='campaign'?'Campaña promocional':'Original institucional')+'</strong></div>'+
- '<div class="field"><label>Imagen de la campaña · 1920 × 720 px (8:3)</label>'+
- (campaign?'<img class="heroPreview" style="width:100%;max-width:760px;aspect-ratio:auto;object-fit:contain" src="'+esc(imageSrc(campaign))+'" alt="Vista previa de la campaña">':'<p class="muted">Sin campaña cargada.</p>')+
- '<input type="file" accept="image/jpeg,image/png,image/webp" data-upload="campaignDesktop"><small>Una sola imagen para computadora y celular. Se muestra completa, sin recortes ni deformaciones.</small></div>'+
- '<div id="hero_status" role="status" aria-live="polite"></div><div class="row" style="margin-top:14px;flex-wrap:wrap"><button type="button" class="btn primary" id="saveBannerBottom" '+(!campaign?'disabled':'')+'>PUBLICAR PROMOCIÓN</button><button type="button" class="btn ghost" id="restoreHero">VOLVER AL ORIGINAL</button></div><p class="muted">La campaña se conserva al regresar al original.</p></div>';
+ const b=DB.banners||{},slides=bannerSlides(),count=slides.filter(Boolean).length;
+ const cards=slides.map((src,i)=>'<div class="field" style="border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0"><strong>Banner '+(i+1)+'</strong><div style="margin:8px 0">'+(src?'<img class="heroPreview" style="width:100%;max-width:350px;aspect-ratio:8/3;object-fit:contain" src="'+esc(imageSrc(src))+'" alt="Vista previa del banner '+(i+1)+'">':'<div style="background:#f3f4f6;border-radius:8px;padding:18px;text-align:center;color:#646b76">Espacio disponible</div>')+'</div><input type="file" accept="image/jpeg,image/png,image/webp" data-upload="campaignSlide" data-slot="'+i+'" aria-label="Subir banner '+(i+1)+'">'+(src?'<button class="btn ghost" type="button" data-clear-banner="'+i+'">Quitar banner</button>':'')+'</div>').join('');
+ $('#content').innerHTML='<div class="card"><h2>Banners de portada</h2><p class="muted">Hasta 12 banners promocionales. Flechas para pasar manualmente y cambio automático cada 3 segundos. En móvil también puedes deslizar.</p>'+
+ '<div class="notice"><strong>Modo visible: '+(b.heroMode==='campaign'?'Carrusel promocional':'Original institucional')+'</strong> · '+count+' de 12 imágenes.</div>'+
+ '<p class="muted">Tamaño recomendado: <b>1920 × 720 px (8:3)</b>. Cada imagen se muestra completa, sin recortes; se mantienen los márgenes laterales.</p>'+
+ '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px">'+cards+'</div>'+
+ '<div id="hero_status" role="status" aria-live="polite" style="margin-top:12px"></div>'+
+ '<div class="row" style="margin-top:16px;flex-wrap:wrap;gap:8px"><button type="button" class="btn primary" id="saveBannerBottom" '+(!count?'disabled':'')+'>GUARDAR Y MOSTRAR CARRUSEL</button><button type="button" class="btn ghost" id="restoreHero">MOSTRAR BANNER ORIGINAL</button></div>'+
+ '<small>Volver al original no borra las campañas. Los banners aparecen en el orden numerado.</small></div>';
 }
 function renderSettings(){
  const s=DB.settings||{};
@@ -569,12 +576,22 @@ async function uploadMedia(file,folder,maxW,maxH){
 }
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-tab]');if(t){if(uploading){alert('Espera a que termine la carga.');return}collect();tab=t.dataset.tab;render();return}
+ const removeBanner=e.target.closest('[data-clear-banner]');
+ if(removeBanner){
+  if(uploading||saving)return;
+  const pos=Number(removeBanner.dataset.clearBanner);if(!Number.isInteger(pos)||pos<0||pos>11)return;
+  const slides=bannerSlides();slides[pos]='';DB.banners.campaignSlides=slides;
+  if(!slides.some(Boolean))DB.banners.heroMode='original';
+  mark();renderBanners();return;
+ }
  if(e.target.closest('#restoreHero')||e.target.closest('#saveBannerBottom')){
   if(uploading||saving)return;
   const mode=e.target.closest('#restoreHero')?'original':'campaign';
-  if(mode==='campaign'&&!DB.banners.campaignDesktop)return;
+  if(mode==='campaign'&&!bannerSlides().some(Boolean))return;
   const old=DB.banners.heroMode;DB.banners.heroMode=mode;mark();
-  try{await saveStore();if(dirty)throw Error('Cambios pendientes');renderBanners();$('#hero_status').textContent=mode==='campaign'?'Promoción publicada.':'Banner original restaurado.';}catch(err){DB.banners.heroMode=old;renderBanners();alert('No se pudo publicar: '+err.message)}return;
+  try{await saveStore();if(dirty)throw Error('Cambios pendientes');renderBanners();$('#hero_status').textContent=mode==='campaign'?'Carrusel guardado y publicado.':'Banner original restaurado.';}
+  catch(err){DB.banners.heroMode=old;renderBanners();alert('No se pudo guardar el banner: '+err.message)}
+  return;
  }
  if(e.target.closest('#saveComboBottom')){await saveCombo();return}
  if(e.target.closest('[data-combo-back]')){collect();comboEditingId=null;renderCombosAdmin();return}
@@ -759,16 +776,17 @@ document.addEventListener('change',async e=>{
      if(!slotEl?.querySelector('[data-remove-image]')&&slotEl){const remove=document.createElement('button');remove.type='button';remove.className='btn ghost';remove.dataset.removeImage=String(slot);remove.dataset.productIndex=String(i);remove.textContent='Eliminar foto';slotEl.appendChild(remove)}
     }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false}
    }
-   else if(kind==='campaignDesktop'){
-    const box=$('#hero_status');box.textContent='Optimizando y enviando…';
-    uploading++;$('#saveAll').disabled=true;inp.disabled=true;const bottom=$('#saveBannerBottom');if(bottom)bottom.disabled=true;
+   else if(kind==='campaignSlide'){
+    const pos=Number(inp.dataset.slot);if(!Number.isInteger(pos)||pos<0||pos>11)return;
+    const box=$('#hero_status');box.textContent='Optimizando banner '+(pos+1)+'…';
+    uploading++;$('#saveAll').disabled=true;inp.disabled=true;
     try{
      const r=await uploadMedia(f,'banners',1920,720);
-     DB.banners.campaignDesktop=r.url;delete DB.banners.campaignMobile;
-     mark();renderBanners();
-     $('#hero_status').textContent='Imagen lista: '+r.w+' × '+r.h+' px. Pulsa PUBLICAR PROMOCIÓN.';
-    }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false;const button=$('#saveBannerBottom');if(button)button.disabled=uploading>0||!DB.banners.campaignDesktop}
+     const slides=bannerSlides();slides[pos]=r.url;DB.banners.campaignSlides=slides;
+     mark();renderBanners();$('#hero_status').textContent='Banner '+(pos+1)+' listo ('+r.w+' × '+r.h+' px). Pulsa GUARDAR Y MOSTRAR CARRUSEL para publicar.';
+    }finally{uploading--;$('#saveAll').disabled=uploading>0;inp.disabled=false}
    }
+
  }catch(err){alert('Error de imagen: '+err.message)}
 });
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const box=$('#loginMsg');try{await login($('#email').value,$('#password').value);await loadStore();$('#loginView').classList.add('hidden');$('#adminView').classList.remove('hidden');render()}catch(err){msg(box,err.message,'notice err')}});

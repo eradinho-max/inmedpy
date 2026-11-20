@@ -330,18 +330,42 @@ function renderNavigation(){
  ((DB.combos||[]).some(c=>c.active!==false&&Number(c.stock)>0)?'<a href="#combos">Combos</a>':'')+
  '<a href="#blog">Novedades</a><a href="#contacto">Contacto</a>';
 }
+let campaignTimer=null,campaignIndex=0,campaignSignature='',campaignMove=null,campaignRestart=null;
 function renderCampaignHero(){
- const b=DB.banners||{}, link=$('#campaignHero'), photo=$('#campaignHeroImage'), mobile=$('#campaignHeroMobile'), original=$('#inicio .hero-grid');
- if(!link||!photo||!mobile||!original)return;
+ const b=DB.banners||{},wrap=$('#campaignHero'),photo=$('#campaignHeroImage'),original=$('#inicio .hero-grid');
+ if(!wrap||!photo||!original)return;
  const safe=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}};
- const desktop=safe(b.campaignDesktop);
- const restore=()=>{link.hidden=true;original.hidden=false;};
- if(b.heroMode!=='campaign'||!desktop){restore();mobile.removeAttribute('srcset');photo.removeAttribute('src');return}
- photo.alt=String(b.campaignAlt||'Promoción SupriMed').slice(0,180);
- photo.onerror=restore;
- mobile.removeAttribute('srcset');
- if(photo.getAttribute('src')!==desktop)photo.src=desktop;
- original.hidden=true;link.hidden=false;
+ const configured=Array.isArray(b.campaignSlides)?b.campaignSlides.slice(0,12):[];
+ const images=(configured.length?configured:[b.campaignDesktop]).map(safe).filter(Boolean);
+ if(campaignTimer)clearInterval(campaignTimer);campaignTimer=null;
+ if(b.heroMode!=='campaign'||!images.length){wrap.hidden=true;original.hidden=false;photo.removeAttribute('src');campaignSignature='';return}
+ const signature=images.join('|');if(signature!==campaignSignature)campaignIndex=0;campaignSignature=signature;
+ campaignIndex=Math.min(campaignIndex,images.length-1);
+ wrap.hidden=false;original.hidden=true;
+ const dots=$('#campaignDots'),prev=$('#campaignPrev'),next=$('#campaignNext');
+ const paint=()=>{if(photo.getAttribute('src')!==images[campaignIndex])photo.src=images[campaignIndex];photo.alt='Promoción SupriMed '+(campaignIndex+1)+' de '+images.length;[...dots.children].forEach((dot,i)=>dot.setAttribute('aria-current',i===campaignIndex?'true':'false'))};
+ const move=delta=>{campaignIndex=(campaignIndex+delta+images.length)%images.length;paint()};
+ const pause=()=>{if(campaignTimer)clearInterval(campaignTimer);campaignTimer=null};
+ const restart=()=>{pause();if(images.length>1&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!wrap.matches(':hover')&&!wrap.matches(':focus-within'))campaignTimer=setInterval(()=>move(1),3000)};
+ dots.replaceChildren();
+ images.forEach((_,i)=>{const button=document.createElement('button');button.type='button';button.className='campaign-dot';button.setAttribute('aria-label','Ver banner '+(i+1));button.addEventListener('click',()=>{campaignIndex=i;paint();restart()});dots.appendChild(button)});
+ const multiple=images.length>1;dots.hidden=!multiple;prev.hidden=!multiple;next.hidden=!multiple;
+ if(!wrap.dataset.carouselBound){
+  prev.addEventListener('click',()=>{if(campaignMove)campaignMove(-1);if(campaignRestart)campaignRestart()});
+  next.addEventListener('click',()=>{if(campaignMove)campaignMove(1);if(campaignRestart)campaignRestart()});
+  wrap.addEventListener('mouseenter',()=>{if(campaignTimer)clearInterval(campaignTimer);campaignTimer=null});
+  wrap.addEventListener('mouseleave',()=>{if(campaignRestart)campaignRestart()});
+  wrap.addEventListener('focusin',()=>{if(campaignTimer)clearInterval(campaignTimer);campaignTimer=null});
+  wrap.addEventListener('focusout',()=>{if(campaignRestart)campaignRestart()});
+  document.addEventListener('visibilitychange',()=>{if(campaignRestart)campaignRestart()});
+  let x=null;
+  wrap.addEventListener('touchstart',e=>{x=e.touches[0]?.clientX??null;if(campaignTimer)clearInterval(campaignTimer);campaignTimer=null},{passive:true});
+  wrap.addEventListener('touchend',e=>{if(x!==null){const dx=(e.changedTouches[0]?.clientX??x)-x;if(Math.abs(dx)>45&&campaignMove)campaignMove(dx<0?1:-1)}x=null;if(campaignRestart)campaignRestart()},{passive:true});
+  wrap.dataset.carouselBound='1';
+ }
+ campaignMove=move;campaignRestart=restart;
+ photo.onerror=()=>{pause();wrap.hidden=true;original.hidden=false};
+ paint();restart();
 }
 function renderHeroGallery(){
  const custom=DB.customImages?.hero,photo=$('#heroImg'),gallery=$('#heroProductGallery');
